@@ -1,0 +1,22 @@
+{
+  "id": "exhibition-wall-panel",
+  "title": "Exposición — El trabajo invisible",
+  "createdAt": "2026-05-31T00:00:00.000Z",
+  "pageComponentId": "exhibition-wall-panel",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 841,
+    "trimHeightMm": 594,
+    "bleedMm": 5,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 150,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {}
+}

@@ -1,0 +1,40 @@
+{
+  "id": "marco-5-s-1",
+  "title": "5-S-1 — Puente S5→S6 — coste marginal → 0 (tipografía) (9.50×2.50 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "tipografia",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 9500,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 5,
+    "wallId": "wall-4",
+    "frameId": "5-S-1",
+    "side": 1,
+    "readingDistanceM": 3,
+    "eyebrow": "S5 → S6 · El puente",
+    "h1": "Coste marginal → 0",
+    "h2": "Lo escaso se vuelve abundante.",
+    "h3": "Ya pasó antes.",
+    "h4": "Y vuelve a pasar.",
+    "paragraphs": [
+      "Cada vez que producir algo se acerca al coste cero, deja de ser un lujo y pasa a estar en todas partes.",
+      "La luz, el cálculo, la información: primero caros, después invisibles."
+    ],
+    "ratio": 1.9,
+    "h1CapFraction": 0.15,
+    "venue": "Finca El Olivar · 17·06·2026"
+  }
+}

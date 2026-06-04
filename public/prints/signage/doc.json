@@ -1,0 +1,22 @@
+{
+  "id": "signage",
+  "title": "AiKit Live — Señalética / directorio",
+  "createdAt": "2026-05-31T00:00:00.000Z",
+  "pageComponentId": "signage",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 460,
+    "trimHeightMm": 1150,
+    "bleedMm": 5,
+    "safeMarginMm": 36,
+    "cropMarks": true
+  },
+  "dpi": 150,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {}
+}

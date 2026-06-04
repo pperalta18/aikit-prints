@@ -1,0 +1,27 @@
+{
+  "id": "marco-16-n-1",
+  "title": "Marco vacío 16-N-1 — Divisoria 2 TEXT+CODE (3.50×2 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "blank",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 3500,
+    "trimHeightMm": 2000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 24,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 16,
+    "wallId": "wall-15",
+    "frameId": "16-N-1",
+    "side": -1
+  }
+}

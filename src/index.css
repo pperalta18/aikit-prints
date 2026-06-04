@@ -1,0 +1,69 @@
+@font-face {
+  font-family: 'Universal Sans Text';
+  src: url('/fonts/Universal-Sans-Text-400.otf') format('opentype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Universal Sans Text';
+  src: url('/fonts/Universal-Sans-Text-550.otf') format('opentype');
+  font-style: normal;
+  font-weight: 500 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Universal Sans Text';
+  src: url('/fonts/Universal-Sans-Text-700.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Universal Sans Display';
+  src: url('/fonts/Universal-Sans-Display-250.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 250;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Universal Sans Display';
+  src: url('/fonts/Universal-Sans-Display-400.otf') format('opentype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Universal Sans Display';
+  src: url('/fonts/Universal-Sans-Display-550.otf') format('opentype');
+  font-style: normal;
+  font-weight: 500 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Universal Sans Display';
+  src: url('/fonts/Universal-Sans-Display-700.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Universal Sans Display';
+  src: url('/fonts/Universal-Sans-Display-820.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 800 900;
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: #0d0f13;
+  font-family: 'Universal Sans Text', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

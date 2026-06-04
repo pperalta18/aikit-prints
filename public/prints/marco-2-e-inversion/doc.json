@@ -1,0 +1,30 @@
+{
+  "id": "marco-2-e-inversion",
+  "title": "Galaxia de mercados — 2-E-inversión · canicas (mitad galaxia) (8.75×2.50 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "galaxy",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 8750,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 2,
+    "wallId": "wall-1",
+    "frameId": "2-E-INVERSIÓN",
+    "side": 1,
+    "zone": "INVERSIÓN",
+    "panel": "left",
+    "chart": "frontier-intelligence"
+  }
+}

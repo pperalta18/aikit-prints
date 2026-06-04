@@ -1,0 +1,38 @@
+{
+  "id": "marco-8-n-1",
+  "title": "Cuadro 8-N-1 — «El telar de la inteligencia» (relieve + cartela, 8.50×2.50 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "cuadro",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 13000,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 8,
+    "wallId": "wall-7",
+    "frameId": "8-N-1",
+    "side": -1,
+    "readingDistanceM": 1.7,
+    "placement": "left",
+    "eyebrow": "Sala S2 · Introducción a la IA",
+    "title": "El telar de la inteligencia",
+    "subtitle": "De un solo nudo a la celosía inmensa",
+    "paragraphs": [
+      "No hay magia ni voluntad oculta: una retícula que multiplica, tejida a una escala antes inalcanzable.",
+      "Crece de una chispa a un coloso; cambia el tamaño, no la naturaleza del cálculo."
+    ],
+    "meta": "Bajorrelieve monocromo · Caliza · Colección AiKit Live · 2026",
+    "alt": "Una figura alegórica con túnica clásica preside un vasto telar-retícula tallado en la piedra. La trama nace de un solo nudo en la esquina inferior y asciende en diagonal hasta una celosía catedralicia que llena el tercio superior. A sus pies, geómetras arrodillados tensan los hilos con compás y plomada; otro hace girar una rueda dentada engranada al bastidor, revelando que el patrón es mecánico. Una única bombilla incandescente, suspendida sobre la figura, baja su luz rasante: enciende los nudos como filamentos y proyecta sombras largas. Borde rectangular tallado en la misma caliza."
+  }
+}

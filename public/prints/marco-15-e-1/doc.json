@@ -1,0 +1,27 @@
+{
+  "id": "marco-15-e-1",
+  "title": "Marco vacío 15-E-1 — Acento vertical S5/S6 — identidad cálida (4×2.50 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "blank",
+  "theme": "dark",
+  "dimensions": {
+    "trimWidthMm": 4000,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 24,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 15,
+    "wallId": "wall-14",
+    "frameId": "15-E-1",
+    "side": 1
+  }
+}

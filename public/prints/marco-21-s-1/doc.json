@@ -1,0 +1,27 @@
+{
+  "id": "marco-21-s-1",
+  "title": "Marco vacío 21-S-1 — Transición (7×2.50 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "blank",
+  "theme": "dark",
+  "dimensions": {
+    "trimWidthMm": 7000,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 24,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 21,
+    "wallId": "wall-19",
+    "frameId": "21-S-1",
+    "side": 1
+  }
+}

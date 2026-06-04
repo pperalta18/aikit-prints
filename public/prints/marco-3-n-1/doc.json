@@ -1,0 +1,38 @@
+{
+  "id": "marco-3-n-1",
+  "title": "Cuadro 3-N-1 — «La ascensión en el umbral» (relieve + cartela, 8.50×2.50 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "cuadro",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 4000,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 3,
+    "wallId": "wall-2",
+    "frameId": "3-N-1",
+    "side": -1,
+    "readingDistanceM": 1.7,
+    "placement": "left",
+    "eyebrow": "Sala S2 · Umbral del progreso",
+    "title": "La ascensión en el umbral",
+    "subtitle": "o la curva que rebasa el marco",
+    "paragraphs": [
+      "La diagonal que sacó al hombre del esfuerzo agachado no se detiene: ahora la empuja el cálculo a gran escala.",
+      "Si la curva se prolonga más allá del dintel, lo que aguarda aún no sabemos nombrarlo."
+    ],
+    "meta": "Bajorrelieve monocromo · Piedra caliza · Colección AiKit Live · 2026",
+    "alt": "Bajorrelieve vertical. Una procesión humana asciende en diagonal desde el ángulo inferior izquierdo, en penumbra: figuras encorvadas que arrastran una rueda dentada rota y empujan junto a un buey fatigado, todavía atadas al esfuerzo primitivo. La diagonal cruza un dintel de piedra tallado en el propio relieve —el umbral— y desemboca, arriba a la derecha, en una figura serena con túnica, ya erguida, que apoya la mano en un cuadro de mandos de palancas y dinamos. Sobre ese vértice, una única bombilla incandescente encendida es la sola fuente de luz: su resplandor rasante alarga las sombras hacia atrás, deja el origen del trabajo casi a oscuras y baña la cima. Engranajes concéntricos, cada vez mayores, escalonan la subida y sugieren una curva que no se detiene en el borde del marco."
+  }
+}

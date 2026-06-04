@@ -1,0 +1,25 @@
+{
+  "id": "aikit-live-mural",
+  "title": "AiKit Live — mural 3 × 2 m",
+  "createdAt": "2026-05-31T00:00:00.000Z",
+  "pageComponentId": "aikit-live-mural",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 3000,
+    "trimHeightMm": 2000,
+    "bleedMm": 0,
+    "safeMarginMm": 150,
+    "cropMarks": false
+  },
+  "dpi": 100,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "logoWidthMm": 1000,
+    "tone": "light"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "pared-18",
+  "title": "Marco vacío — S1 Bici / combustión (pared 18, 3,5 × 2,5 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "blank",
+  "theme": "dark",
+  "dimensions": {
+    "trimWidthMm": 3500,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 60,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "invId": 18
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "name": "aikit-prints",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "AiKit Live print framework — neumorphic CMYK wall graphics, signage and editorial text walls. Standalone extract of the neo-work print system.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "studio": "remotion studio src/remotion/index.ts",
+    "export": "node scripts/export-print.mjs",
+    "tile": "node scripts/tile-print.mjs",
+    "control-table": "node scripts/control-table.mjs",
+    "legibility": "node scripts/legibility.mjs",
+    "sources": "node scripts/sources.mjs",
+    "coverage": "node scripts/coverage.mjs",
+    "frames": "node scripts/generate-frames.mjs",
+    "verify:print": "node scripts/verify-print.mjs"
+  },
+  "dependencies": {
+    "@hugeicons-pro/core-solid-standard": "^4.2.0",
+    "@hugeicons-pro/core-stroke-standard": "^4.2.0",
+    "@hugeicons/react": "^1.1.6",
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.18.0",
+    "@remotion/bundler": "^4.0.469",
+    "@remotion/renderer": "^4.0.469",
+    "agentation": "^3.0.2",
+    "pdf-lib": "^1.17.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.469",
+    "three": "^0.171.0"
+  },
+  "devDependencies": {
+    "@remotion/cli": "^4.0.469",
+    "@types/node": "^24.12.4",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "@types/three": "^0.171.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^3.4.19",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.10",
+    "vitest": "^4.1.7"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "marco-5-n-1",
+  "title": "Galaxia de mercados — 5N1 · el sol IA (fondo de la nave) (9.50×2.50 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "galaxy",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 9500,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 5,
+    "wallId": "wall-4",
+    "frameId": "5-N-1",
+    "side": -1,
+    "panel": "back"
+  }
+}

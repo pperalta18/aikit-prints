@@ -1,0 +1,30 @@
+{
+  "id": "marco-1-s-1",
+  "title": "1-S-1 — Bienvenida · AiKit Live (7×2.50 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "aikit-live-mural",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 7000,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 24,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 1,
+    "wallId": "wall-0",
+    "frameId": "1-S-1",
+    "side": 1,
+    "logoWidthMm": 1000,
+    "tone": "light",
+    "offsetYmm": 350
+  }
+}

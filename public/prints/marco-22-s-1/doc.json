@@ -1,0 +1,32 @@
+{
+  "id": "marco-22-s-1",
+  "title": "Cubo central S2 — 03 · 22-S-1 (2.50×2.50 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "cubo-cara",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 2500,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 24,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 22,
+    "wallId": "wall-20",
+    "frameId": "22-S-1",
+    "side": 1,
+    "index": "03",
+    "title": "Título de la sección tres",
+    "ground": "#16b3cf",
+    "eyebrow": "AiKit Live · S2",
+    "inkMode": "dark"
+  }
+}

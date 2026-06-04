@@ -1,0 +1,32 @@
+{
+  "id": "marco-24-e-1",
+  "title": "Cubo central S2 — 04 · 24-E-1 (2×2.50 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "cubo-cara",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 2000,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 24,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 24,
+    "wallId": "wall-22",
+    "frameId": "24-E-1",
+    "side": 1,
+    "index": "04",
+    "title": "Título de la sección cuatro",
+    "ground": "#b84fed",
+    "eyebrow": "AiKit Live · S2",
+    "inkMode": "light"
+  }
+}

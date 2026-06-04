@@ -1,0 +1,27 @@
+{
+  "id": "marco-6-w-1",
+  "title": "Marco vacío 6-W-1 — Cinema (3.50×2.50 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "blank",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 3500,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 24,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 6,
+    "wallId": "wall-5",
+    "frameId": "6-W-1",
+    "side": -1
+  }
+}

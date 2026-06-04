@@ -1,0 +1,75 @@
+{
+  "id": "marco-11-w-image",
+  "title": "11-W-IMAGE — La evolución de la imagen IA (9.25×2.50 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "evolucion-imagen",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 9250,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 11,
+    "wallId": "wall-10",
+    "frameId": "11-W-IMAGE",
+    "side": -1,
+    "zone": "IMAGE",
+    "items": [
+      {
+        "year": "2014",
+        "era": "Nacen las GAN",
+        "model": "Goodfellow et al."
+      },
+      {
+        "year": "2016",
+        "era": "GAN convolucional",
+        "model": "DCGAN"
+      },
+      {
+        "year": "2018",
+        "era": "Caras fotorrealistas",
+        "model": "BigGAN · StyleGAN"
+      },
+      {
+        "year": "2021",
+        "era": "Texto → imagen",
+        "model": "DALL·E · CLIP"
+      },
+      {
+        "year": "2022",
+        "era": "La era de la difusión",
+        "model": "DALL·E 2 · Midjourney · SD"
+      },
+      {
+        "year": "2023",
+        "era": "Nitidez y coherencia",
+        "model": "Midjourney v5 · SDXL"
+      },
+      {
+        "year": "2024",
+        "era": "Texto en la imagen",
+        "model": "DALL·E 3 · Flux"
+      },
+      {
+        "year": "2025",
+        "era": "Control y consistencia",
+        "model": "GPT Image · Nano Banana"
+      },
+      {
+        "year": "2026",
+        "era": "Indistinguible de lo real",
+        "model": "Generación en tiempo real"
+      }
+    ]
+  }
+}

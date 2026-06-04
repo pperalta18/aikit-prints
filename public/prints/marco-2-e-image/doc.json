@@ -1,0 +1,28 @@
+{
+  "id": "marco-2-e-image",
+  "title": "2-E-IMAGE — Will Smith comiendo espaguetis: el progreso del vídeo IA (6.75×2.50 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "evolucion-video",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 6750,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 2,
+    "wallId": "wall-1",
+    "frameId": "2-E-IMAGE",
+    "side": 1,
+    "zone": "IMAGE"
+  }
+}

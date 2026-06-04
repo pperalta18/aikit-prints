@@ -1,0 +1,11 @@
+node_modules
+dist
+*.local
+.DS_Store
+.env
+
+out
+
+# Generated build/bundle output
+build/
+*.tsbuildinfo

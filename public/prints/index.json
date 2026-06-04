@@ -1,0 +1,353 @@
+[
+  {
+    "id": "exhibition-wall-panel",
+    "title": "Exposición — El trabajo invisible",
+    "dimensions": {
+      "trimWidthMm": 841,
+      "trimHeightMm": 594,
+      "bleedMm": 5,
+      "safeMarginMm": 0,
+      "cropMarks": false
+    },
+    "dpi": 150,
+    "updatedAt": "2026-05-31T01:04:44.422Z"
+  },
+  {
+    "id": "agi-timeline",
+    "title": "El Año Cero — ¿Cuándo llegará la AGI?",
+    "dimensions": {
+      "trimWidthMm": 6000,
+      "trimHeightMm": 2500,
+      "bleedMm": 0,
+      "safeMarginMm": 180,
+      "cropMarks": false
+    },
+    "dpi": 60,
+    "updatedAt": "2026-05-31T01:49:55.020Z"
+  },
+  {
+    "id": "aikit-live-mural",
+    "title": "AiKit Live — mural 3 × 2 m",
+    "dimensions": {
+      "trimWidthMm": 3000,
+      "trimHeightMm": 2000,
+      "bleedMm": 0,
+      "safeMarginMm": 150,
+      "cropMarks": false
+    },
+    "dpi": 100,
+    "updatedAt": "2026-05-31T02:14:52.728Z"
+  },
+  {
+    "id": "signage",
+    "title": "AiKit Live — Señalética / directorio",
+    "dimensions": {
+      "trimWidthMm": 460,
+      "trimHeightMm": 1150,
+      "bleedMm": 5,
+      "safeMarginMm": 36,
+      "cropMarks": true
+    },
+    "dpi": 150,
+    "updatedAt": "2026-05-31T01:06:14.065Z"
+  },
+  {
+    "id": "bienvenida",
+    "title": "AiKit Live — Bienvenida (entrada)",
+    "dimensions": {
+      "trimWidthMm": 594,
+      "trimHeightMm": 841,
+      "bleedMm": 5,
+      "safeMarginMm": 38,
+      "cropMarks": true
+    },
+    "dpi": 150,
+    "updatedAt": "2026-05-31T06:01:25.471Z"
+  },
+  {
+    "id": "llegada",
+    "title": "AiKit Live — Llegada y parking",
+    "dimensions": {
+      "trimWidthMm": 594,
+      "trimHeightMm": 420,
+      "bleedMm": 5,
+      "safeMarginMm": 30,
+      "cropMarks": true
+    },
+    "dpi": 150,
+    "updatedAt": "2026-05-31T10:45:39.754Z"
+  },
+  {
+    "id": "direccional",
+    "title": "AiKit Live — Señal direccional (cruce)",
+    "dimensions": {
+      "trimWidthMm": 594,
+      "trimHeightMm": 420,
+      "bleedMm": 5,
+      "safeMarginMm": 30,
+      "cropMarks": true
+    },
+    "dpi": 150,
+    "updatedAt": "2026-05-31T06:01:25.482Z"
+  },
+  {
+    "id": "plano",
+    "title": "AiKit Live — Estás aquí / recorrido",
+    "dimensions": {
+      "trimWidthMm": 594,
+      "trimHeightMm": 420,
+      "bleedMm": 5,
+      "safeMarginMm": 30,
+      "cropMarks": true
+    },
+    "dpi": 150,
+    "updatedAt": "2026-05-31T10:45:39.775Z"
+  },
+  {
+    "id": "identificador-sala",
+    "title": "AiKit Live — Identificador de sala (plantilla)",
+    "dimensions": {
+      "trimWidthMm": 297,
+      "trimHeightMm": 420,
+      "bleedMm": 5,
+      "safeMarginMm": 24,
+      "cropMarks": true
+    },
+    "dpi": 150,
+    "updatedAt": "2026-05-31T10:45:39.795Z"
+  },
+  {
+    "id": "acreditacion",
+    "title": "AiKit Live — Acreditación / check-in",
+    "dimensions": {
+      "trimWidthMm": 420,
+      "trimHeightMm": 594,
+      "bleedMm": 5,
+      "safeMarginMm": 30,
+      "cropMarks": true
+    },
+    "dpi": 150,
+    "updatedAt": "2026-05-31T10:45:39.808Z"
+  },
+  {
+    "id": "aseos",
+    "title": "AiKit Live — Aseos",
+    "dimensions": {
+      "trimWidthMm": 297,
+      "trimHeightMm": 420,
+      "bleedMm": 5,
+      "safeMarginMm": 24,
+      "cropMarks": true
+    },
+    "dpi": 150,
+    "updatedAt": "2026-05-31T10:45:39.826Z"
+  },
+  {
+    "id": "acceso-restringido",
+    "title": "AiKit Live — Acceso privado",
+    "dimensions": {
+      "trimWidthMm": 297,
+      "trimHeightMm": 420,
+      "bleedMm": 5,
+      "safeMarginMm": 24,
+      "cropMarks": true
+    },
+    "dpi": 150,
+    "updatedAt": "2026-05-31T10:45:39.846Z"
+  },
+  {
+    "id": "wifi",
+    "title": "AiKit Live — WiFi",
+    "dimensions": {
+      "trimWidthMm": 148,
+      "trimHeightMm": 210,
+      "bleedMm": 3,
+      "safeMarginMm": 11,
+      "cropMarks": true
+    },
+    "dpi": 300,
+    "updatedAt": "2026-05-31T10:45:39.871Z"
+  },
+  {
+    "id": "mesa",
+    "title": "AiKit Live — Numerador de mesa (plantilla)",
+    "dimensions": {
+      "trimWidthMm": 148,
+      "trimHeightMm": 210,
+      "bleedMm": 3,
+      "safeMarginMm": 11,
+      "cropMarks": true
+    },
+    "dpi": 300,
+    "updatedAt": "2026-05-31T10:45:39.895Z"
+  },
+  {
+    "id": "credencial-speaker",
+    "title": "AiKit Live — Acreditación · Speaker",
+    "dimensions": {
+      "trimWidthMm": 105,
+      "trimHeightMm": 148,
+      "bleedMm": 3,
+      "safeMarginMm": 6,
+      "cropMarks": true
+    },
+    "dpi": 300,
+    "updatedAt": "2026-06-03T00:00:00.000Z"
+  },
+  {
+    "id": "credencial-host",
+    "title": "AiKit Live — Acreditación · Host",
+    "dimensions": {
+      "trimWidthMm": 105,
+      "trimHeightMm": 148,
+      "bleedMm": 3,
+      "safeMarginMm": 6,
+      "cropMarks": true
+    },
+    "dpi": 300,
+    "updatedAt": "2026-06-03T00:00:00.000Z"
+  },
+  {
+    "id": "credencial-staff",
+    "title": "AiKit Live — Acreditación · Staff",
+    "dimensions": {
+      "trimWidthMm": 105,
+      "trimHeightMm": 148,
+      "bleedMm": 3,
+      "safeMarginMm": 6,
+      "cropMarks": true
+    },
+    "dpi": 300,
+    "updatedAt": "2026-06-03T00:00:00.000Z"
+  },
+  {
+    "id": "credencial-guest",
+    "title": "AiKit Live — Acreditación · Guest",
+    "dimensions": {
+      "trimWidthMm": 105,
+      "trimHeightMm": 148,
+      "bleedMm": 3,
+      "safeMarginMm": 6,
+      "cropMarks": true
+    },
+    "dpi": 300,
+    "updatedAt": "2026-06-03T00:00:00.000Z"
+  },
+  {
+    "id": "raster-proof",
+    "title": "Raster pipeline proof — full-bleed image → CMYK PDF/X",
+    "dimensions": {
+      "trimWidthMm": 1000,
+      "trimHeightMm": 1400,
+      "bleedMm": 10,
+      "safeMarginMm": 0,
+      "cropMarks": false
+    },
+    "dpi": 36,
+    "updatedAt": "2026-06-04T00:00:00.000Z"
+  },
+  {
+    "id": "hero-solar",
+    "title": "Sistema solar de la inversión — S3 INVERSIÓN (hero, pared 2 cara S3)",
+    "dimensions": {
+      "trimWidthMm": 6000,
+      "trimHeightMm": 2200,
+      "bleedMm": 10,
+      "safeMarginMm": 0,
+      "cropMarks": false
+    },
+    "dpi": 60,
+    "updatedAt": "2026-06-04T00:00:00.000Z"
+  },
+  {
+    "id": "aceleracion",
+    "title": "Aceleración — S3 NAVE E (pared 11, horizonte de tareas + ventana de contexto)",
+    "dimensions": {
+      "trimWidthMm": 6000,
+      "trimHeightMm": 2000,
+      "bleedMm": 10,
+      "safeMarginMm": 0,
+      "cropMarks": false
+    },
+    "dpi": 60,
+    "updatedAt": "2026-06-04T00:00:00.000Z"
+  },
+  {
+    "id": "codigo",
+    "title": "El valor del código — S3 TEXT+CODE (pared 16, tiempo de desarrollo + código escrito por IA)",
+    "dimensions": {
+      "trimWidthMm": 3200,
+      "trimHeightMm": 1800,
+      "bleedMm": 10,
+      "safeMarginMm": 0,
+      "cropMarks": false
+    },
+    "dpi": 60,
+    "updatedAt": "2026-06-04T00:00:00.000Z"
+  },
+  {
+    "id": "marco-10-s-1",
+    "title": "Sala 2: Introducción a la inteligencia artificial — S1→S2 (pared 10, flecha ←)",
+    "dimensions": {
+      "trimWidthMm": 6000,
+      "trimHeightMm": 2500,
+      "bleedMm": 10,
+      "safeMarginMm": 0,
+      "cropMarks": false
+    },
+    "dpi": 24,
+    "updatedAt": "2026-06-04T00:00:00.000Z"
+  },
+  {
+    "id": "umbral",
+    "title": "Umbral S2→S3 — banda-título de la nave (pared 3, IMAGE · TEXT+CODE · INVERSIÓN)",
+    "dimensions": {
+      "trimWidthMm": 7600,
+      "trimHeightMm": 1800,
+      "bleedMm": 10,
+      "safeMarginMm": 0,
+      "cropMarks": false
+    },
+    "dpi": 60,
+    "updatedAt": "2026-06-04T00:00:00.000Z"
+  },
+  {
+    "id": "micro-acento",
+    "title": "Micro-acento S5/S6 — cita tipográfica (pared 14, «Ya pasó antes»)",
+    "dimensions": {
+      "trimWidthMm": 1300,
+      "trimHeightMm": 1000,
+      "bleedMm": 10,
+      "safeMarginMm": 0,
+      "cropMarks": false
+    },
+    "dpi": 60,
+    "updatedAt": "2026-06-04T00:00:00.000Z"
+  },
+  {
+    "id": "pared-18",
+    "title": "Marco vacío — S1 Bici / combustión (pared 18, 5 × 2,5 m)",
+    "dimensions": {
+      "trimWidthMm": 3500,
+      "trimHeightMm": 2500,
+      "bleedMm": 10,
+      "safeMarginMm": 0,
+      "cropMarks": false
+    },
+    "dpi": 60,
+    "updatedAt": "2026-06-04T00:00:00.000Z"
+  },
+  {
+    "id": "pared-2-w-2",
+    "title": "Pared 2 · cara W (S1 combustión) panel 2 — 16,25 × 2,5 m",
+    "dimensions": {
+      "trimWidthMm": 10500,
+      "trimHeightMm": 2500,
+      "bleedMm": 10,
+      "safeMarginMm": 0,
+      "cropMarks": false
+    },
+    "dpi": 60,
+    "updatedAt": "2026-06-04T00:00:00.000Z"
+  }
+]

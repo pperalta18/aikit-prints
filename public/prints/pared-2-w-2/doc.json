@@ -1,0 +1,27 @@
+{
+  "id": "pared-2-w-2",
+  "title": "Pared 2 · cara W (S1 combustión) panel 2 — 10,5 × 2,5 m",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "blank",
+  "theme": "dark",
+  "dimensions": {
+    "trimWidthMm": 10500,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 60,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 2,
+    "wallId": "wall-1",
+    "frameId": "2-W-2",
+    "side": -1
+  }
+}

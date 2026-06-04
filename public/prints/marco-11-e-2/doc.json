@@ -1,0 +1,27 @@
+{
+  "id": "marco-11-e-2",
+  "title": "Marco vacío 11-E-2 — Nave E — aceleración (12.25×2.50 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "blank",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 12250,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 24,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 11,
+    "wallId": "wall-10",
+    "frameId": "11-E-2",
+    "side": 1
+  }
+}

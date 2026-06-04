@@ -1,0 +1,24 @@
+{
+  "id": "hero-solar",
+  "title": "Sistema solar de la inversión — S3 INVERSIÓN (hero, pared 2 cara S3)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "hero-solar",
+  "theme": "dark",
+  "dimensions": {
+    "trimWidthMm": 6000,
+    "trimHeightMm": 2200,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 60,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "invId": 2
+  }
+}

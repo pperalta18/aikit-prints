@@ -1,0 +1,34 @@
+{
+  "id": "marco-10-s-1",
+  "title": "Marco 10-S-1 — Wayfinding S1→S2 · Sala 2 (6.50×2.50 m)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "wayfinding-s1-s2",
+  "theme": "dark",
+  "dimensions": {
+    "trimWidthMm": 6500,
+    "trimHeightMm": 2500,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 24,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 10,
+    "wallId": "wall-9",
+    "frameId": "10-S-1",
+    "side": 1,
+    "invId": 10,
+    "readingDistanceM": 4,
+    "eyebrow": "Próxima sala",
+    "sala": "Sala 2",
+    "title": "Introducción a la inteligencia artificial",
+    "arrow": "left",
+    "locator": "S1 → S2"
+  }
+}
