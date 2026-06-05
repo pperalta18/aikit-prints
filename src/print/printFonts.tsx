@@ -29,6 +29,9 @@ const PRINT_FACES: Array<[string, string, string, string]> = [
   ['Universal Sans Text', 'fonts/Universal-Sans-Text-700.ttf', 'truetype', '700'],
   // The hairline cut as its own one-weight family so 400-fallback can't happen.
   ['Universal Sans Display Hair', 'fonts/Universal-Sans-Display-250.ttf', 'truetype', '400'],
+  // The legible Display cuts (Regular / Medium) for headings that must read at size.
+  ['Universal Sans Display', 'fonts/Universal-Sans-Display-400.otf', 'opentype', '400'],
+  ['Universal Sans Display', 'fonts/Universal-Sans-Display-550.otf', 'opentype', '500 600'],
 ]
 
 const PRINT_FONT_CSS = PRINT_FACES.map(
@@ -45,6 +48,9 @@ export const PRINT_TEXT_FONT = "'Universal Sans Text', ui-sans-serif, system-ui,
 /** Headings — the true hairline Display cut (size, not weight, carries hierarchy). */
 export const PRINT_DISPLAY_HAIR =
   "'Universal Sans Display Hair', 'Universal Sans Display', ui-sans-serif, system-ui, sans-serif"
+
+/** Headings — the legible Display cut (Regular/Medium) for titles that must read at size. */
+export const PRINT_DISPLAY = "'Universal Sans Display', ui-sans-serif, system-ui, sans-serif"
 
 /** Inject the print type system's @font-face rules. Render once per print page. */
 export function PrintFonts() {

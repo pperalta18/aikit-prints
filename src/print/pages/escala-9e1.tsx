@@ -1,32 +1,31 @@
 import type { PrintPageProps } from '../types'
 import type { PrintGeometry } from '../geometry'
+import type { CSSProperties } from 'react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { ArrowRight02Icon } from '@hugeicons-pro/core-stroke-standard'
 import { PrintFonts } from '../printFonts'
-import { type TipoPalette, TipoField, tipoEyebrow, tipoH2, tipoH3, tipoH4, tipoPalette } from './tipografia-kit'
+import { type TipoPalette, TipoField, tipoEyebrow, tipoH2, tipoH4, tipoPalette } from './tipografia-kit'
 import { eventTypeScale } from './tipografia'
 import { LayerStack, MiniMatrix } from './escala-modelos-kit'
-import {
-  type ScaleModel,
-  formatFactorEs,
-  formatParamsEs,
-  growthFactor,
-  layersOf,
-  layoutSmallModels,
-  yearOf,
-} from './escala-modelos'
-import { sourcesCaption } from './dataviz-scales'
+import { formatFactorEs, formatParamsEs, growthFactor, layersOf, modelSideMm, yearOf } from './escala-modelos'
 import { pieceBySlug } from '../space/wall-data'
 
 /**
  * escala-9e1 — first half of the model-scale pair: **Perceptrón · AlexNet · GPT-2
  * on wall 9E1** (10.75 × 2.5 m), editorial light register.
  * ──────────────────────────────────────────────────────────────────────────
- * Three models, centred as a group, each a dark **stack of layers** on paper —
- * a network is a stack of layers ("no es magia, es multiplicación de matrices").
- * The footprint area is the parameter count (the exponential), the number of
- * layers is the network depth: Perceptrón 1 layer / 512 params (a ~0.8 mm speck +
- * magnifier), AlexNet 8 / 60 M, GPT-2 48 / 1.5 bn. A cue points to GPT-4, which no
- * longer fits at scale (pair: `escala-8s1.tsx`, the textless monolith).
+ * Composed as ONE editorial sentence read left→right across the 10.75 m band
+ * (the only structure that fits a 4.3:1 wall at 4.5 m — the eye sweeps, it does
+ * not compose). The headline OPENS the sentence inline on the left, centred on
+ * the box line; the three honest squares are the chronological predicate, baseline-
+ * aligned on a single hairline ground rule so the size ramp (a ~0.8 mm Perceptrón
+ * speck → AlexNet 0.28 m → GPT-2 1.4 m) reads as a staircase growing UP from the
+ * floor — the staircase IS the exponential. The right ~40 % is a deliberate runway
+ * the next model must travel to leave the wall: a small black Huge Icons arrow
+ * carries GPT-4 off → its companion wall 8-S-1 (the textless monolith).
  *
+ * Two horizontal axes only (ground rule + cartela line), hierarchy by colour not
+ * size, the single brand-blue accent reserved for the Perceptrón locator dot alone.
  * Honest, code-rendered from the sourced `wall-data.ts`. Maths: `escala-modelos.ts`.
  */
 
@@ -43,6 +42,11 @@ const FALLBACK: Datum[] = [
 
 type Props = { readingDistanceM?: number }
 
+/** Sentence-case support line (deck / sub-labels) — the eyebrow recipe, un-tracked. */
+function softLine(geo: PrintGeometry, sizePt: number, color: string): CSSProperties {
+  return { ...tipoEyebrow(geo, sizePt, color), textTransform: 'none', letterSpacing: 0, fontWeight: 400, lineHeight: 1.4 }
+}
+
 export function Escala9E1({ doc, geo }: PrintPageProps) {
   const { mm } = geo
   const p = (doc.props ?? {}) as Props
@@ -57,28 +61,27 @@ export function Escala9E1({ doc, geo }: PrintPageProps) {
   const all = (piece?.data as Datum[] | undefined) ?? FALLBACK
   const byId = new Map(all.map((d) => [d.id, d]))
   const order = ['perceptron', 'alexnet', 'gpt2']
-  const small: ScaleModel[] = order
+  const small = order
     .map((id) => byId.get(id))
     .filter((d): d is Datum => Boolean(d))
     .map((d) => ({ id: d.id, label: DISPLAY_NAME[d.id] ?? d.label, value: d.value, year: yearOf(d.date) }))
-  const sources = order.concat('gpt4').map((id) => byId.get(id)).filter((d): d is Datum => Boolean(d))
   const gpt4 = byId.get('gpt4')
   const gpt2 = byId.get('gpt2')
 
-  // ── layout: squares centred on a common mid-line, distributed across the width ──
-  const cy = H * 0.45
-  const layout = layoutSmallModels(small, {
-    wallWidthMm: W,
-    wallHeightMm: H,
-    marginXMm: marginX,
-    minVisibleSideMm: 8,
-    centerFractions: [0.12, 0.4, 0.66],
-  })
-  const sq = new Map(layout.squares.map((s) => [s.id, s]))
-  const captionY = H * 0.78
+  // ── the editorial spine: one common ground line; the boxes grow UP from it ──
+  const groundY = H * 0.73
+  // Full-width centre fractions (chronological, spread across the wall's centre-left
+  // so the three breathe; the right is left clear for GPT-4, pinned to the edge).
+  const centresFullFrac: Record<string, number> = { perceptron: 0.3, alexnet: 0.48, gpt2: 0.66 }
+  const sq = new Map(
+    small.map((m) => [m.id, { id: m.id, label: m.label, value: m.value, year: m.year, sideMm: modelSideMm(m.value), cxMm: (centresFullFrac[m.id] ?? 0.5) * W }] as const),
+  )
+  const gpt2Sq = sq.get('gpt2')!
+  const midY = groundY - gpt2Sq.sideMm / 2 // the sentence line = GPT-2's mid-height
+  const cartelaY = groundY + H * 0.055 // the museum labels hang just below the horizon
 
   const scale = eventTypeScale({ trimHeightMm: H, readingDistanceM, ratio: 1.6, h1CapFraction: 0.05 })
-  const microPt = scale.eyebrowPt * 0.8
+  const microPt = scale.eyebrowPt * 0.82
 
   return (
     <>
@@ -86,56 +89,63 @@ export function Escala9E1({ doc, geo }: PrintPageProps) {
       <TipoField pal={pal} />
 
       <div style={{ position: 'absolute', left: geo.bleedPx, top: geo.bleedPx, width: geo.trimWidthPx, height: geo.trimHeightPx }}>
-        {/* ── header, top-left ── */}
-        <div style={{ position: 'absolute', left: mm(marginX), top: mm(H * 0.085), width: mm(W * 0.5) }}>
+        {/* ── the editorial spine: a full-bleed horizon the whole sentence sits on ── */}
+        <div style={{ position: 'absolute', left: 0, top: mm(groundY), width: '100%', height: Math.max(1, mm(1.6)), background: pal.hairline }} />
+
+        {/* ── the headline OPENS the sentence: inline-left, centred on the box line ── */}
+        <div style={{ position: 'absolute', left: mm(marginX), top: mm(midY), transform: 'translateY(-50%)', width: mm(W * 0.205) }}>
           <span style={tipoEyebrow(geo, scale.eyebrowPt, pal.muted)}>Tamaño de modelos · 1958 → hoy</span>
-          <div style={{ ...tipoH2(geo, scale.h2Pt, pal), marginTop: mm(H * 0.035) }}>Setenta años de escala</div>
-          <div style={{ ...tipoEyebrow(geo, microPt, pal.muted), textTransform: 'none', letterSpacing: 0, fontWeight: 400, lineHeight: 1.4, marginTop: mm(H * 0.028), maxWidth: mm(W * 0.3) }}>
-            El área de cada modelo es su número de parámetros. Las franjas son sus capas — la profundidad de la red.
+          <div style={{ ...tipoH2(geo, scale.h2Pt, pal), marginTop: mm(H * 0.028) }}>Setenta años de escala</div>
+          <div style={{ ...softLine(geo, scale.eyebrowPt, pal.inkSoft), marginTop: mm(H * 0.03), maxWidth: mm(W * 0.2) }}>
+            El área de cada modelo es su número de parámetros. Las franjas oscuras son sus capas: la profundidad de la red.
           </div>
         </div>
 
-        {/* ── the three model stacks (centred on cy) ── */}
-        {small.map((m) => {
-          const s = sq.get(m.id)!
-          if (m.id === 'perceptron') return null // a speck → magnifier below
-          const topMm = cy - s.sideMm / 2
+        {/* ── the chronological predicate: AlexNet · GPT-2 grow up from the ground ── */}
+        {(['alexnet', 'gpt2'] as const).map((id) => {
+          const s = sq.get(id)!
           return (
-            <div key={m.id}>
-              <div style={{ position: 'absolute', left: mm(s.cxMm - s.sideMm / 2), top: mm(topMm), width: mm(s.sideMm), height: mm(s.sideMm) }}>
-                <LayerStack geo={geo} pal={pal} wPx={mm(s.sideMm)} hPx={mm(s.sideMm)} layers={layersOf(m.id)} seed={m.id === 'gpt2' ? 3 : 7} />
+            <div key={id}>
+              <div style={{ position: 'absolute', left: mm(s.cxMm - s.sideMm / 2), top: mm(groundY - s.sideMm), width: mm(s.sideMm), height: mm(s.sideMm) }}>
+                <LayerStack geo={geo} pal={pal} wPx={mm(s.sideMm)} hPx={mm(s.sideMm)} layers={layersOf(id)} seed={id === 'gpt2' ? 3 : 7} />
               </div>
-              <Caption geo={geo} pal={pal} cxMm={s.cxMm} y={captionY} name={m.label} sub={`${m.year} · ${formatParamsEs(m.value)}`} layers={`${layersOf(m.id)} capas`} namePt={scale.h4Pt} subPt={scale.eyebrowPt} microPt={microPt} />
+              <Caption geo={geo} pal={pal} cxMm={s.cxMm} y={cartelaY} num={id === 'gpt2' ? '03' : '02'} name={s.label} sub={`${s.year} · ${formatParamsEs(s.value)}`} layers={`${layersOf(id)} capas`} namePt={scale.h4Pt} subPt={microPt} microPt={microPt} />
             </div>
           )
         })}
 
-        {/* ── Perceptrón: a to-scale locator + a magnified single layer (512 weights) ── */}
-        <PerceptronCallout geo={geo} pal={pal} cxMm={sq.get('perceptron')!.cxMm} trueSideMm={sq.get('perceptron')!.sideMm} cy={cy} captionY={captionY} H={H} W={W} namePt={scale.h4Pt} subPt={scale.eyebrowPt} microPt={microPt} />
+        {/* ── Perceptrón: a to-scale blue speck on the ground + a magnified detail above ── */}
+        <PerceptronCallout geo={geo} pal={pal} cxMm={sq.get('perceptron')!.cxMm} groundY={groundY} cartelaY={cartelaY} H={H} W={W} namePt={scale.h4Pt} microPt={microPt} />
 
-        {/* ── cross-wall cue: GPT-4 doesn't fit at scale ── */}
+        {/* ── GPT-4 leaves the wall: the small black Huge Icons arrow exits right → 8-S-1 ── */}
         {gpt4 && gpt2 && (
-          <Gpt4Cue geo={geo} pal={pal} W={W} marginX={marginX} cy={cy} captionY={captionY} H={H} namePt={scale.h2Pt} subPt={scale.eyebrowPt} microPt={microPt} factor={formatFactorEs(growthFactor(gpt2.value, gpt4.value))} params={formatParamsEs(gpt4.value)} />
+          <Gpt4Cue
+            geo={geo}
+            pal={pal}
+            W={W}
+            midY={midY}
+            H={H}
+            h2Pt={scale.h2Pt}
+            eyebrowPt={scale.eyebrowPt}
+            microPt={microPt}
+            factor={formatFactorEs(growthFactor(gpt2.value, gpt4.value))}
+            params={formatParamsEs(gpt4.value)}
+            layers={layersOf('gpt4')}
+          />
         )}
-
-        {/* ── one discreet honesty line, bottom-left ── */}
-        <div style={{ position: 'absolute', left: mm(marginX), bottom: mm(H * 0.05), maxWidth: mm(W * 0.6) }}>
-          <span style={tipoEyebrow(geo, microPt, pal.faint)}>
-            Representado a escala · área ∝ parámetros · {sourcesCaption(sources)}
-          </span>
-        </div>
       </div>
     </>
   )
 }
 
-/* ── a model caption (museum label), centred under its square on a common line ─── */
+/* ── a model caption (museum label), numbered, centred under its square ─────────── */
 
 function Caption({
   geo,
   pal,
   cxMm,
   y,
+  num,
   name,
   sub,
   layers,
@@ -147,6 +157,7 @@ function Caption({
   pal: TipoPalette
   cxMm: number
   y: number
+  num: string
   name: string
   sub: string
   layers: string
@@ -157,6 +168,7 @@ function Caption({
   const { mm } = geo
   return (
     <div style={{ position: 'absolute', left: mm(cxMm), top: mm(y), transform: 'translateX(-50%)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+      <div style={{ ...tipoEyebrow(geo, microPt, pal.faint), marginBottom: mm(7) }}>{num}</div>
       <div style={tipoH4(geo, namePt, pal)}>{name}</div>
       <div style={{ ...tipoEyebrow(geo, subPt, pal.muted), marginTop: mm(8) }}>{sub}</div>
       <div style={{ ...tipoEyebrow(geo, microPt, pal.faint), marginTop: mm(5) }}>{layers}</div>
@@ -164,139 +176,109 @@ function Caption({
   )
 }
 
-/* ── the Perceptrón magnifier ─────────────────────────────────────────────────── */
+/* ── the Perceptrón: a to-scale speck on the ground + a magnified detail above ───── */
 
 function PerceptronCallout({
   geo,
   pal,
   cxMm,
-  trueSideMm,
-  cy,
-  captionY,
+  groundY,
+  cartelaY,
   H,
   W,
   namePt,
-  subPt,
   microPt,
 }: {
   geo: PrintGeometry
   pal: TipoPalette
   cxMm: number
-  trueSideMm: number
-  cy: number
-  captionY: number
+  groundY: number
+  cartelaY: number
   H: number
   W: number
   namePt: number
-  subPt: number
   microPt: number
 }) {
   const { mm } = geo
-  const dotR = mm(H * 0.0035)
-  const boxWmm = W * 0.038
+  const trueSideMm = modelSideMm(512) // ≈ 0.8 mm at the shared scale
+  const dotR = Math.max(2, mm(H * 0.004))
+  const boxWmm = W * 0.03
   const boxHmm = boxWmm / 2
   const boxLeft = cxMm - boxWmm / 2
-  const boxTop = cy - boxHmm / 2
+  const insetBottom = groundY - H * 0.165 // floats above the ground, tethered to the speck
+  const insetTop = insetBottom - boxHmm
   const mag = Math.round(boxWmm / Math.max(trueSideMm, 1e-6) / 50) * 50
+  const leader = Math.max(1, mm(0.5))
 
   return (
     <>
-      {/* locator dot at the true (to-scale) position */}
-      <div style={{ position: 'absolute', left: mm(cxMm) - dotR, top: mm(cy) - dotR, width: dotR * 2, height: dotR * 2, borderRadius: dotR, background: pal.accent }} />
-      {/* dashed leader from the speck up to the magnifier */}
-      <div style={{ position: 'absolute', left: mm(cxMm) - Math.max(1, mm(0.4)) / 2, top: mm(boxTop + boxHmm), width: 0, height: mm(cy - dotR - (boxTop + boxHmm)), borderLeft: `${Math.max(1, mm(0.4))}px dashed ${pal.muted}` }} />
+      {/* the single brand-blue accent: the to-scale speck on the ground line */}
+      <div style={{ position: 'absolute', left: mm(cxMm) - dotR, top: mm(groundY) - dotR, width: dotR * 2, height: dotR * 2, borderRadius: dotR, background: pal.accent }} />
+      {/* dashed leader rising from the speck up to the magnified detail */}
+      <div style={{ position: 'absolute', left: mm(cxMm) - leader / 2, top: mm(insetBottom), width: 0, height: mm(groundY - insetBottom) - dotR, borderLeft: `${leader}px dashed ${pal.muted}` }} />
 
-      <div style={{ position: 'absolute', left: mm(boxLeft), top: mm(boxTop - H * 0.04), whiteSpace: 'nowrap' }}>
-        <span style={tipoEyebrow(geo, microPt, pal.muted)}>Detalle · ×{mag}</span>
+      {/* the "Detalle · ×N" note above the inset */}
+      <div style={{ position: 'absolute', left: mm(boxLeft), top: mm(insetTop - H * 0.038), whiteSpace: 'nowrap' }}>
+        <span style={tipoEyebrow(geo, microPt, pal.muted)}>Detalle · ×{mag} · ampliado</span>
       </div>
       {/* a magnified single layer of 512 weights, framed as an inset */}
-      <div style={{ position: 'absolute', left: mm(boxLeft), top: mm(boxTop), width: mm(boxWmm), height: mm(boxHmm), border: `${Math.max(1, mm(0.6))}px solid ${pal.ink}` }}>
+      <div style={{ position: 'absolute', left: mm(boxLeft), top: mm(insetTop), width: mm(boxWmm), height: mm(boxHmm), border: `${Math.max(1, mm(0.6))}px solid ${pal.ink}` }}>
         <MiniMatrix geo={geo} pal={pal} wPx={mm(boxWmm)} hPx={mm(boxHmm)} cols={32} rows={16} />
       </div>
-      {/* caption on the common label line */}
-      <div style={{ position: 'absolute', left: mm(cxMm), top: mm(captionY), transform: 'translateX(-50%)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+
+      {/* caption on the common cartela line */}
+      <div style={{ position: 'absolute', left: mm(cxMm), top: mm(cartelaY), transform: 'translateX(-50%)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+        <div style={{ ...tipoEyebrow(geo, microPt, pal.faint), marginBottom: mm(7) }}>01</div>
         <div style={tipoH4(geo, namePt, pal)}>Perceptrón</div>
-        <div style={{ ...tipoEyebrow(geo, subPt, pal.muted), marginTop: mm(8) }}>1958 · 512 parámetros</div>
+        <div style={{ ...tipoEyebrow(geo, microPt, pal.muted), marginTop: mm(8) }}>1958 · 512 parámetros</div>
         <div style={{ ...tipoEyebrow(geo, microPt, pal.faint), marginTop: mm(5) }}>1 capa · ≈ 0,8 mm a escala</div>
       </div>
     </>
   )
 }
 
-/* ── the GPT-4 cross-wall cue ──────────────────────────────────────────────────── */
+/* ── the GPT-4 cue: pinned hard right, it announces the next wall (a small black arrow) ── */
 
 function Gpt4Cue({
   geo,
   pal,
   W,
-  marginX,
-  cy,
-  captionY,
+  midY,
   H,
-  namePt,
-  subPt,
+  h2Pt,
+  eyebrowPt,
   microPt,
   factor,
   params,
+  layers,
 }: {
   geo: PrintGeometry
   pal: TipoPalette
   W: number
-  marginX: number
-  cy: number
-  captionY: number
+  midY: number
   H: number
-  namePt: number
-  subPt: number
+  h2Pt: number
+  eyebrowPt: number
   microPt: number
   factor: string
   params: string
+  layers: number
 }) {
   const { mm } = geo
-  // GPT-4 reads as a fourth column on the same grid as the three model squares:
-  // its name heads the column, the magnitude is the wall's thesis (área ∝ parámetros),
-  // and the connector exits the wall on the model centre-line — GPT-4 is so vast it
-  // leaves this wall and *becomes* the next one (8-S-1, the monolith).
-  const colWmm = W * 0.22
-  const rightMm = W - marginX // the column's right edge rides the safe margin
-  const colLeft = rightMm - colWmm
-  const magPt = namePt * 0.72
+  const arrowMm = H * 0.07 // small & disciplined, never a banner
 
-  // connector: from the column's left edge, sweeping right past the safe margin
-  // toward the wall edge — a wayfinding arrow to the companion wall.
-  const arrowStartMm = colLeft + colWmm * 0.12
-  const arrowEndMm = W - marginX * 0.22
-  const arrowWpx = mm(arrowEndMm - arrowStartMm)
-  const headH = mm(H * 0.05)
-  const stroke = Math.max(1, mm(1.3))
-
+  // One right-anchored unit pushed hard toward the edge (much tighter than the left
+  // margin): the next model named, then the small black arrow as the rightmost mark,
+  // pointing off the edge — it announces the next wall.
   return (
-    <>
-      {/* the subject — a fourth column header, aligned above the model centre-line */}
-      <div style={{ position: 'absolute', left: mm(colLeft), top: mm(cy - H * 0.215), width: mm(colWmm), textAlign: 'right' }}>
-        <div style={tipoEyebrow(geo, subPt, pal.muted)}>El siguiente</div>
-        <div style={{ ...tipoH2(geo, namePt, pal), marginTop: mm(H * 0.012) }}>GPT-4</div>
+    <div style={{ position: 'absolute', right: mm(W * 0.022), top: mm(midY), transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: mm(W * 0.012), whiteSpace: 'nowrap' }}>
+      <div style={{ textAlign: 'right' }}>
+        <span style={tipoEyebrow(geo, eyebrowPt, pal.muted)}>El siguiente</span>
+        <div style={{ ...tipoH2(geo, h2Pt, pal), marginTop: mm(H * 0.012) }}>GPT-4</div>
+        <div style={{ ...softLine(geo, microPt, pal.muted), marginTop: mm(H * 0.02) }}>≈ {params} de parámetros · {layers} capas</div>
+        <div style={{ ...softLine(geo, microPt, pal.muted), marginTop: mm(H * 0.006) }}>{factor} GPT-2 · no cabe a escala en esta pared</div>
       </div>
-
-      {/* the magnitude — the killer number, carried in the single disciplined accent */}
-      <div style={{ position: 'absolute', left: mm(colLeft), top: mm(cy - H * 0.095), width: mm(colWmm), textAlign: 'right', whiteSpace: 'nowrap' }}>
-        <span style={{ ...tipoH3(geo, magPt, pal), color: pal.accent }}>{factor}</span>
-        <span style={{ ...tipoEyebrow(geo, subPt, pal.muted), marginLeft: mm(W * 0.006) }}>GPT-2</span>
-      </div>
-
-      {/* connector on the model centre-line, exiting the wall toward 8-S-1 */}
-      <div style={{ position: 'absolute', left: mm(arrowStartMm), top: mm(cy) - headH / 2, width: arrowWpx, height: headH }}>
-        <svg width={arrowWpx} height={headH} viewBox={`0 0 ${arrowWpx} ${headH}`} style={{ overflow: 'visible' }}>
-          <line x1={0} y1={headH / 2} x2={arrowWpx - headH * 0.5} y2={headH / 2} stroke={pal.accent} strokeWidth={stroke} />
-          <polyline points={`${arrowWpx - headH * 0.7},${headH * 0.16} ${arrowWpx},${headH / 2} ${arrowWpx - headH * 0.7},${headH * 0.84}`} fill="none" stroke={pal.accent} strokeWidth={stroke} strokeLinejoin="round" strokeLinecap="round" />
-        </svg>
-      </div>
-
-      {/* honest detail on the common museum-label line, with the other captions */}
-      <div style={{ position: 'absolute', left: mm(colLeft), top: mm(captionY), width: mm(colWmm), textAlign: 'right' }}>
-        <div style={{ ...tipoEyebrow(geo, subPt, pal.muted), textTransform: 'none', letterSpacing: 0, fontWeight: 400, lineHeight: 1.4 }}>No cabe a escala en esta pared.</div>
-        <div style={{ ...tipoEyebrow(geo, microPt, pal.faint), marginTop: mm(6) }}>≈ {params} de parámetros</div>
-      </div>
-    </>
+      <HugeiconsIcon icon={ArrowRight02Icon} size={mm(arrowMm)} color={pal.ink} strokeWidth={1} />
+    </div>
   )
 }

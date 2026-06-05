@@ -118,9 +118,9 @@ const DEFAULT_ERAS: Era[] = [
     model: 'GPT Image 2',
     now: true,
     images: [
-      { subject: 'escena coral moderna, composición barroca fotorrealista (GPT Image 2)', src: `${A}/2026-hero.png` },
+      { subject: 'interior de brasserie a hora dorada, composición con capas y reflejos (GPT Image 2)', src: `${A}/2026-hero.png` },
       { subject: 'escena callejera compleja (GPT Image 2)', src: `${A}/2026-b.png` },
-      { subject: 'bodegón fotorrealista a la manera holandesa (GPT Image 2)', src: `${A}/2026-c.png` },
+      { subject: 'manos de relojero reparando un movimiento mecánico, macro (GPT Image 2)', src: `${A}/2026-c.png` },
     ],
   },
 ]

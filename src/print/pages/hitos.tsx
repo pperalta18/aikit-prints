@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import { Img, staticFile, getRemotionEnvironment } from 'remotion'
 import type { PrintPageProps } from '../types'
-import { PrintFonts, PRINT_DISPLAY_HAIR, PRINT_TEXT_FONT } from '../printFonts'
+import { PrintFonts, PRINT_DISPLAY, PRINT_TEXT_FONT } from '../printFonts'
 import { eventTypeScale } from './tipografia'
 import { tipoPalette, type TipoPalette } from './tipografia-kit'
 
@@ -47,20 +47,22 @@ type Props = {
   rows?: number
   /** Wall ground behind the grid. Default white. */
   ground?: string
+  /** Lateral (left/right) margin in mm; the grid floats on the ground, top/bottom stay full-bleed. Default W * 0.025. */
+  sideMarginMm?: number
 }
 
 /** The 12 hitos — defaults; the doc can override via props. */
 const DEFAULT_ITEMS: Item[] = [
   {
     logro: 'Resolvió el plegamiento de las proteínas',
-    desc: 'Predijo la estructura tridimensional de casi todas las proteínas conocidas —un problema abierto durante medio siglo— y liberó más de 200 millones de modelos. Aceleró la biología y el diseño de fármacos en todo el mundo, y mereció el Nobel de Química 2024.',
+    desc: 'Predijo la estructura tridimensional de casi todas las proteínas conocidas (un problema abierto durante medio siglo) y liberó más de 200 millones de modelos. Aceleró la biología y el diseño de fármacos en todo el mundo, y mereció el Nobel de Química 2024.',
     field: 'Biología',
     meta: 'AlphaFold · Google DeepMind · 2024',
     src: `${ASSET}/alphafold.png`,
   },
   {
     logro: 'Venció al campeón mundial de Go',
-    desc: 'Derrotó 4–1 a Lee Sedol en un juego que se creía vetado a las máquinas por exigir intuición. Su inesperado «movimiento 37» asombró a los maestros y abrió la era moderna del aprendizaje por refuerzo.',
+    desc: 'Derrotó 4-1 a Lee Sedol en un juego que se creía vetado a las máquinas por exigir intuición. Su inesperado «movimiento 37» asombró a los maestros y abrió la era moderna del aprendizaje por refuerzo.',
     field: 'Juegos',
     meta: 'AlphaGo · Google DeepMind · 2016',
     src: `${ASSET}/alphago.png`,
@@ -74,7 +76,7 @@ const DEFAULT_ITEMS: Item[] = [
   },
   {
     logro: 'Descubrió 2,2 millones de materiales nuevos',
-    desc: 'Predijo la estabilidad de millones de cristales inorgánicos y halló 380.000 estructuras estables —el equivalente a casi 800 años de investigación experimental—, abriendo el camino a nuevas baterías, superconductores y semiconductores.',
+    desc: 'Predijo la estabilidad de millones de cristales inorgánicos y halló 380.000 estructuras estables (el equivalente a casi 800 años de investigación experimental), abriendo el camino a nuevas baterías, superconductores y semiconductores.',
     field: 'Materiales',
     meta: 'GNoME · Google DeepMind · 2023',
     src: `${ASSET}/gnome.png`,
@@ -101,7 +103,7 @@ const DEFAULT_ITEMS: Item[] = [
     src: `${ASSET}/alphatensor.png`,
   },
   {
-    logro: 'Primer hallazgo matemático nuevo de un LLM',
+    logro: 'Primer hallazgo matemático nuevo de una IA',
     desc: 'Acopló un gran modelo de lenguaje a un evaluador automático para encontrar soluciones inéditas a problemas abiertos de matemáticas y algoritmos: el primer conocimiento genuinamente nuevo y verificable descubierto por un modelo de lenguaje.',
     field: 'Matemáticas',
     meta: 'FunSearch · Google DeepMind · 2023',
@@ -109,7 +111,7 @@ const DEFAULT_ITEMS: Item[] = [
   },
   {
     logro: 'Clasificó 71 millones de mutaciones humanas',
-    desc: 'Estimó el efecto de todas las mutaciones que alteran una proteína humana —71 millones en total—, clasificando el 89% como benignas o probablemente patógenas y entregando a la medicina un mapa para descifrar enfermedades genéticas raras.',
+    desc: 'Estimó el efecto de todas las mutaciones que alteran una proteína humana (71 millones en total), clasificando el 89% como benignas o probablemente patógenas y entregando a la medicina un mapa para descifrar enfermedades genéticas raras.',
     field: 'Genómica',
     meta: 'AlphaMissense · Google DeepMind · 2023',
     src: `${ASSET}/alphamissense.png`,
@@ -130,7 +132,7 @@ const DEFAULT_ITEMS: Item[] = [
   },
   {
     logro: 'Halló un planeta oculto en el ruido',
-    desc: 'Una red neuronal reanalizó datos del telescopio Kepler y detectó la débil señal de Kepler-90i, el octavo planeta de una estrella lejana —el primer sistema solar que iguala al nuestro en número de planetas—, invisible para los métodos clásicos.',
+    desc: 'Una red neuronal reanalizó datos del telescopio Kepler y detectó la débil señal de Kepler-90i, el octavo planeta de una estrella lejana (el primer sistema solar que iguala al nuestro en número de planetas), invisible para los métodos clásicos.',
     field: 'Astronomía',
     meta: 'NASA · Google · 2017',
     src: `${ASSET}/kepler.png`,
@@ -157,10 +159,12 @@ export function Hitos({ doc, geo }: PrintPageProps) {
   const descPt = scale.bodyPt
   const metaPt = scale.eyebrowPt
 
-  /* ── full-bleed grid: cells tile the whole wall, edge to edge ───────────────── */
-  const cellW = W / cols
+  /* ── grid: full-bleed top/bottom, white lateral margins on the left/right ─────── */
+  const sideMargin = typeof p.sideMarginMm === 'number' && p.sideMarginMm >= 0 ? p.sideMarginMm : W * 0.025
+  const gridW = W - 2 * sideMargin
+  const cellW = gridW / cols
   const cellH = H / rows
-  const cellX = (c: number) => c * cellW
+  const cellX = (c: number) => sideMargin + c * cellW
   const cellY = (r: number) => r * cellH
   const seam = Math.max(1, mm(0.8)) // hairline grid seam
 
@@ -195,7 +199,7 @@ export function Hitos({ doc, geo }: PrintPageProps) {
           <div key={`vseam-${k}`} style={{ ...at(cellX(k + 1) - 0, 0), width: seam, height: mm(H), background: pal.hairline, transform: 'translateX(-50%)' }} />
         ))}
         {Array.from({ length: rows - 1 }, (_, k) => (
-          <div key={`hseam-${k}`} style={{ ...at(0, cellY(k + 1)), width: mm(W), height: seam, background: pal.hairline, transform: 'translateY(-50%)' }} />
+          <div key={`hseam-${k}`} style={{ ...at(sideMargin, cellY(k + 1)), width: mm(gridW), height: seam, background: pal.hairline, transform: 'translateY(-50%)' }} />
         ))}
       </div>
     </>
@@ -231,34 +235,20 @@ function Cell({
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
       <div style={{ position: 'absolute', left: mm(padX), top: mm(padY), right: mm(padX), bottom: mm(padY), display: 'flex', flexDirection: 'column' }}>
-        {/* header row: a small trophy + the field tag (the single accent) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: mm(cellW * 0.05) }}>
-          <div style={{ width: mm(thumb), height: mm(thumb), flex: '0 0 auto', position: 'relative', overflow: 'hidden' }}>
-            <Trophy item={item} />
-          </div>
-          <div
-            style={{
-              fontFamily: PRINT_TEXT_FONT,
-              fontSize: pt(metaPt),
-              fontWeight: 600,
-              letterSpacing: pt(metaPt * 0.16),
-              textTransform: 'uppercase',
-              color: pal.accent,
-            }}
-          >
-            {item.field}
-          </div>
+        {/* header: a small trophy (top-left) */}
+        <div style={{ width: mm(thumb), height: mm(thumb), position: 'relative', overflow: 'hidden' }}>
+          <Trophy item={item} />
         </div>
 
         {/* logro — the cell label: what the AI achieved (reduced size) */}
         <div
           style={{
             marginTop: mm(cellH * 0.03),
-            fontFamily: PRINT_DISPLAY_HAIR,
+            fontFamily: PRINT_DISPLAY,
             fontSize: pt(logroPt),
             fontWeight: 400,
             lineHeight: 1.02,
-            letterSpacing: pt(-logroPt * 0.016),
+            letterSpacing: pt(-logroPt * 0.012),
             color: pal.ink,
           }}
         >
@@ -283,23 +273,48 @@ function Cell({
         {/* spacer pushes the credit line to the bottom of the cell */}
         <div style={{ flex: 1, minHeight: mm(cellH * 0.02) }} />
 
-        {/* credit line — system / model · org · year (hairline above, like a spec line) */}
+        {/* footer — hairline, then credit line (left) + field tag (right, the single accent) */}
         <div style={{ height: Math.max(1, mm(0.8)), background: pal.hairline, width: '100%' }} />
         <div
           style={{
             marginTop: mm(cellH * 0.016),
-            fontFamily: PRINT_TEXT_FONT,
-            fontSize: pt(metaPt),
-            fontWeight: 600,
-            letterSpacing: pt(metaPt * 0.12),
-            textTransform: 'uppercase',
-            color: pal.muted,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            display: 'flex',
+            alignItems: 'baseline',
+            justifyContent: 'space-between',
+            gap: mm(cellW * 0.05),
           }}
         >
-          {item.meta}
+          <div
+            style={{
+              fontFamily: PRINT_TEXT_FONT,
+              fontSize: pt(metaPt),
+              fontWeight: 600,
+              letterSpacing: pt(metaPt * 0.12),
+              textTransform: 'uppercase',
+              color: pal.muted,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              minWidth: 0,
+            }}
+          >
+            {item.meta}
+          </div>
+          <div
+            style={{
+              fontFamily: PRINT_TEXT_FONT,
+              fontSize: pt(metaPt),
+              fontWeight: 600,
+              letterSpacing: pt(metaPt * 0.16),
+              textTransform: 'uppercase',
+              color: pal.accent,
+              whiteSpace: 'nowrap',
+              flex: '0 0 auto',
+              textAlign: 'right',
+            }}
+          >
+            {item.field}
+          </div>
         </div>
       </div>
     </div>
