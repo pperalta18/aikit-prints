@@ -42,8 +42,11 @@ describe('coverage', () => {
       const fs = forWall(w.registry!.invId)
       for (const side of [1, -1] as const) {
         const faceWidth = sumWidth(fs.filter((f) => f.side === side))
-        // Cuts have zero gap, so the panels reconstruct the wall run within a sliver.
-        expect(Math.abs(faceWidth - w.length)).toBeLessThan(0.5)
+        // Cuts have zero gap, so panels reconstruct the wall run within a sliver —
+        // minus any corner inset where a wall stands on the face (e.g. the nave end
+        // wall over wall 2's INVERSIÓN corner pulls that bay 0.5 m off the end).
+        expect(faceWidth).toBeLessThanOrEqual(w.length + 0.01)
+        expect(faceWidth).toBeGreaterThan(w.length - 0.6)
       }
     }
   })
@@ -75,9 +78,10 @@ describe('nave zone projection', () => {
     const naveBays = forWall(2).filter((f) => f.zone)
     expect(naveBays.map((f) => f.zone)).toEqual([...NAVE_ZONE_ORDER])
     const widths = naveBays.map((f) => f.widthM)
-    // Cut at the real divisoria projections → 6.75 / 7 / 8.75, no longer equal thirds.
-    expect(widths).toEqual([6.75, 7, 8.75])
-    expect(sumWidth(naveBays)).toBeCloseTo(findWallByInvId(2)!.length, 5)
+    // Divisoria projections → 6.75 / 7, and INVERSIÓN pulled 0.5 m off the back-wall
+    // corner (it stands on this face for the last 0.5 m) → 8.25, not 8.75.
+    expect(widths).toEqual([6.75, 7, 8.25])
+    expect(sumWidth(naveBays)).toBeCloseTo(findWallByInvId(2)!.length - 0.5, 5)
   })
 
   it('cuts wall 11 nave face at the divisoria positions (unequal bays)', () => {

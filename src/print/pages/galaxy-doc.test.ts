@@ -65,7 +65,7 @@ describe('galaxy — registration & contract', () => {
 describe('galaxy — physical fit', () => {
   it('panels carry their wall widths and ride within the 2.5 m wall height', () => {
     expect(DOCS.back.dimensions.trimWidthMm).toBe(9500)
-    expect(DOCS.left.dimensions.trimWidthMm).toBe(8750)
+    expect(DOCS.left.dimensions.trimWidthMm).toBe(8250)
     expect(DOCS.right.dimensions.trimWidthMm).toBe(5750)
     for (const doc of Object.values(DOCS)) expect(doc.dimensions.trimHeightMm).toBeLessThanOrEqual(2500)
   })
@@ -127,9 +127,9 @@ describe('galaxy — renders real content (names only, nothing clipped)', () => 
   it('the left wall has half galaxy + the Artificial Analysis frontier chart', () => {
     const left = html(DOCS.left)
     expect(left).toContain('Café') // galaxy half
-    expect(left).toContain('50%') // ring discs
+    expect(left).toContain('<ellipse') // orbital rings
     expect(left).toContain('Inteligencia de los modelos') // chart title
-    expect(left).toContain('Artificial Analysis') // chart source / watermark
+    expect(left).toContain('ARTIFICIAL ANALYSIS') // chart attribution (eyebrow)
     expect(left).toContain('FECHA DE LANZAMIENTO') // x axis
     expect(left).toContain('OpenAI') // provider legend
     expect(left).toContain('Anthropic') // provider legend
@@ -138,6 +138,6 @@ describe('galaxy — renders real content (names only, nothing clipped)', () => 
   it('the right wall renders its galaxy half by name (chart half reserved)', () => {
     const right = html(DOCS.right)
     expect(right).toContain('Disney')
-    expect(right).toContain('50%')
+    expect(right).toContain('<ellipse')
   })
 })

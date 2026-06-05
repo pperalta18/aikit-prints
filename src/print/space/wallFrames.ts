@@ -176,6 +176,23 @@ export function computeWallFrames(opts: WallFramesOptions): WallFrame[] {
     const naveSide = naveFacingSide(wall, allWalls)
 
     for (const side of [1, -1] as const) {
+      // 0 — corner inset: a perpendicular wall standing ON this face AND covering an
+      //     END (e.g. the nave end wall over a side wall's corner) occludes that strip
+      //     in 3D, so pull the framable run in to the occluder's near edge — the panel
+      //     must not slide behind the corner return. (Flush corners give a 0 inset.)
+      let effStart = runStart
+      let effEnd = runEnd
+      for (const p of allWalls) {
+        if (p.id === wall.id) continue
+        if (p.normalAxis === wall.normalAxis) continue
+        if (touchedFace(wall, p) !== side) continue
+        const at = runValueOf(wall, { cx: p.cx, cz: p.cz })
+        const pLo = at - p.thickness / 2
+        const pHi = at + p.thickness / 2
+        if (pLo <= runStart + TOUCH_TOL_M && pHi > runStart + TOUCH_TOL_M && pHi < runEnd) effStart = Math.max(effStart, pHi)
+        if (pHi >= runEnd - TOUCH_TOL_M && pLo < runEnd - TOUCH_TOL_M && pLo > runStart) effEnd = Math.min(effEnd, pLo)
+      }
+
       // 1 — abutment cuts: perpendicular walls whose end touches THIS face.
       const cuts: number[] = []
       for (const p of allWalls) {
@@ -183,17 +200,17 @@ export function computeWallFrames(opts: WallFramesOptions): WallFrame[] {
         if (p.normalAxis === wall.normalAxis) continue // not perpendicular
         if (touchedFace(wall, p) !== side) continue
         const at = runValueOf(wall, { cx: p.cx, cz: p.cz })
-        if (at > runStart + FRAME_END_MARGIN_M && at < runEnd - FRAME_END_MARGIN_M) cuts.push(at)
+        if (at > effStart + FRAME_END_MARGIN_M && at < effEnd - FRAME_END_MARGIN_M) cuts.push(at)
       }
       // 2 — nave zone projection on the nave-facing face of walls 2 & 11.
       const isNaveFace = naveSide != null && side === naveSide
       if (isNaveFace) {
         for (const at of naveProjectionCuts(wall, allWalls)) {
-          if (at > runStart + FRAME_END_MARGIN_M && at < runEnd - FRAME_END_MARGIN_M) cuts.push(at)
+          if (at > effStart + FRAME_END_MARGIN_M && at < effEnd - FRAME_END_MARGIN_M) cuts.push(at)
         }
       }
 
-      const bounds = [runStart, ...dedupeCuts(cuts), runEnd]
+      const bounds = [effStart, ...dedupeCuts(cuts), effEnd]
       const tag = sideTag(wall, side)
       const segments: { lo: number; hi: number }[] = []
       for (let i = 0; i < bounds.length - 1; i++) {
