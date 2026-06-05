@@ -29,7 +29,13 @@ function loadWalls() {
   const layout = JSON.parse(readFileSync(join(ROOT, 'src/print/space/event-layout.json'), 'utf8'))
   const offX = -layout.spaceWidth / 2
   const offZ = -layout.spaceDepth / 2
-  return layout.elements
+  // Single source of truth for the uniform wall height: the layout root `wallHeight`
+  // (the venue's walls are 3 m). Falls back to 2.5 m only if the layout carries none.
+  const wallHeight =
+    typeof layout.wallHeight === 'number' && Number.isFinite(layout.wallHeight) && layout.wallHeight > 0
+      ? layout.wallHeight
+      : 2.5
+  const walls = layout.elements
     .filter((e) => e.type === 'wall')
     .map((e, i) => {
       const cx = e.x + e.w / 2 + offX
@@ -47,7 +53,7 @@ function loadWalls() {
         normalAxis,
         length: normalAxis === 'x' ? sz : sx,
         thickness: normalAxis === 'x' ? sx : sz,
-        height: explicit ? e.alturaM : 2.5,
+        height: explicit ? e.alturaM : wallHeight,
         hasExplicitHeight: explicit,
         registry:
           e.invId == null
@@ -55,6 +61,7 @@ function loadWalls() {
             : { invId: e.invId, sala: e.sala ?? '', tema: e.tema ?? '', rol: e.rol ?? '', track: e.track ?? 'C/I', research: e.research ?? false, estado: e.estado ?? 'pend' },
       }
     })
+  return { walls, wallHeight }
 }
 
 /** A frame id → a filesystem/URL-safe doc id, e.g. `2-E-TEXT+CODE` → `marco-2-e-text-code`. */
@@ -95,10 +102,10 @@ function docFor(frame, wallsByInv) {
 }
 
 function main() {
-  const walls = loadWalls()
+  const { walls, wallHeight } = loadWalls()
   const registered = walls.filter((w) => w.registry).sort((a, b) => a.registry.invId - b.registry.invId)
   const wallsByInv = new Map(registered.map((w) => [w.registry.invId, w]))
-  const frames = computeWallFrames({ walls: registered, allWalls: walls })
+  const frames = computeWallFrames({ walls: registered, allWalls: walls, fallbackHeight: wallHeight })
 
   // Drop any previously-generated frame docs so removed segments don't linger.
   let removed = 0

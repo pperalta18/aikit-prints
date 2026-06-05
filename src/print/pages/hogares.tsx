@@ -92,7 +92,15 @@ export function Hogares({ doc, geo }: PrintPageProps) {
 
   const pal: TipoPalette = tipoPalette(doc.theme)
   const W = geo.dims.trimWidthMm
-  const H = geo.dims.trimHeightMm
+  // Hybrid-museográfico vertical fit: compose the hung row against the tuned reference
+  // height and centre that stage on the eye band, so a taller wall (3 m) gains balanced
+  // air instead of leaving the row floating over a big bottom margin. The full-bleed
+  // cream "history" ground (below) fills the real wall height independently. Identity
+  // at REF_H — the 2.5 m design is unchanged.
+  const REF_H = 2500
+  const Hfull = geo.dims.trimHeightMm
+  const H = Math.min(Hfull, REF_H)
+  const stageTopPx = geo.bleedPx + (geo.trimHeightPx - geo.mm(H)) / 2
   const N = items.length
 
   // Caption type — sized to the room reading distance (small chord so the captions
@@ -162,8 +170,8 @@ export function Hogares({ doc, geo }: PrintPageProps) {
         />
       ) : null}
 
-      {/* trim layer — everything positioned in mm from the trim origin */}
-      <div style={{ position: 'absolute', left: geo.bleedPx, top: geo.bleedPx, width: geo.trimWidthPx, height: geo.trimHeightPx }}>
+      {/* trim layer — the composed stage, centred on the eye band (see REF_H above) */}
+      <div style={{ position: 'absolute', left: geo.bleedPx, top: stageTopPx, width: geo.trimWidthPx, height: geo.mm(H) }}>
 
         {/* ── quiet header eyebrow, centred ──────────────────────────────────── */}
         {eyebrow ? (

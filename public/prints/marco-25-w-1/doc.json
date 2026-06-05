@@ -6,7 +6,7 @@
   "theme": "light",
   "dimensions": {
     "trimWidthMm": 2000,
-    "trimHeightMm": 2500,
+    "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
     "cropMarks": false

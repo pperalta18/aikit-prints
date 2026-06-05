@@ -85,7 +85,7 @@ const DEFAULT_ERAS: Era[] = [
       { subject: 'gesto con manos deformes, dedos de más y fundidos (SD 1.5)', src: `${A}/2022-g1.png` },
       { subject: 'multitud en una fiesta, caras y manos derretidas (SD 1.5)', src: `${A}/2022-g2.png` },
       { subject: 'bodegón con frutas deformes y colores imposibles, derretido (SD 1.5)', src: `${A}/2022-g3.png` },
-      { subject: 'calle de neón con texto ininteligible (SD 1.5)', src: `${A}/2022-g4.png` },
+      { subject: 'escaparate de librería: rótulos y lomos con texto ilegible (SD 1.5)', src: `${A}/2022-g4.png` },
       { subject: 'intento de gran composición renacentista, figuras sin rostro (SD 1.5)', src: `${A}/2022-b.png` },
     ],
   },
@@ -118,9 +118,9 @@ const DEFAULT_ERAS: Era[] = [
     model: 'GPT Image 2',
     now: true,
     images: [
-      { subject: 'interior de brasserie a hora dorada, composición con capas y reflejos (GPT Image 2)', src: `${A}/2026-hero.png` },
+      { subject: 'composición onírica: planos, bocetos y maquetas flotando en espiral (GPT Image 2)', src: `${A}/2026-hero.png` },
       { subject: 'escena callejera compleja (GPT Image 2)', src: `${A}/2026-b.png` },
-      { subject: 'manos de relojero reparando un movimiento mecánico, macro (GPT Image 2)', src: `${A}/2026-c.png` },
+      { subject: 'retrato editorial hiperrealista, primer plano con textura de piel real (GPT Image 2)', src: `${A}/2026-c.png` },
     ],
   },
 ]

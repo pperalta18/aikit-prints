@@ -36,8 +36,8 @@ export const NAVE_ZONE_ORDER = ['IMAGE', 'TEXT+CODE', 'INVERSIÓN'] as const
 export const FRAME_END_MARGIN_M = 0.4
 /** Segments shorter than this are dropped (float slivers at junctions). */
 export const FRAME_MIN_SEGMENT_M = 0.3
-/** Fallback height for a wall without measured `alturaM`. */
-export const FRAME_FALLBACK_HEIGHT_M = 2.5
+/** Fallback height for a wall without measured `alturaM` (venue walls are 3 m). */
+export const FRAME_FALLBACK_HEIGHT_M = 3.0
 /** How close two coordinates must be to count as touching / coincident (m). */
 const TOUCH_TOL_M = 0.05
 
@@ -152,7 +152,7 @@ export type WallFramesOptions = {
   walls: Wall[]
   /** Every wall in the layout, used for abutment + nave-divisoria lookup. */
   allWalls: Wall[]
-  /** Fallback height for walls without measured `alturaM` (default 2.5 m). */
+  /** Fallback height for walls without measured `alturaM` (default 3 m). */
   fallbackHeight?: number
 }
 

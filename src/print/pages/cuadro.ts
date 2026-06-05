@@ -37,14 +37,23 @@ export type CuadroLayoutOpts = {
   gapMm: number
   /** Which side the painting hangs on. Default 'left' (reads painting → label). */
   placement?: CuadroPlacement
+  /**
+   * Hang **two** reliefs on the wall instead of one. When set, `placement`/`gapMm`
+   * are ignored and the wall is laid out as a symmetric diptych: the two paintings
+   * are centred on the wall's quarter-points and the cartela floats dead-centre
+   * between them (see {@link layoutCuadro}). Used by the wide 8-N-1 feature wall.
+   */
+  secondPainting?: boolean
 }
 
 export type CuadroLayout = {
   /** The framed painting box. */
   painting: CuadroBox
+  /** The second painting box — only present when `secondPainting` was requested. */
+  painting2?: CuadroBox
   /** The cartela (label) column box — full painting height; text centres inside. */
   cartela: CuadroBox
-  /** The whole [painting · gap · cartela] group, horizontally centred on the wall. */
+  /** The whole hung group, horizontally centred on the wall. */
   group: { x: number; width: number }
 }
 
@@ -60,9 +69,14 @@ function pos(name: string, v: number): number {
  *
  * The painting is sized to a fraction of the wall height and its true aspect;
  * the cartela rides beside it at the same height. The [painting · gap · cartela]
- * group is centred horizontally so equal gallery air frames it. Deterministic;
- * throws on non-positive inputs, a fraction outside (0, 1], an unknown placement,
- * or a group too wide to fit the wall.
+ * group is centred horizontally so equal gallery air frames it.
+ *
+ * With `secondPainting`, the wall becomes a symmetric **diptych**: two reliefs of
+ * the same size centred on the wall's quarter-points (so they spread evenly across
+ * the run) with the cartela floating dead-centre between them; `placement`/`gapMm`
+ * are then ignored. Deterministic; throws on non-positive inputs, a fraction
+ * outside (0, 1], an unknown placement, a group too wide to fit the wall, or a
+ * diptych whose paintings overflow / collide with the centred cartela.
  */
 export function layoutCuadro(opts: CuadroLayoutOpts): CuadroLayout {
   const wallWidthMm = pos('wallWidthMm', opts.wallWidthMm)
@@ -81,6 +95,31 @@ export function layoutCuadro(opts: CuadroLayoutOpts): CuadroLayout {
 
   const paintingH = wallHeightMm * frac
   const paintingW = paintingH * paintingAspect
+  const y = (wallHeightMm - paintingH) / 2
+
+  // ── diptych: two reliefs, evenly distributed, cartela centred between them ──
+  // The wall carries two works hung symmetrically about its centre: each painting
+  // is centred on a wall quarter-point (¼ and ¾ of the run) so they read as evenly
+  // spread across the run, and the museum label floats dead-centre between them.
+  if (opts.secondPainting) {
+    const cartelaX = (wallWidthMm - cartelaWidthMm) / 2
+    const p1x = wallWidthMm * 0.25 - paintingW / 2
+    const p2x = wallWidthMm * 0.75 - paintingW / 2
+    if (p1x < 0 || p2x + paintingW > wallWidthMm) {
+      throw new Error(`layoutCuadro: diptych paintings (${paintingW.toFixed(1)} mm) overflow the wall (${wallWidthMm} mm)`)
+    }
+    // The centred cartela must not collide with either relief.
+    if (p1x + paintingW > cartelaX || cartelaX + cartelaWidthMm > p2x) {
+      throw new Error(`layoutCuadro: diptych cartela overlaps a painting — widen the wall or narrow the cartela`)
+    }
+    return {
+      painting: { x: p1x, y, width: paintingW, height: paintingH },
+      painting2: { x: p2x, y, width: paintingW, height: paintingH },
+      cartela: { x: cartelaX, y, width: cartelaWidthMm, height: paintingH },
+      group: { x: p1x, width: p2x + paintingW - p1x },
+    }
+  }
+
   const groupW = paintingW + gapMm + cartelaWidthMm
   if (groupW > wallWidthMm) {
     throw new Error(
@@ -90,7 +129,6 @@ export function layoutCuadro(opts: CuadroLayoutOpts): CuadroLayout {
   }
 
   const groupX = (wallWidthMm - groupW) / 2
-  const y = (wallHeightMm - paintingH) / 2
 
   const paintingX = placement === 'left' ? groupX : groupX + cartelaWidthMm + gapMm
   const cartelaX = placement === 'left' ? groupX + paintingW + gapMm : groupX

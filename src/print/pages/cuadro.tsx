@@ -37,21 +37,29 @@ import { defaultRasterSrc, normalizeRasterSrc } from './raster'
 type Props = {
   /** Painting asset path relative to `public/`. Default `prints/<id>/assets/<id>.png`. */
   src?: string
+  /** Second painting path — hangs the wall as a diptych (8-N-1). Relative to `public/`. */
+  src2?: string
   /** Alt / sources description. Default = the title. */
   alt?: string
+  /** Alt for the second painting. Default = `alt`. */
+  alt2?: string
   /** The *approach* reading distance to the cartela (m) — drives the label sizing. */
   readingDistanceM?: number
-  /** Room / section locator above the title. */
+  /** Room / section locator above the title. Omit (or empty) for a clean cartela with no eyebrow. */
   eyebrow?: string
   /** The allegorical work-title. */
   title?: string
-  /** Optional quiet second line / dedication. */
+  /** Optional quiet second line / dedication. Omit for a clean cartela with no subtitle. */
   subtitle?: string
   /** The fine editorial label text (1–2 short sentences). */
   paragraphs?: string[]
   /** The *ficha técnica* (técnica · soporte · colección · año). */
   meta?: string
-  /** Which side the painting hangs on. Default 'left'. */
+  /** Draw the short hairline rule between the title and the body. Default `false` (clean). */
+  divider?: boolean
+  /** Lift the relief off the wall with a drop shadow + mat keyline. Default `false` (the reliefs carry their own carved frame). */
+  framed?: boolean
+  /** Which side the painting hangs on. Default 'left'. Ignored when `src2` is set. */
   placement?: CuadroPlacement
   /** Painting width ÷ height. Default 2/3 (the portrait reliefs). */
   paintingAspect?: number
@@ -61,26 +69,26 @@ type Props = {
   titleCapFraction?: number
   /** Modular ratio between cartela levels. Default 1.28. */
   ratio?: number
-  /** Target characters per line in the cartela measure. Default 34. */
+  /** Target characters per line in the cartela measure. Default 42. */
   cartelaChars?: number
 }
 
-const DEFAULTS: Required<Omit<Props, 'src' | 'alt'>> = {
+const DEFAULTS = {
   readingDistanceM: 1.7,
-  eyebrow: 'Sala S2 · Umbral del progreso',
   title: 'La ascensión en el umbral',
-  subtitle: 'o la curva que rebasa el marco',
   paragraphs: [
     'La diagonal que sacó al hombre del esfuerzo agachado no se detiene: ahora la empuja el cálculo a gran escala.',
     'Si la curva se prolonga más allá del dintel, lo que aguarda aún no sabemos nombrarlo.',
   ],
   meta: 'Bajorrelieve monocromo · Piedra caliza · Colección AiKit Live · 2026',
-  placement: 'left',
+  divider: false,
+  framed: false,
+  placement: 'left' as CuadroPlacement,
   paintingAspect: 2 / 3,
   paintingHeightFraction: 0.84,
   titleCapFraction: 0.012,
   ratio: 1.28,
-  cartelaChars: 34,
+  cartelaChars: 42,
 }
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -92,11 +100,15 @@ export function Cuadro({ doc, geo }: PrintPageProps) {
   const p = (doc.props ?? {}) as Props
 
   const readingDistanceM = typeof p.readingDistanceM === 'number' ? p.readingDistanceM : DEFAULTS.readingDistanceM
-  const eyebrow = p.eyebrow ?? DEFAULTS.eyebrow
+  // Eyebrow / subtitle are opt-in: only render them when the doc explicitly supplies
+  // non-empty copy. Omitting them keeps the cartela clean (title → body → ficha).
+  const eyebrow = typeof p.eyebrow === 'string' && p.eyebrow.trim() ? p.eyebrow : ''
   const title = p.title ?? DEFAULTS.title
-  const subtitle = p.subtitle ?? DEFAULTS.subtitle
+  const subtitle = typeof p.subtitle === 'string' && p.subtitle.trim() ? p.subtitle : ''
   const paragraphs = Array.isArray(p.paragraphs) ? p.paragraphs : DEFAULTS.paragraphs
   const meta = p.meta ?? DEFAULTS.meta
+  const divider = typeof p.divider === 'boolean' ? p.divider : DEFAULTS.divider
+  const framed = typeof p.framed === 'boolean' ? p.framed : DEFAULTS.framed
   const placement = p.placement ?? DEFAULTS.placement
   const paintingAspect = typeof p.paintingAspect === 'number' ? p.paintingAspect : DEFAULTS.paintingAspect
   const paintingHeightFraction =
@@ -111,14 +123,18 @@ export function Cuadro({ doc, geo }: PrintPageProps) {
 
   const src = normalizeRasterSrc(typeof p.src === 'string' && p.src.trim() ? p.src : defaultRasterSrc(doc.id))
   const alt = typeof p.alt === 'string' ? p.alt : title
+  // A second relief turns the wall into a diptych (8-N-1).
+  const src2 = typeof p.src2 === 'string' && p.src2.trim() ? normalizeRasterSrc(p.src2) : null
+  const alt2 = typeof p.alt2 === 'string' ? p.alt2 : alt
 
   // Cartela type — sized for the *approach* distance, so the label stays small
   // (the image is the protagonist) yet clears the legibility floor up close.
   const scale = eventTypeScale({ trimHeightMm: H, readingDistanceM, ratio, h1CapFraction: titleCapFraction })
 
-  // The narrow museum-label column: a comfortable measure for the body, bounded so
-  // it never grows into a second wall of text nor collapses too tight.
-  const cartelaWidthMm = clamp(bodyMeasureMm(scale.bodyPt, { chars: cartelaChars }), W * 0.03, W * 0.085)
+  // The museum-label column: a comfortable measure for the body, bounded to a sane
+  // physical width (mm) so the title and paragraphs get room to breathe without the
+  // label ever growing into a second wall of text.
+  const cartelaWidthMm = clamp(bodyMeasureMm(scale.bodyPt, { chars: cartelaChars }), Math.min(W * 0.12, 300), Math.min(W * 0.45, 560))
   const gapMm = W * 0.022
 
   const layout = layoutCuadro({
@@ -129,12 +145,14 @@ export function Cuadro({ doc, geo }: PrintPageProps) {
     cartelaWidthMm,
     gapMm,
     placement,
+    secondPainting: src2 != null,
   })
 
-  // Vertical rhythm in the cartela, anchored to the body cap-height.
+  // Vertical rhythm in the cartela, anchored to the body cap-height. Generous, so the
+  // title and the paragraphs each sit in their own air on the clean (divider-less) label.
   const bodyCapMm = scale.capHeights.bodyMm
-  const blockGap = mm(bodyCapMm * 1.4)
-  const paraGap = mm(bodyCapMm * 0.9)
+  const blockGap = mm(bodyCapMm * 1.9)
+  const paraGap = mm(bodyCapMm * 1.05)
   const tickW = mm(scale.capHeights.eyebrowMm * 2.6)
   const tickH = Math.max(1, mm(scale.capHeights.eyebrowMm * 0.3))
 
@@ -145,7 +163,7 @@ export function Cuadro({ doc, geo }: PrintPageProps) {
 
       {/* trim layer — everything positioned in mm from the trim origin */}
       <div style={{ position: 'absolute', left: geo.bleedPx, top: geo.bleedPx, width: geo.trimWidthPx, height: geo.trimHeightPx }}>
-        {/* ── the hung painting ── */}
+        {/* ── the hung relief(s) — carved frame is in the art, so no CSS frame/shadow by default ── */}
         <div
           style={{
             position: 'absolute',
@@ -155,8 +173,22 @@ export function Cuadro({ doc, geo }: PrintPageProps) {
             height: mm(layout.painting.height),
           }}
         >
-          <Painting geo={geo} src={src} alt={alt} pal={pal} />
+          <Painting geo={geo} src={src} alt={alt} pal={pal} shadow={framed} keyline={framed} />
         </div>
+
+        {layout.painting2 ? (
+          <div
+            style={{
+              position: 'absolute',
+              left: mm(layout.painting2.x),
+              top: mm(layout.painting2.y),
+              width: mm(layout.painting2.width),
+              height: mm(layout.painting2.height),
+            }}
+          >
+            <Painting geo={geo} src={src2 as string} alt={alt2} pal={pal} shadow={framed} keyline={framed} />
+          </div>
+        ) : null}
 
         {/* ── the cartela (museum label), text vertically centred to the painting ── */}
         <div
@@ -171,11 +203,13 @@ export function Cuadro({ doc, geo }: PrintPageProps) {
             justifyContent: 'center',
           }}
         >
-          {/* eyebrow with a short warm accent tick */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: mm(scale.capHeights.eyebrowMm * 0.9), marginBottom: blockGap }}>
-            <span style={{ width: tickW, height: tickH, background: pal.accent, flex: '0 0 auto' }} />
-            <span style={cartelaEyebrow(geo, scale.eyebrowPt, pal.muted)}>{eyebrow}</span>
-          </div>
+          {/* optional eyebrow with a short warm accent tick */}
+          {eyebrow ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: mm(scale.capHeights.eyebrowMm * 0.9), marginBottom: blockGap }}>
+              <span style={{ width: tickW, height: tickH, background: pal.accent, flex: '0 0 auto' }} />
+              <span style={cartelaEyebrow(geo, scale.eyebrowPt, pal.muted)}>{eyebrow}</span>
+            </div>
+          ) : null}
 
           {/* title (+ optional subtitle) */}
           <div style={cartelaTitle(geo, scale.h1Pt, pal)}>{title}</div>
@@ -183,13 +217,15 @@ export function Cuadro({ doc, geo }: PrintPageProps) {
             <div style={{ ...cartelaSubtitle(geo, scale.h3Pt, pal), marginTop: mm(scale.capHeights.h3Mm * 0.5) }}>{subtitle}</div>
           ) : null}
 
-          {/* the one divider */}
-          <div style={{ marginTop: blockGap, marginBottom: blockGap }}>
-            <CartelaDivider geo={geo} pal={pal} widthMm={cartelaWidthMm * 0.42} color={pal.accent} />
-          </div>
+          {/* optional divider rule */}
+          {divider ? (
+            <div style={{ marginTop: blockGap, marginBottom: blockGap }}>
+              <CartelaDivider geo={geo} pal={pal} widthMm={cartelaWidthMm * 0.42} color={pal.accent} />
+            </div>
+          ) : null}
 
-          {/* the fine editorial label text */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: paraGap }}>
+          {/* the fine editorial label text — its own air below the title */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: paraGap, marginTop: divider ? 0 : blockGap }}>
             {paragraphs.map((para, i) => (
               <p key={i} style={cartelaBody(geo, scale.bodyPt, pal)}>
                 {para}

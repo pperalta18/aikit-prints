@@ -94,11 +94,12 @@ const OFF_Z = -SPACE_DEPTH / 2
 
 /**
  * Height (metres) assumed for a wall that carries no explicit `alturaM`. Matches
- * the museographic brief — "height from the 3D model (assume 2.5 m and warn if
- * absent)". Walls dimension their graphics against this fallback until the real
- * model height is recorded on the element. See `specs/wall-graphics.md`.
+ * the venue's physical walls — **raised to 3 m** (the original museographic-brief
+ * assumption was 2.5 m, "height from the 3D model and warn if absent"). Walls
+ * dimension their graphics against this fallback until the real model height is
+ * recorded on the element. See `specs/wall-graphics.md`.
  */
-export const DEFAULT_WALL_HEIGHT_M = 2.5
+export const DEFAULT_WALL_HEIGHT_M = 3.0
 
 /**
  * The saved global wall height (metres) the 3D editor seeds its height control

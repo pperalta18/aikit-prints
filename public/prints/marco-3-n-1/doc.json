@@ -6,7 +6,7 @@
   "theme": "light",
   "dimensions": {
     "trimWidthMm": 4000,
-    "trimHeightMm": 2500,
+    "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
     "cropMarks": false
@@ -25,12 +25,12 @@
     "side": -1,
     "readingDistanceM": 1.7,
     "placement": "left",
-    "eyebrow": "Sala S2 · Umbral del progreso",
+    "divider": false,
+    "framed": false,
     "title": "La ascensión en el umbral",
-    "subtitle": "o la curva que rebasa el marco",
     "paragraphs": [
-      "La diagonal que sacó al hombre del esfuerzo agachado no se detiene: ahora la empuja el cálculo a gran escala.",
-      "Si la curva se prolonga más allá del dintel, lo que aguarda aún no sabemos nombrarlo."
+      "La misma pendiente que un día enderezó la espalda del hombre no se detiene en el dintel: hoy la empuja un cálculo que no se cansa.",
+      "Prolóngala unos pasos más allá del marco y asoma un país que aún no sabemos nombrar."
     ],
     "meta": "Bajorrelieve monocromo · Piedra caliza · Colección AiKit Live · 2026",
     "alt": "Bajorrelieve vertical. Una procesión humana asciende en diagonal desde el ángulo inferior izquierdo, en penumbra: figuras encorvadas que arrastran una rueda dentada rota y empujan junto a un buey fatigado, todavía atadas al esfuerzo primitivo. La diagonal cruza un dintel de piedra tallado en el propio relieve —el umbral— y desemboca, arriba a la derecha, en una figura serena con túnica, ya erguida, que apoya la mano en un cuadro de mandos de palancas y dinamos. Sobre ese vértice, una única bombilla incandescente encendida es la sola fuente de luz: su resplandor rasante alarga las sombras hacia atrás, deja el origen del trabajo casi a oscuras y baña la cima. Engranajes concéntricos, cada vez mayores, escalonan la subida y sugieren una curva que no se detiene en el borde del marco."

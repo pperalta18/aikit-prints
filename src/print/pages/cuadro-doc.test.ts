@@ -28,7 +28,9 @@ const WALLS = [
 
 // Defaults mirrored from `cuadro.tsx` DEFAULTS, so the authored canvas is proven
 // with the exact constants the page renders with (same idea as hero-solar-doc).
-const DEFAULTS = { paintingAspect: 2 / 3, paintingHeightFraction: 0.84, titleCapFraction: 0.012, ratio: 1.28, cartelaChars: 34 }
+const DEFAULTS = { paintingAspect: 2 / 3, paintingHeightFraction: 0.84, titleCapFraction: 0.012, ratio: 1.28, cartelaChars: 42 }
+
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
 
 const RENDER_INTENTS = ['perceptual', 'relative', 'saturation', 'absolute']
 
@@ -74,10 +76,13 @@ describe.each(WALLS)('cuadro doc — $slug', ({ slug, invId }) => {
     expect(geo.mediaHeightPx).toBeLessThan(20000)
   })
 
-  it('carries real cartela copy (title, eyebrow, ≥1 paragraph, meta)', () => {
+  it('carries real, clean cartela copy (title, ≥1 paragraph, meta — no eyebrow/subtitle/divider)', () => {
     expect(typeof p.title).toBe('string')
     expect((p.title as string).length).toBeGreaterThan(3)
-    expect(typeof p.eyebrow).toBe('string')
+    // The cleaned-up cartela drops the eyebrow, subtitle and the title↔body rule.
+    expect(p.eyebrow).toBeUndefined()
+    expect(p.subtitle).toBeUndefined()
+    expect(p.divider).toBe(false)
     expect(Array.isArray(p.paragraphs)).toBe(true)
     expect((p.paragraphs as unknown[]).length).toBeGreaterThanOrEqual(1)
     for (const para of p.paragraphs as unknown[]) {
@@ -88,10 +93,16 @@ describe.each(WALLS)('cuadro doc — $slug', ({ slug, invId }) => {
     expect(p.meta as string).toContain('AiKit Live')
   })
 
-  it('points at a committed painting asset (non-trivial PNG)', () => {
+  it('points at committed painting asset(s) (non-trivial PNG; both reliefs for a diptych)', () => {
     const ap = assetPath(slug)
     expect(existsSync(ap)).toBe(true)
     expect(statSync(ap).size).toBeGreaterThan(50 * 1024) // a real relief, not a stub
+    // A diptych wall (8-N-1) commits a second relief via `src2`.
+    if (typeof p.src2 === 'string') {
+      const ap2 = fileURLToPath(new URL(`../../../public/${p.src2}`, import.meta.url))
+      expect(existsSync(ap2)).toBe(true)
+      expect(statSync(ap2).size).toBeGreaterThan(50 * 1024)
+    }
   })
 
   it('hangs full-wall-height on its registered wall', () => {
@@ -106,7 +117,7 @@ describe.each(WALLS)('cuadro doc — $slug', ({ slug, invId }) => {
     expect(doc.dimensions.trimWidthMm).toBeLessThanOrEqual(wallLengthMm + 1)
   })
 
-  it('lays the painting + cartela out inside the wall (no overflow)', () => {
+  it('lays the painting(s) + cartela out inside the wall (no overflow)', () => {
     const W = doc.dimensions.trimWidthMm
     const H = doc.dimensions.trimHeightMm
     const readingDistanceM = num(p.readingDistanceM, 1.7)
@@ -116,7 +127,13 @@ describe.each(WALLS)('cuadro doc — $slug', ({ slug, invId }) => {
       ratio: DEFAULTS.ratio,
       h1CapFraction: DEFAULTS.titleCapFraction,
     })
-    const cartelaWidthMm = Math.max(W * 0.03, Math.min(W * 0.085, bodyMeasureMm(scale.bodyPt, { chars: DEFAULTS.cartelaChars })))
+    // Mirror the page's cartela-width clamp (a sane physical width in mm).
+    const cartelaWidthMm = clamp(
+      bodyMeasureMm(scale.bodyPt, { chars: DEFAULTS.cartelaChars }),
+      Math.min(W * 0.12, 300),
+      Math.min(W * 0.45, 560),
+    )
+    const secondPainting = typeof p.src2 === 'string'
     const layout = layoutCuadro({
       wallWidthMm: W,
       wallHeightMm: H,
@@ -125,13 +142,17 @@ describe.each(WALLS)('cuadro doc — $slug', ({ slug, invId }) => {
       cartelaWidthMm,
       gapMm: W * 0.022,
       placement: 'left',
+      secondPainting,
     })
     const eps = 1e-6
+    // diptych walls resolve a second relief; single walls do not
+    expect(Boolean(layout.painting2)).toBe(secondPainting)
     // painting fits within the wall height with margin (it's a hung work, not full-bleed)
     expect(layout.painting.height).toBeLessThan(H)
     expect(layout.painting.width / layout.painting.height).toBeCloseTo(DEFAULTS.paintingAspect, 6)
-    // both boxes inside the wall
-    for (const box of [layout.painting, layout.cartela]) {
+    // every box inside the wall
+    const boxes = [layout.painting, layout.cartela, ...(layout.painting2 ? [layout.painting2] : [])]
+    for (const box of boxes) {
       expect(box.x).toBeGreaterThanOrEqual(-eps)
       expect(box.x + box.width).toBeLessThanOrEqual(W + eps)
       expect(box.y).toBeGreaterThanOrEqual(-eps)

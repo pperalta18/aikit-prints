@@ -54,7 +54,15 @@ export function Escala9E1({ doc, geo }: PrintPageProps) {
 
   const pal = tipoPalette(doc.theme)
   const W = geo.dims.trimWidthMm
-  const H = geo.dims.trimHeightMm
+  // Hybrid-museográfico vertical fit: compose against the tuned reference height and
+  // centre that "stage" on the museographic eye band, so a taller wall (3 m) gains
+  // balanced breathing room above/below instead of sinking the horizon into the
+  // lower third. At REF_H the stage IS the full trim, so the 2.5 m design is
+  // byte-for-byte unchanged — only taller walls get the centred headroom.
+  const REF_H = 2500
+  const Hfull = geo.dims.trimHeightMm
+  const H = Math.min(Hfull, REF_H)
+  const stageTopPx = geo.bleedPx + (geo.trimHeightPx - geo.mm(H)) / 2
   const marginX = W * 0.045
 
   const piece = pieceBySlug('tamano-de-modelos')
@@ -88,7 +96,7 @@ export function Escala9E1({ doc, geo }: PrintPageProps) {
       <PrintFonts />
       <TipoField pal={pal} />
 
-      <div style={{ position: 'absolute', left: geo.bleedPx, top: geo.bleedPx, width: geo.trimWidthPx, height: geo.trimHeightPx }}>
+      <div style={{ position: 'absolute', left: geo.bleedPx, top: stageTopPx, width: geo.trimWidthPx, height: geo.mm(H) }}>
         {/* ── the editorial spine: a full-bleed horizon the whole sentence sits on ── */}
         <div style={{ position: 'absolute', left: 0, top: mm(groundY), width: '100%', height: Math.max(1, mm(1.6)), background: pal.hairline }} />
 

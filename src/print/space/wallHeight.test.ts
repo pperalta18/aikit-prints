@@ -2,8 +2,10 @@
  * Unit tests for per-wall height (Phase 2).
  *
  * Contract under test: walls take their physical height from per-wall data
- * (`alturaM`) and fall back to 2.5 m "and warn if absent" (the museographic
- * brief, `specs/wall-graphics.md`). These pin the *pure* height logic the 3D
+ * (`alturaM`) and fall back to the global venue height — **3 m** (raised from the
+ * museographic brief's original 2.5 m), "and warn if absent" (`specs/wall-graphics.md`).
+ * The venue is uniform: no wall carries a measured `alturaM`, so every wall is on
+ * that one global fallback. These pin the *pure* height logic the 3D
  * scene depends on — coercion of bad/missing values, the data-vs-fallback
  * resolution, and the "which walls are still defaulted" flag used for the warn —
  * without asserting any fabricated height numbers (none are measured yet, so the
@@ -40,8 +42,8 @@ function fakeWall(over: Partial<Wall> = {}): Wall {
 }
 
 describe('DEFAULT_WALL_HEIGHT_M', () => {
-  it('is the 2.5 m the brief mandates as the fallback', () => {
-    expect(DEFAULT_WALL_HEIGHT_M).toBe(2.5)
+  it('is the venue’s 3 m walls (raised from the brief’s original 2.5 m fallback)', () => {
+    expect(DEFAULT_WALL_HEIGHT_M).toBe(3.0)
   })
 })
 
@@ -116,9 +118,10 @@ describe('wallsWithoutHeight — the set to warn about', () => {
   })
 
   it('defaults to scanning every mountable surface', () => {
-    // The two S3 nave dividers (invId 12, 16) carry an explicit alturaM; every
-    // other surface is still on the fallback, so all-but-two lack a measured height.
-    expect(wallsWithoutHeight()).toHaveLength(MOUNTABLE.length - 2)
+    // No wall carries a measured `alturaM` — the venue is uniform (one global 3 m
+    // height for every wall, the S3 nave dividers included), so every mountable
+    // surface is on the fallback and therefore in the warn set.
+    expect(wallsWithoutHeight()).toHaveLength(MOUNTABLE.length)
   })
 })
 
@@ -131,18 +134,16 @@ describe('parsed layout — current honest state (no heights measured yet)', () 
     }
   })
 
-  it('falls walls back to 2.5 m unless they carry an explicit alturaM', () => {
-    // The S3 nave dividers (invId 12, 16) carry alturaM: 2; every other wall still
-    // takes its height from the 3D model later and uses the fallback for now.
+  it('falls every wall back to the one global height (no per-wall alturaM measured)', () => {
+    // The venue is uniform: every wall — the S3 nave dividers (12, 16) included —
+    // takes the single global height (now 3 m), so none carries an explicit alturaM
+    // and all resolve to DEFAULT_WALL_HEIGHT_M.
     for (const w of WALLS) {
-      if (w.hasExplicitHeight) {
-        expect(w.height).toBe(2)
-      } else {
-        expect(w.height).toBe(DEFAULT_WALL_HEIGHT_M)
-      }
+      expect(w.hasExplicitHeight).toBe(false)
+      expect(w.height).toBe(DEFAULT_WALL_HEIGHT_M)
     }
-    const explicit = WALLS.filter((w) => w.hasExplicitHeight).map((w) => w.registry?.invId).sort((a, b) => (a ?? 0) - (b ?? 0))
-    expect(explicit).toEqual([12, 16])
+    const explicit = WALLS.filter((w) => w.hasExplicitHeight).map((w) => w.registry?.invId)
+    expect(explicit).toEqual([])
   })
 
   it('a measured wall would surface its data height end-to-end', () => {

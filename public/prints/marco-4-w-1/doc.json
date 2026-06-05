@@ -7,7 +7,7 @@
   "surface": "#f7f3e8",
   "dimensions": {
     "trimWidthMm": 7750,
-    "trimHeightMm": 2500,
+    "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
     "cropMarks": false

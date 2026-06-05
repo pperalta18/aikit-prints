@@ -72,6 +72,74 @@ describe('layoutCuadro — placement flips the order, not the geometry', () => {
   })
 })
 
+describe('layoutCuadro — diptych (secondPainting)', () => {
+  // A wide feature wall (13 × 3 m) hung with two reliefs, like 8-N-1.
+  const WIDE: CuadroLayoutOpts = {
+    wallWidthMm: 13000,
+    wallHeightMm: 3000,
+    paintingAspect: 2 / 3,
+    paintingHeightFraction: 0.84,
+    cartelaWidthMm: 460,
+    gapMm: 300,
+    secondPainting: true,
+  }
+
+  it('returns two paintings and a cartela, both reliefs the same size', () => {
+    const { painting, painting2, cartela } = layoutCuadro(WIDE)
+    expect(painting2).toBeDefined()
+    if (!painting2) throw new Error('no painting2')
+    expect(painting2.width).toBeCloseTo(painting.width, 6)
+    expect(painting2.height).toBeCloseTo(painting.height, 6)
+    expect(cartela.width).toBeCloseTo(WIDE.cartelaWidthMm, 6)
+    // sized to the wall-height fraction and true aspect
+    expect(painting.height).toBeCloseTo(3000 * 0.84, 6)
+    expect(painting.width / painting.height).toBeCloseTo(2 / 3, 6)
+  })
+
+  it('centres each relief on a wall quarter-point and the cartela dead-centre', () => {
+    const { painting, painting2, cartela } = layoutCuadro(WIDE)
+    if (!painting2) throw new Error('no painting2')
+    expect(painting.x + painting.width / 2).toBeCloseTo(WIDE.wallWidthMm * 0.25, 6)
+    expect(painting2.x + painting2.width / 2).toBeCloseTo(WIDE.wallWidthMm * 0.75, 6)
+    expect(cartela.x + cartela.width / 2).toBeCloseTo(WIDE.wallWidthMm / 2, 6)
+  })
+
+  it('hangs everything at the same height, vertically centred', () => {
+    const { painting, painting2, cartela } = layoutCuadro(WIDE)
+    if (!painting2) throw new Error('no painting2')
+    const top = painting.y
+    const bottom = WIDE.wallHeightMm - (painting.y + painting.height)
+    expect(top).toBeCloseTo(bottom, 6)
+    expect(painting2.y).toBeCloseTo(top, 6)
+    expect(cartela.y).toBeCloseTo(top, 6)
+    expect(cartela.height).toBeCloseTo(painting.height, 6)
+  })
+
+  it('is symmetric and keeps everything inside the wall without overlap', () => {
+    const { painting, painting2, cartela, group } = layoutCuadro(WIDE)
+    if (!painting2) throw new Error('no painting2')
+    const leftAir = group.x
+    const rightAir = WIDE.wallWidthMm - (group.x + group.width)
+    expect(leftAir).toBeCloseTo(rightAir, 6)
+    // order on the wall: P1 | cartela | P2, no overlaps
+    expect(painting.x + painting.width).toBeLessThanOrEqual(cartela.x + EPS)
+    expect(cartela.x + cartela.width).toBeLessThanOrEqual(painting2.x + EPS)
+    for (const box of [painting, painting2, cartela]) {
+      expect(box.x).toBeGreaterThanOrEqual(-EPS)
+      expect(box.x + box.width).toBeLessThanOrEqual(WIDE.wallWidthMm + EPS)
+    }
+  })
+
+  it('throws when the cartela cannot fit between the two reliefs', () => {
+    expect(() => layoutCuadro({ ...WIDE, cartelaWidthMm: 7000 })).toThrow(/overlaps a painting/)
+  })
+
+  it('throws when the reliefs themselves overflow the wall', () => {
+    // A narrow wall can't seat two quarter-point reliefs.
+    expect(() => layoutCuadro({ ...WIDE, wallWidthMm: 2000 })).toThrow()
+  })
+})
+
 describe('layoutCuadro — everything inside the wall', () => {
   it('keeps both boxes within the wall bounds', () => {
     for (const placement of ['left', 'right'] as const) {

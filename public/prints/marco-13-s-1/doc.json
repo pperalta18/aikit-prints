@@ -6,7 +6,7 @@
   "theme": "light",
   "dimensions": {
     "trimWidthMm": 6500,
-    "trimHeightMm": 2500,
+    "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
     "cropMarks": false
@@ -35,6 +35,6 @@
     "showTick": false,
     "logoSrc": "prints/marco-13-s-1/assets/la-naranja-mecanica.svg",
     "logoAlt": "La Naranja Mecánica",
-    "logoMaxWidthMm": 1000
+    "logoMaxWidthMm": 600
   }
 }

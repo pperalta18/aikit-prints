@@ -102,7 +102,15 @@ export function Contexto({ doc, geo }: PrintPageProps) {
   const lede = p.lede ?? DEFAULT_HEADER.lede
 
   const W = geo.dims.trimWidthMm
-  const H = geo.dims.trimHeightMm
+  // Hybrid-museográfico vertical fit: compose against the tuned reference height and
+  // centre that stage on the eye band, so a taller wall (3 m) gains balanced air top
+  // and bottom — keeping the header and the rising plate-row together — instead of
+  // floating the header up and sinking the baseline. Identity at REF_H (2.5 m design
+  // unchanged); only taller walls get the centred headroom.
+  const REF_H = 2500
+  const Hfull = geo.dims.trimHeightMm
+  const H = Math.min(Hfull, REF_H)
+  const stageTopPx = geo.bleedPx + (geo.trimHeightPx - geo.mm(H)) / 2
   const N = items.length
 
   /** Museographic type scale — every level sized to the wall's reading distance. */
@@ -153,8 +161,8 @@ export function Contexto({ doc, geo }: PrintPageProps) {
       {/* clean white editorial ground, bled to the media edge */}
       <div style={{ position: 'absolute', inset: 0, background: BG }} />
 
-      {/* trim layer — everything positioned in mm from the trim origin */}
-      <div style={{ position: 'absolute', left: geo.bleedPx, top: geo.bleedPx, width: geo.trimWidthPx, height: geo.trimHeightPx }}>
+      {/* trim layer — the composed stage, centred on the eye band (see REF_H above) */}
+      <div style={{ position: 'absolute', left: geo.bleedPx, top: stageTopPx, width: geo.trimWidthPx, height: geo.mm(H) }}>
 
         {/* ── header (top-left): concept kicker · statement · lede ───────────────── */}
         <div style={{ ...at(ML, H * 0.07), width: mm(CONTENT_W * 0.5) }}>
