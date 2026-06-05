@@ -25,10 +25,10 @@ First proven on print **`marco-5-s-1`** (`public/prints/marco-5-s-1/doc.json`).
 print needs (`bg`, `field`, `ink`, `inkSoft`, `muted`, `faint`, `hairline`, `accent`).
 
 - **Light (default)** — `TIPO_LIGHT`: **clean white** ground, neutral near-black
-  ink (`#141414`), cool greys for the descending hierarchy, one warm accent
-  (`BRAND.orange`). *Muy fino, muy simple.*
-- **Dark** — `TIPO_DARK`: deep ink ground, warm white type — one family with the
-  velocity-room "data on dark" walls.
+  ink (`#141414`), cool greys for the descending hierarchy, one accent
+  (`KIT_BLUE` — the brand primary; **never orange**). *Muy fino, muy simple.*
+- **Dark** — `TIPO_DARK`: deep **neutral** ink ground, cool white type — no
+  warm/cream cast. (Brand surfaces use the `GRAY` scale in `src/lib/neumorphism.ts`.)
 
 Flip ground with a one-line `doc.json` change (`"theme": "light" | "dark"`).
 
@@ -82,7 +82,7 @@ exported family constants:
 
 ### Ornament
 
-One disciplined accent (a short tick / the warm rule), full-width **hairline rules**
+One disciplined accent (a short tick / the KIT_BLUE rule), full-width **hairline rules**
 (`Rule`, mm-thick so they read at distance), and the discreet **`Lockup`**
 ("AiKit Live"). Nothing else — no gradients on the light ground, no stock, no shouting.
 

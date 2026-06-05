@@ -1,6 +1,6 @@
 {
   "id": "marco-2-w-1",
-  "title": "2-W-1 · Indicador próxima sala — «La velocidad de escala» (6.25×2.50 m)",
+  "title": "2-W-1 · Indicador próxima sala — «Velocidad de progreso» (6.25×2.50 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "proxima-sala",
   "theme": "light",
@@ -26,8 +26,10 @@
     "invId": 2,
     "readingDistanceM": 4,
     "eyebrow": "Próxima sala",
-    "sala": "La velocidad de escala",
-    "salaLines": ["La velocidad", "de escala"],
-    "arrow": "right"
+    "sala": "Velocidad de progreso",
+    "salaLines": ["Velocidad", "de progreso"],
+    "arrow": "left",
+    "showFilete": false,
+    "showTick": false
   }
 }

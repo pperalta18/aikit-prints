@@ -142,8 +142,8 @@ describe('proxima-sala — renders real content (not a blank page)', () => {
     const html = render()
     expect(html).toContain('Próxima sala') // the eyebrow
     // the room name — authored with an explicit rag (two balanced lines)
-    expect(html).toContain('La velocidad')
-    expect(html).toContain('de escala')
+    expect(html).toContain('Velocidad')
+    expect(html).toContain('de progreso')
     expect(html).toContain('<svg') // the discreet thin-line arrow
   })
 })

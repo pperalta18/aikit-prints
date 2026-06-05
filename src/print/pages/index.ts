@@ -51,8 +51,9 @@ import { ProximaSala } from './proxima-sala'
 // Museum-painting page (relief image as protagonist + fine cartela). `cuadro.ts`
 // (pure layout maths) shares the basename, so the page import is explicit `.tsx`.
 import { Cuadro } from './cuadro.tsx'
-// Image-track #11 (wall 11-W-IMAGE): a dated timeline of AI image generation,
-// timeline mechanism inherited from `agi-timeline`. Pictures on top, years below.
+// Image-track #11 (wall 11-W-IMAGE): editorial museum-grid timeline of AI image
+// generation (2023→hoy) — tiled panels w/ seams, giant staggered years, image
+// mosaics per era, arrows, one blue accent on «2026 · HOY».
 import { EvolucionImagen } from './evolucion-imagen'
 // Code-track #11 (wall 11-W-TEXT+CODE): context window as relatable text volume
 // (unas páginas → una novela → dos biblias). Real sourced data, √-scaled stacks.
@@ -66,6 +67,13 @@ import { Hogares } from './hogares'
 // Image-track #13 (13-N-1 / 13-S-1): «La Naranja Mecánica» — each game upgrade
 // (autonomous truck, dark factory…) paired with a framed real photo: ya está pasando.
 import { NaranjaMecanica } from './naranja-mecanica'
+// Section-title wall (01 · La energía artificial): the Figma slide composition rebuilt
+// in the «El Año Cero» register — ink on warm paper, single blue accent, a carved «01»
+// and a neumorphic light-bulb relief (the allegory of «artificial energy»).
+import { SeccionEnergiaArtificial } from './seccion-01-energia-artificial'
+// Editorial table-of-contents wall (5-S-1, S5→S6 bridge): a narrow ruled «índice»
+// held to the left — nº · room · deck per entry, one KIT_BLUE «you-are-here» tick.
+import { Indice } from './indice'
 
 /**
  * Page registry — maps a `doc.pageComponentId` to its React component. Add a new
@@ -133,6 +141,10 @@ export const PRINT_PAGES: Record<string, PrintPageComponent> = {
   hogares: Hogares,
   // ── Image-track #13 (13-N-1 / 13-S-1): «La Naranja Mecánica» — asset del juego → prueba real ──
   'naranja-mecanica': NaranjaMecanica,
+  // ── Section-title wall (01 · La energía artificial): carved «01» + light-bulb relief, El Año Cero register ──
+  'seccion-01-energia-artificial': SeccionEnergiaArtificial,
+  // ── Editorial índice (5-S-1, S5→S6 bridge): narrow ruled table-of-contents on the left ──
+  indice: Indice,
 }
 
 export function getPrintPage(id: string): PrintPageComponent | undefined {

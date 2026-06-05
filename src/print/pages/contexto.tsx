@@ -1,34 +1,50 @@
 import type { CSSProperties } from 'react'
-import { KIT_BLUE, DISPLAY_FONT, TEXT_FONT } from '@/lib/neumorphism'
+import { Img, staticFile, getRemotionEnvironment } from 'remotion'
+import { KIT_BLUE } from '@/lib/neumorphism'
+import { PrintFonts, PRINT_DISPLAY_HAIR, PRINT_TEXT_FONT } from '../printFonts'
+import { eventTypeScale } from './tipografia'
 import type { PrintPageProps } from '../types'
 
 /**
- * contexto — wall 11-W-TEXT+CODE (Nave E · cámara TEXT+CODE, 7.5 × 2.5 m).
- * ──────────────────────────────────────────────────────────────────────
- * **La ventana de contexto** — la "memoria de trabajo" del modelo: cuánto texto
- * puede leer y tener presente de una sola vez. El dato de verdad (tokens) no le
- * dice nada a nadie, así que cada hito se representa por **cuánto texto cabe en
- * esa memoria** en una unidad que cualquiera entiende: unas páginas → un capítulo
- * → una novela → una enciclopedia → dos biblias enteras.
+ * contexto — wall 11-W-TEXT+CODE (Nave E · cámara TEXT+CODE, 7 × 2.5 m).
+ * ──────────────────────────────────────────────────────────────────────────
+ * **La ventana de contexto over time** — the model's working memory: how much
+ * text it can read and hold at once. A raw token count means nothing to anyone,
+ * so each milestone is rendered as the **document of that size** — the volume of
+ * text that fits — photographed as a black-and-white still life: unas páginas →
+ * un artículo → un capítulo → una novela → la Biblia entera → una saga (Juego
+ * de Tronos al completo).
  *
- * Visual: una progresión izquierda→derecha de **pilas de papel** sobre una línea
- * de suelo común; la altura de cada pila ∝ √(tokens) (acotada con un suelo para
- * que el primer hito siga siendo visible — nota de escala honesta). Encima de
- * cada pila, la equivalencia legible (el gancho); debajo de la línea, modelo ·
- * año · tokens. El presente (HOY · 2026) va en KIT_BLUE.
+ * Composition: a clean white editorial ground (a curated gallery wall), over
+ * which a left→right row of **framed B&W document prints** rises from a common
+ * baseline — the plate grows with the context (a curling page → a towering
+ * saga), so the explosion of the last six years is legible at a glance. Above
+ * each plate floats the relatable equivalence (the hook); below the baseline, the
+ * honest figure — tokens · model · year. The present (HOY · 2026) is KIT_BLUE.
  *
- * Datos reales y datados (ventana de contexto al lanzamiento): GPT-3 2.048 ·
- * GPT-4 8.192 · Claude 2.1 200.000 · Gemini 1.5 Pro 1.000.000 · hoy 1–2M.
- * (Mismas fuentes que `wall-data.ts` → `ventana-de-contexto`.)
+ * Real, datable context windows at launch: GPT-2 1.024 · GPT-3.5 4.096 ·
+ * GPT-4 8.192 · Claude 2.1 200.000 · Gemini 1.5 Pro 1.000.000 · hoy ~2M.
+ * Equivalences verified at 0,75 palabras/token (OpenAI): the Bible (KJV ≈
+ * 783.137 palabras) ÷ 0,75 ≈ 1,04M tokens → 1M tokens ≈ one Bible; A Song of
+ * Ice and Fire (~1,77M palabras) ≈ 2,3M tokens ≈ the ~2M window of today.
+ * Plate height ∝ log(tokens) so every hito reads; the token figures and the
+ * imagery carry the true magnitude.
  *
- * Autoría en milímetros desde el origen de trim, tipografía en puntos: lee a
- * escala de imprenta a cualquier tamaño / DPI.
+ * Type is sized for exhibition, not by eye: every level comes from
+ * `eventTypeScale` at the wall's reading distance. Authored in millimetres from
+ * the trim origin, type in points — reads at print scale at any size / DPI.
  */
 
+/* ── clean white editorial ground · B&W plates · single blue accent ─────────── */
 const BG = '#ffffff'
-const INK = '#1a1a1a'
-const INK_SOFT = 'rgba(26,26,26,0.62)'
-const HAIRLINE = 'rgba(26,26,26,0.85)'
+const INK = '#161616'
+const INK_SOFT = 'rgba(22,22,22,0.58)'
+const INK_FAINT = 'rgba(22,22,22,0.42)'
+const HAIRLINE = 'rgba(22,22,22,0.34)'
+const MAT = '#ffffff' // plate ground behind each print
+
+/** How far the wall is read, in metres — drives the whole museographic type scale. */
+const READING_DISTANCE_M = 3.5
 
 type Item = {
   /** Model / hito name, e.g. "GPT-3". */
@@ -39,147 +55,174 @@ type Item = {
   tokens: number
   /** Compact token label, e.g. "2K", "1M". */
   tokenLabel: string
-  /** The relatable hook — what that much text *is* (one line, big). */
+  /** The relatable hook — the document that much text *is* (one line, big). */
   equiv: string
   /** Sub-equivalence (smaller), e.g. "≈ 500 páginas". */
   equivSub: string
+  /** B&W still-life of that document, under public/ (Remotion `staticFile`). */
+  src: string
+  /** Display aspect (w/h) of the plate — matched to the photo so it isn't letterboxed. */
+  aspect: number
+  /** objectPosition for the cover-crop (the meaningful part of the photo). */
+  focus?: string
+  /** The present — marked in KIT_BLUE. */
+  now?: boolean
 }
 
 type Props = {
   items?: Item[]
+  /** Protagonist statement (header). */
+  title?: string
+  /** Lede paragraph (header). */
+  lede?: string
 }
 
-/** The growth of context windows — defaults; the doc can override via props. */
+const A = 'prints/marco-11-w-text-code/assets'
+
+/** The growth of the context window — defaults; the doc can override via props. */
 const DEFAULT_ITEMS: Item[] = [
-  { model: 'GPT-3', year: '2020', tokens: 2048, tokenLabel: '2K', equiv: 'Unas páginas', equivSub: '≈ un correo largo' },
-  { model: 'GPT-4', year: '2023', tokens: 8192, tokenLabel: '8K', equiv: 'Un capítulo', equivSub: '≈ 25 páginas' },
-  { model: 'Claude 2.1', year: '2023', tokens: 200000, tokenLabel: '200K', equiv: 'Una novela', equivSub: '≈ 500 páginas' },
-  { model: 'Gemini 1.5 Pro', year: '2024', tokens: 1000000, tokenLabel: '1M', equiv: 'Una enciclopedia', equivSub: '≈ 3.000 páginas' },
-  { model: 'Hoy', year: '2026', tokens: 2000000, tokenLabel: '2M', equiv: 'Dos biblias enteras', equivSub: '≈ una biblioteca' },
+  { model: 'GPT-2', year: '2019', tokens: 1024, tokenLabel: '1K', equiv: 'Unas páginas', equivSub: '≈ un correo largo', src: `${A}/doc-1-page.png`, aspect: 0.78, focus: 'center 42%' },
+  { model: 'GPT-3.5', year: '2022', tokens: 4096, tokenLabel: '4K', equiv: 'Un artículo', equivSub: '≈ 3.000 palabras', src: `${A}/doc-2-story.png`, aspect: 1.0, focus: 'center center' },
+  { model: 'GPT-4', year: '2023', tokens: 8192, tokenLabel: '8K', equiv: 'Un capítulo', equivSub: '≈ 20 páginas', src: `${A}/doc-3-chapter.png`, aspect: 1.3, focus: 'center center' },
+  { model: 'Claude 2.1', year: '2023', tokens: 200000, tokenLabel: '200K', equiv: 'Una novela', equivSub: '≈ 500 páginas', src: `${A}/doc-4-novel.png`, aspect: 0.76, focus: 'center center' },
+  { model: 'Gemini 1.5 Pro', year: '2024', tokens: 1000000, tokenLabel: '1M', equiv: 'La Biblia entera', equivSub: '≈ 783.000 palabras', src: `${A}/doc-5-bible.png`, aspect: 0.66, focus: 'center center' },
+  { model: 'Hoy', year: '2026', tokens: 2000000, tokenLabel: '2M', equiv: 'Juego de Tronos', equivSub: '≈ la saga completa · 1,7 M palabras', src: `${A}/doc-6-saga.png`, aspect: 0.7, focus: 'center center', now: true },
 ]
+
+const DEFAULT_HEADER = {
+  title: 'De unas páginas a una saga entera.',
+  lede: 'La ventana de contexto es la memoria de trabajo de un modelo: cuánto texto puede leer y tener presente a la vez. En seis años pasó de un correo a una saga entera.',
+}
 
 export function Contexto({ doc, geo }: PrintPageProps) {
   const { mm, pt } = geo
   const p = (doc.props ?? {}) as Props
   const items = Array.isArray(p.items) && p.items.length ? p.items : DEFAULT_ITEMS
+  const title = p.title ?? DEFAULT_HEADER.title
+  const lede = p.lede ?? DEFAULT_HEADER.lede
 
   const W = geo.dims.trimWidthMm
   const H = geo.dims.trimHeightMm
   const N = items.length
 
+  /** Museographic type scale — every level sized to the wall's reading distance. */
+  const scale = eventTypeScale({ trimHeightMm: H, readingDistanceM: READING_DISTANCE_M, ratio: 1.7, h1CapFraction: 0.092 })
+
   /** Absolute placement in mm from the trim origin. */
   const at = (leftMm: number, topMm: number): CSSProperties => ({ position: 'absolute', left: mm(leftMm), top: mm(topMm) })
 
-  /* ── horizontal grid (mm) — stacks + gutters tile the content width ───────── */
-  const MX = W * 0.04
+  /* ── horizontal grid (mm): evenly-pitched milestone centres = the time axis ──── */
+  const MX = W * 0.035
   const CONTENT_X0 = MX
   const CONTENT_W = W - 2 * MX
-  const GUTTER_FRAC = 0.42 // generous air between the stacks
-  const slotW = CONTENT_W / (N + (N - 1) * GUTTER_FRAC)
-  const PITCH = slotW * (1 + GUTTER_FRAC)
-  const slotLeft = (i: number) => CONTENT_X0 + i * PITCH
-  const slotCenter = (i: number) => slotLeft(i) + slotW / 2
+  const PITCH = CONTENT_W / N
+  const center = (i: number) => CONTENT_X0 + PITCH * (i + 0.5)
 
-  /* ── vertical grid (mm) ──────────────────────────────────────────────────── */
-  const GROUND_Y = H * 0.84 // common floor line the stacks rise from
-  const STACK_MAX_H = H * 0.5 // tallest stack (the present)
-  const STACK_FLOOR_H = H * 0.036 // smallest visible stack (√-floored → scale note)
-  const EQUIV_GAP = H * 0.018 // air between a stack's top and its equiv label
-  const CAP_Y = GROUND_Y + H * 0.026 // model · tokens caption under the floor
+  /* ── vertical grid (mm): plates rise from a common baseline ──────────────────── */
+  const GROUND_Y = H * 0.83 // baseline the document plates stand on
+  const PLATE_MAX_H = H * 0.52 // tallest plate (the present — a towering saga)
+  const PLATE_MIN_H = H * 0.115 // shortest visible plate (a page) — tall enough to read
+  const EQUIV_GAP = H * 0.028 // air between a plate's top and its floating equiv
+  const CAP_Y = GROUND_Y + H * 0.03 // tokens · model · year caption under the line
 
-  /* honest height map: area/height ∝ √tokens, floored so the first hito reads */
-  const sq = (v: number) => Math.sqrt(Math.max(v, 1))
+  /* honest height map: plate height ∝ log(tokens), so every hito reads */
+  const lg = (v: number) => Math.log10(Math.max(v, 1))
   const minT = Math.min(...items.map((d) => d.tokens))
   const maxT = Math.max(...items.map((d) => d.tokens))
-  const span = sq(maxT) - sq(minT) || 1
-  const stackH = (tokens: number) => STACK_FLOOR_H + ((sq(tokens) - sq(minT)) / span) * (STACK_MAX_H - STACK_FLOOR_H)
+  const span = lg(maxT) - lg(minT) || 1
+  const plateH = (tokens: number) => PLATE_MIN_H + ((lg(tokens) - lg(minT)) / span) * (PLATE_MAX_H - PLATE_MIN_H)
+  /** Plate width follows the photo's aspect — so each document looks like itself,
+   *  never letterboxed — bounded so a wide one can't crowd its neighbours. */
+  const plateW = (h: number, aspect: number) => Math.max(PITCH * 0.22, Math.min(PITCH * 0.92, h * aspect))
 
-  const stackW = slotW * 0.66
-  const PAGE_MM = 7 // striation pitch (suggests stacked sheets)
+  /* type styles — sizes from the scale (exhibition law), not by eye */
+  const sTitle: CSSProperties = { fontFamily: PRINT_DISPLAY_HAIR, fontSize: pt(scale.h1Pt), fontWeight: 400, letterSpacing: pt(-scale.h1Pt * 0.02), lineHeight: 0.98, color: INK, margin: 0 }
+  const sLede: CSSProperties = { fontFamily: PRINT_TEXT_FONT, fontSize: pt(scale.bodyPt), fontWeight: 400, lineHeight: 1.4, color: INK_SOFT, margin: 0, hyphens: 'none' }
+  const sEquiv: CSSProperties = { fontFamily: PRINT_DISPLAY_HAIR, fontSize: pt(scale.h3Pt), fontWeight: 400, letterSpacing: pt(-scale.h3Pt * 0.012), lineHeight: 0.98 }
+  const sEquivSub: CSSProperties = { fontFamily: PRINT_TEXT_FONT, fontSize: pt(scale.bodyPt * 0.86), fontWeight: 500, color: INK_FAINT, lineHeight: 1.1 }
+  const sToken: CSSProperties = { fontFamily: PRINT_DISPLAY_HAIR, fontSize: pt(scale.h4Pt), fontWeight: 400, letterSpacing: pt(-scale.h4Pt * 0.01), lineHeight: 1 }
+  const sModel: CSSProperties = { fontFamily: PRINT_TEXT_FONT, fontSize: pt(scale.bodyPt * 0.92), fontWeight: 500, lineHeight: 1.16 }
 
   return (
     <>
-      {/* clean white field, bled to the media edge */}
+      <PrintFonts />
+      {/* clean white editorial ground, bled to the media edge */}
       <div style={{ position: 'absolute', inset: 0, background: BG }} />
 
       {/* trim layer — everything positioned in mm from the trim origin */}
       <div style={{ position: 'absolute', left: geo.bleedPx, top: geo.bleedPx, width: geo.trimWidthPx, height: geo.trimHeightPx }}>
 
-        {/* ── header (top-left): eyebrow · question · deck ─────────────────────── */}
-        <div style={{ ...at(MX, H * 0.07), width: mm(CONTENT_W) }}>
-          <div style={{ fontFamily: TEXT_FONT, fontSize: pt(30), fontWeight: 600, letterSpacing: pt(1.2), textTransform: 'uppercase', color: INK_SOFT }}>
-            S3 · Nave E · Texto + Código
-          </div>
-          <div style={{ marginTop: mm(20), fontFamily: DISPLAY_FONT, fontSize: pt(126), fontWeight: 500, letterSpacing: pt(-1.6), lineHeight: 1.0, color: INK }}>
-            ¿Cuánto puede recordar de una sola vez?
-          </div>
-          <div style={{ marginTop: mm(22), fontFamily: TEXT_FONT, fontSize: pt(40), fontWeight: 400, lineHeight: 1.28, color: INK_SOFT, maxWidth: mm(CONTENT_W * 0.62) }}>
-            La <strong style={{ fontWeight: 600, color: INK }}>ventana de contexto</strong> es la memoria de trabajo del modelo. En cuatro años pasó de unas páginas a una biblioteca entera.
-          </div>
+        {/* ── header (top-left): statement · lede ────────────────────────────────── */}
+        <div style={{ ...at(MX, H * 0.07), width: mm(CONTENT_W * 0.5) }}>
+          <div style={sTitle}>{title}</div>
+          <div style={{ ...sLede, marginTop: mm(H * 0.022), maxWidth: mm(CONTENT_W * 0.31) }}>{lede}</div>
         </div>
 
-        {/* ── the row of memory stacks ─────────────────────────────────────────── */}
+        {/* ── the rising row of document plates ──────────────────────────────────── */}
         {items.map((item, i) => {
-          const isNow = i === N - 1
-          const h = stackH(item.tokens)
+          const h = plateH(item.tokens)
+          const w = plateW(h, item.aspect)
           const top = GROUND_Y - h
-          const accent = isNow ? KIT_BLUE : INK
-          const faint = isNow ? 'rgba(0,112,249,0.10)' : 'rgba(26,26,26,0.05)'
-          const striate = isNow ? 'rgba(0,112,249,0.16)' : 'rgba(26,26,26,0.11)'
+          const left = center(i) - w / 2
+          const accent = item.now ? KIT_BLUE : INK
           return (
-            <div key={`stack-${i}`}>
-              {/* equiv label — the relatable hook, floating above the stack top */}
-              <div style={{ ...at(slotLeft(i) - slotW * 0.17, top - EQUIV_GAP), width: mm(slotW * 1.34), textAlign: 'center', transform: 'translateY(-100%)' }}>
-                <div style={{ fontFamily: DISPLAY_FONT, fontSize: pt(58), fontWeight: 500, letterSpacing: pt(-0.4), lineHeight: 1.02, color: accent }}>
-                  {item.equiv}
-                </div>
-                <div style={{ marginTop: mm(5), fontFamily: TEXT_FONT, fontSize: pt(30), fontWeight: 500, color: INK_SOFT }}>
-                  {item.equivSub}
-                </div>
+            <div key={`plate-${i}`}>
+              {/* equiv — the relatable hook, floating above the plate top */}
+              <div style={{ ...at(center(i) - PITCH / 2, top - EQUIV_GAP), width: mm(PITCH), textAlign: 'center', transform: 'translateY(-100%)' }}>
+                <div style={{ ...sEquiv, color: accent }}>{item.equiv}</div>
+                <div style={{ ...sEquivSub, marginTop: mm(H * 0.006) }}>{item.equivSub}</div>
               </div>
 
-              {/* the paper stack: height ∝ √tokens, page striations for texture */}
+              {/* the framed B&W print: full-bleed photo + a hairline keyline on the white wall */}
               <div
                 style={{
-                  ...at(slotCenter(i) - stackW / 2, top),
-                  width: mm(stackW),
+                  ...at(left, top),
+                  width: mm(w),
                   height: mm(h),
-                  background:
-                    `repeating-linear-gradient(to bottom, ${striate} 0 ${mm(0.6)}px, rgba(0,0,0,0) ${mm(0.6)}px ${mm(PAGE_MM)}px), ` +
-                    faint,
-                  borderLeft: `${mm(1.2)}px solid ${accent}`,
-                  borderRight: `${mm(1.2)}px solid ${accent}`,
-                  borderTop: `${mm(2.4)}px solid ${accent}`,
+                  background: MAT,
+                  overflow: 'hidden',
                   boxSizing: 'border-box',
+                  border: `${Math.max(1, mm(item.now ? 2 : 1))}px solid ${item.now ? KIT_BLUE : HAIRLINE}`,
                 }}
-              />
+              >
+                <Plate item={item} />
+              </div>
 
-              {/* caption under the floor: model · year · tokens */}
-              <div style={{ ...at(slotLeft(i) - slotW * 0.17, CAP_Y), width: mm(slotW * 1.34), textAlign: 'center' }}>
-                <div style={{ fontFamily: DISPLAY_FONT, fontSize: pt(64), fontWeight: 500, letterSpacing: pt(-0.6), lineHeight: 1, color: accent }}>
+              {/* caption under the baseline: tokens · model · year */}
+              <div style={{ ...at(center(i) - PITCH / 2, CAP_Y), width: mm(PITCH), textAlign: 'center' }}>
+                <div style={{ ...sToken, color: accent }}>
                   {item.tokenLabel}
-                  <span style={{ fontFamily: TEXT_FONT, fontSize: pt(28), fontWeight: 600, letterSpacing: pt(0.4), color: INK_SOFT }}> tokens</span>
+                  <span style={{ fontFamily: PRINT_TEXT_FONT, fontSize: pt(scale.bodyPt * 0.7), fontWeight: 600, letterSpacing: pt(0.4), color: INK_FAINT }}> tokens</span>
                 </div>
-                <div style={{ marginTop: mm(8), fontFamily: TEXT_FONT, fontSize: pt(34), fontWeight: 500, color: INK }}>
-                  {item.model} {isNow ? '' : `· ${item.year}`}
-                  {isNow && <span style={{ color: KIT_BLUE, fontWeight: 600 }}> · {item.year}</span>}
+                <div style={{ ...sModel, marginTop: mm(H * 0.008), color: INK }}>
+                  {item.model}
+                  <span style={{ color: item.now ? KIT_BLUE : INK_SOFT }}> · {item.year}</span>
                 </div>
               </div>
             </div>
           )
         })}
 
-        {/* ── common ground line under the stacks ──────────────────────────────── */}
-        <div style={{ ...at(slotCenter(0) - stackW * 0.8, GROUND_Y), width: mm(slotCenter(N - 1) - slotCenter(0) + stackW * 1.6), height: mm(3), background: HAIRLINE }} />
-
-        {/* ── footnote: token gloss + scale note + sources ─────────────────────── */}
-        <div style={{ ...at(MX, H * 0.955), width: mm(CONTENT_W) }}>
-          <div style={{ fontFamily: TEXT_FONT, fontSize: pt(22), fontWeight: 400, color: INK_SOFT, lineHeight: 1.3 }}>
-            Un token ≈ un fragmento de palabra. Alturas representadas a escala √ (no lineal) para que todos los hitos sean visibles.
-            &nbsp;·&nbsp; Fuentes: OpenAI · Anthropic · Google · arXiv 2005.14165.
-          </div>
-        </div>
+        {/* ── common baseline (the time axis) with a tick under each milestone ────── */}
+        <div style={{ ...at(center(0) - PITCH * 0.42, GROUND_Y - mm(1)), width: mm(center(N - 1) - center(0) + PITCH * 0.84), height: Math.max(1, mm(2.4)), background: HAIRLINE }} />
+        {items.map((item, i) => (
+          <div key={`tick-${i}`} style={{ ...at(center(i) - mm(1), GROUND_Y - mm(1)), width: Math.max(1, mm(2.4)), height: mm(H * 0.012), background: item.now ? KIT_BLUE : HAIRLINE }} />
+        ))}
       </div>
     </>
   )
+}
+
+/* ── one document plate: the real B&W still life, cover-cropped ──────────────── */
+function Plate({ item }: { item: Item }) {
+  const src = typeof item.src === 'string' && item.src.trim() ? item.src.trim() : ''
+  const style: CSSProperties = { width: '100%', height: '100%', objectFit: 'cover', objectPosition: item.focus ?? 'center center', display: 'block', filter: 'grayscale(1) contrast(1.07)' }
+  if (!src) {
+    // Placeholder until the real PNG lands — a soft tonal field naming the document.
+    return (
+      <div style={{ width: '100%', height: '100%', background: 'linear-gradient(152deg, #e9e9ea 0%, #cfcfd2 100%)', display: 'flex', alignItems: 'flex-end' }} />
+    )
+  }
+  const path = staticFile(src.replace(/^\/+/, '').replace(/^public\//, ''))
+  return getRemotionEnvironment().isRendering ? <Img src={path} alt={item.equiv} style={style} /> : <img src={path} alt={item.equiv} style={style} />
 }

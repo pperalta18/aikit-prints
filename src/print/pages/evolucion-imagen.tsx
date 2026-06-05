@@ -1,226 +1,324 @@
 import type { CSSProperties } from 'react'
 import { Img, staticFile, getRemotionEnvironment } from 'remotion'
-import { KIT_BLUE, DISPLAY_FONT, TEXT_FONT } from '@/lib/neumorphism'
+import { KIT_BLUE } from '@/lib/neumorphism'
+import { PrintFonts, PRINT_DISPLAY_HAIR, PRINT_TEXT_FONT } from '../printFonts'
+import { eventTypeScale } from './tipografia'
 import type { PrintPageProps } from '../types'
 
 /**
- * evolucion-imagen — wall 11-W-IMAGE (Nave E · cámara IMAGE, 10 × 2.5 m).
- * ──────────────────────────────────────────────────────────────────────
- * A very wide **timeline of AI image generation**: a row of dated frames reading
- * left→right = past→present, from the first blurry GAN faces to today's
- * indistinguishable images. Each milestone is a year + a representative image;
- * the present (2026 · HOY) is marked in KIT_BLUE.
+ * evolucion-imagen — wall 11-W-IMAGE (Nave E · cámara IMAGE, 9.25 × 2.5 m).
+ * ──────────────────────────────────────────────────────────────────────────
+ * An **editorial museum-grid** timeline of AI image generation, 2023 → today.
+ * The reference is a gallery "magazine wall": a uniform grid of tiled panels with
+ * fine joints, over which a deliberately asymmetric composition is laid — huge
+ * display years straddling panels, clusters of images bleeding to the panel seams,
+ * short text plates, with the years/images staggered band to band so it reads as
+ * one designed wall, past→present, left→right.
  *
- * The **timeline mechanism is inherited from `agi-timeline` ("El Año Cero")** —
- * a single blue accent on «now», a horizon axis with year ruler ticks and big
- * Display year numerals. Inverted to the museum reading: pictures on top, the
- * dated axis underneath. No headline, **no cream ground** — a clean white field
- * so the row of images is the whole wall (the timeline only, per the brief).
+ * Substrate: a uniform COLS×ROWS tile grid; a thin **seam overlay** is drawn on top
+ * of everything (joints cross images and type alike, as on a physically panelled
+ * wall). Composition: four era-bands (one per year, 3 columns each). Within a band,
+ * the giant year and the image cluster sit in **different rows** so nothing overlaps.
  *
- * Placeholder images for now (`item.src` empty → an abstract monochrome swatch
- * that runs **from noise to a clean image** as you move forward in time). Drop a
- * real print-res PNG per year under `assets/` and set `item.src` to swap a frame
- * in — the layout is unchanged.
+ * **Type is sized for exhibition**, not by eye: every level comes from
+ * `eventTypeScale` at the wall's reading distance — the giant years are the H1
+ * protagonist, era headlines step down the modular chord, and the model/intro copy
+ * is set to the museographic *comfort* size (≈1 in cap / 10 ft), so it reads at
+ * distance. Voice: clean white ground, hairline Universal Sans Display, and a
+ * **single KIT_BLUE accent** reserved for «2026 · HOY» (the present).
  *
- * Authored in millimetres from the trim origin (a trim layer offset by the
- * bleed), type in points, so it reads at print scale at any size / DPI.
+ * Images are **iconic samples per era** (several per year, varied). Until the real
+ * print-res PNGs land under `assets/`, each slot renders a labelled tonal
+ * placeholder naming the era's model — drop a `src` on the era image to swap it in.
  */
 
 const BG = '#ffffff'
 const INK = '#1a1a1a'
-const INK_SOFT = 'rgba(26,26,26,0.62)'
-const HAIRLINE = 'rgba(26,26,26,0.85)'
+const INK_SOFT = 'rgba(26,26,26,0.56)'
+const SEAM = 'rgba(26,26,26,0.11)'
 
-type Item = {
-  /** The milestone year, e.g. "2022". */
-  year: string
-  /** Short era label (uppercase eyebrow above the model). */
-  era: string
-  /** The model / tool(s) that defined the year. */
-  model: string
-  /** Optional real image path under `public/` (Remotion `staticFile`). */
+/** How far the wall is read, in metres — drives the whole museographic type scale. */
+const READING_DISTANCE_M = 3.5
+
+/* ── content model ────────────────────────────────────────────────────────── */
+type EraImage = {
+  /** What the sample depicts — used as the placeholder label + future gen prompt. */
+  subject: string
+  /** Optional real print-res image under `public/` (Remotion `staticFile`). */
   src?: string
 }
-
+type Era = {
+  year: string
+  /** Small tracked kicker above the headline. */
+  eyebrow: string
+  /** The era's headline. */
+  title: string
+  /** The model(s) that defined the year. */
+  model: string
+  /** Iconic samples (several per era; first is the hero). */
+  images: EraImage[]
+  /** The present — marked in KIT_BLUE. */
+  now?: boolean
+}
 type Props = {
-  items?: Item[]
+  eras?: Era[]
+  /** Intro plate (top-left). No headline, no locator — one line of context. */
+  lede?: string
 }
 
-/** The decade of AI image generation — defaults; the doc can override via props. */
-const DEFAULT_ITEMS: Item[] = [
-  { year: '2014', era: 'Nacen las GAN', model: 'Goodfellow et al.' },
-  { year: '2016', era: 'GAN convolucional', model: 'DCGAN' },
-  { year: '2018', era: 'Caras fotorrealistas', model: 'BigGAN · StyleGAN' },
-  { year: '2021', era: 'Texto → imagen', model: 'DALL·E · CLIP' },
-  { year: '2022', era: 'La era de la difusión', model: 'DALL·E 2 · Midjourney · SD' },
-  { year: '2023', era: 'Nitidez y coherencia', model: 'Midjourney v5 · SDXL' },
-  { year: '2024', era: 'Texto en la imagen', model: 'DALL·E 3 · Flux' },
-  { year: '2025', era: 'Control y consistencia', model: 'GPT Image · Nano Banana' },
-  { year: '2026', era: 'Indistinguible de lo real', model: 'Generación en tiempo real' },
+/**
+ * The four eras — each generated with the **real model of its year** (so the wall
+ * is an honest exhibit, not a stylisation): SD 1.5 (2022) → SDXL (2023) → Recraft
+ * v3 (2024) → GPT Image 2 (2026). Years are skipped on purpose to read as
+ * acceleration. `src` paths resolve under `public/` via `staticFile`.
+ */
+const A = 'prints/marco-11-w-image/assets'
+const DEFAULT_ERAS: Era[] = [
+  {
+    year: '2022',
+    eyebrow: 'Difusión temprana',
+    title: 'Aprende a soñar',
+    model: 'Stable Diffusion 1.5 · DALL·E 2',
+    // The hero slot is a 2×2 grid (imgs 0-3): many dreamy early-diffusion attempts,
+    // quartered by the wall seams. img 4 is the separate small plate below-left.
+    images: [
+      { subject: 'retrato onírico, anatomía imprecisa (SD 1.5)', src: `${A}/2022-g1.png` },
+      { subject: 'paisaje de fantasía «trending on artstation» (SD 1.5)', src: `${A}/2022-g2.png` },
+      { subject: 'criatura onírica de formas imprecisas (SD 1.5)', src: `${A}/2022-g3.png` },
+      { subject: 'sueño cósmico, arquitectura etérea (SD 1.5)', src: `${A}/2022-g4.png` },
+      { subject: 'paisaje de fantasía «trending on artstation» (SD 1.5)', src: `${A}/2022-b.png` },
+    ],
+  },
+  {
+    year: '2023',
+    eyebrow: 'Difusión madura',
+    title: 'Gana nitidez',
+    model: 'SDXL · Midjourney v5',
+    images: [
+      { subject: 'retrato fotográfico coherente (SDXL)', src: `${A}/2023-hero.png` },
+      { subject: 'paisaje cinematográfico (SDXL)', src: `${A}/2023-b.png` },
+      { subject: 'bodegón de producto (SDXL)', src: `${A}/2023-c.png` },
+    ],
+  },
+  {
+    year: '2024',
+    eyebrow: 'Texto y diseño',
+    title: 'Aprende a escribir',
+    model: 'Recraft v3 · nanobanana 2',
+    images: [
+      { subject: 'cartel de cine con título legible (Recraft v3)', src: `${A}/2024-hero.png` },
+      { subject: 'packaging con marca legible (nanobanana 2)', src: `${A}/2024-b.png` },
+      { subject: 'infografía con rótulos correctos (Recraft v3)', src: `${A}/2024-c.png` },
+    ],
+  },
+  {
+    year: '2026',
+    eyebrow: 'Indistinguible de lo real',
+    title: 'Funde con lo real',
+    model: 'GPT Image 2',
+    now: true,
+    images: [
+      { subject: 'retrato fotorrealista (GPT Image 2)', src: `${A}/2026-hero.png` },
+      { subject: 'escena callejera compleja (GPT Image 2)', src: `${A}/2026-b.png` },
+      { subject: 'bodegón fotográfico (GPT Image 2)', src: `${A}/2026-c.png` },
+    ],
+  },
 ]
 
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t
+const DEFAULT_INTRO = {
+  lede: 'En apenas cuatro años, la imagen IA pasó de manchas oníricas a fotografías que el ojo ya no distingue de una cámara real. Cada bloque está generado con el modelo de referencia de su año.',
 }
 
-function gray(v: number): string {
-  const n = Math.round(v)
-  return `rgb(${n}, ${n}, ${n})`
-}
+/* ── tile grid ────────────────────────────────────────────────────────────── */
+const COLS = 12
+const ROWS = 3
+
+/**
+ * The editorial composition, authored on the tile grid. Each block is placed by
+ * tile coords {c,r} with a span {cw,rh}. Hand-arranged so the giant years stagger
+ * and the image cluster of each band never shares a row with its year (no overlap).
+ * Era bands are 3 columns wide (cols 0-2, 3-5, 6-8, 9-11).
+ */
+type Block =
+  | { kind: 'intro'; c: number; r: number; cw: number; rh: number }
+  | { kind: 'year'; c: number; r: number; cw: number; rh: number; era: number }
+  | { kind: 'plate'; c: number; r: number; cw: number; rh: number; era: number }
+  | { kind: 'image'; c: number; r: number; cw: number; rh: number; era: number; img: number }
+  | { kind: 'grid'; c: number; r: number; cw: number; rh: number; era: number; imgs: number[] }
+
+const LAYOUT: Block[] = [
+  // ── 2022 · cols 0-2 — year TOP, hero is a 2×2 grid of 4 early-diffusion tries ──
+  { kind: 'intro', c: 0, r: 0, cw: 1, rh: 1 },
+  { kind: 'year', c: 1, r: 0, cw: 2, rh: 1, era: 0 },
+  { kind: 'plate', c: 0, r: 1, cw: 1, rh: 1, era: 0 },
+  { kind: 'image', c: 0, r: 2, cw: 1, rh: 1, era: 0, img: 4 },
+  { kind: 'grid', c: 1, r: 1, cw: 2, rh: 2, era: 0, imgs: [0, 1, 2, 3] },
+
+  // ── 2024 · cols 3-5 — year BOTTOM, hero top-left ──
+  { kind: 'image', c: 3, r: 0, cw: 2, rh: 2, era: 1, img: 0 },
+  { kind: 'plate', c: 5, r: 0, cw: 1, rh: 1, era: 1 },
+  { kind: 'image', c: 5, r: 1, cw: 1, rh: 1, era: 1, img: 1 },
+  { kind: 'year', c: 3, r: 2, cw: 2, rh: 1, era: 1 },
+  { kind: 'image', c: 5, r: 2, cw: 1, rh: 1, era: 1, img: 2 },
+
+  // ── 2025 · cols 6-8 — year TOP, hero bottom-left ──
+  { kind: 'year', c: 6, r: 0, cw: 2, rh: 1, era: 2 },
+  { kind: 'plate', c: 8, r: 0, cw: 1, rh: 1, era: 2 },
+  { kind: 'image', c: 6, r: 1, cw: 2, rh: 2, era: 2, img: 0 },
+  { kind: 'image', c: 8, r: 1, cw: 1, rh: 1, era: 2, img: 1 },
+  { kind: 'image', c: 8, r: 2, cw: 1, rh: 1, era: 2, img: 2 },
+
+  // ── 2026 · cols 9-11 — the NOW era (blue): year TOP-right, hero mid-right ──
+  { kind: 'plate', c: 9, r: 0, cw: 1, rh: 1, era: 3 },
+  { kind: 'year', c: 10, r: 0, cw: 2, rh: 1, era: 3 },
+  { kind: 'image', c: 9, r: 1, cw: 1, rh: 1, era: 3, img: 1 },
+  { kind: 'image', c: 9, r: 2, cw: 1, rh: 1, era: 3, img: 2 },
+  { kind: 'image', c: 10, r: 1, cw: 2, rh: 2, era: 3, img: 0 },
+]
 
 export function EvolucionImagen({ doc, geo }: PrintPageProps) {
   const { mm, pt } = geo
   const p = (doc.props ?? {}) as Props
-  const items = Array.isArray(p.items) && p.items.length ? p.items : DEFAULT_ITEMS
+  const eras = Array.isArray(p.eras) && p.eras.length ? p.eras : DEFAULT_ERAS
+  const intro = {
+    lede: p.lede ?? DEFAULT_INTRO.lede,
+  }
 
   const W = geo.dims.trimWidthMm
   const H = geo.dims.trimHeightMm
+  const tileW = W / COLS
+  const tileH = H / ROWS
 
-  /** Absolute placement in mm from the trim origin. */
-  const at = (leftMm: number, topMm: number): CSSProperties => ({ position: 'absolute', left: mm(leftMm), top: mm(topMm) })
+  /** Museographic type scale — every level sized to the wall's reading distance. */
+  const scale = eventTypeScale({ trimHeightMm: H, readingDistanceM: READING_DISTANCE_M, ratio: 1.7, h1CapFraction: 0.132 })
 
-  /* ── horizontal grid (mm) — frames + gutters tile the content width ──────── */
-  const MX = W * 0.03 // 300 on a 10 m wall
-  const CONTENT_X0 = MX
-  const CONTENT_W = W - 2 * MX
-  const N = items.length
-  const GUTTER_FRAC = 0.19 // gutter as a fraction of a frame's width
-  const slotW = CONTENT_W / (N + (N - 1) * GUTTER_FRAC)
-  const gutter = slotW * GUTTER_FRAC
-  const PITCH = slotW + gutter
-  const slotLeft = (i: number) => CONTENT_X0 + i * PITCH
-  const slotCenter = (i: number) => slotLeft(i) + slotW / 2
-  const TL_END = slotLeft(N - 1) + slotW
+  /** Tile rect → absolute mm box. */
+  const box = (c: number, r: number, cw: number, rh: number): CSSProperties => ({
+    position: 'absolute',
+    left: mm(c * tileW),
+    top: mm(r * tileH),
+    width: mm(cw * tileW),
+    height: mm(rh * tileH),
+  })
 
-  /* ── vertical grid (mm) — no header, so the row is centred on the wall ───── */
-  const IMG_TOP = H * 0.1 // ~250
-  const IMG_BASELINE = H * 0.648 // ~1620  (bottom of the frames)
-  const slotH = IMG_BASELINE - IMG_TOP
-  const CAP_Y = IMG_BASELINE + H * 0.012 // caption under the frame
-  const AXIS_Y = H * 0.76 // ~1900  (horizon line)
-  const YEAR_Y = H * 0.78 // ~1950  (big year numerals, below the axis)
-
-  /* ── line weights (mm) — bumped for a 10 m wall seen at distance ─────────── */
-  const W_FRAME = 1.6
-  const H_EJE = 4
-  const W_YTICK = 2
-  const H_YTICK = 26
-  const W_DROP = 1
-  const DROP_INK = 'rgba(26,26,26,0.16)'
-  const DISC_D = 16
-  const FADE_IN = slotLeft(0) - MX * 0.4 // axis fades in to the left (pre-history)
+  /* type styles — sizes from the scale (exhibition law), not by eye */
+  const sYear: CSSProperties = { fontFamily: PRINT_DISPLAY_HAIR, fontWeight: 400, lineHeight: 0.8, letterSpacing: pt(-10), whiteSpace: 'nowrap' }
+  const sEyebrow: CSSProperties = { fontFamily: PRINT_TEXT_FONT, fontSize: pt(scale.eyebrowPt), fontWeight: 600, letterSpacing: pt(scale.eyebrowPt * 0.045), textTransform: 'uppercase', color: INK_SOFT, lineHeight: 1.18 }
+  const sTitle: CSSProperties = { fontFamily: PRINT_DISPLAY_HAIR, fontSize: pt(scale.h4Pt), fontWeight: 400, letterSpacing: pt(-1), lineHeight: 1.02, color: INK }
+  const sModel: CSSProperties = { fontFamily: PRINT_TEXT_FONT, fontSize: pt(scale.bodyPt), fontWeight: 600, lineHeight: 1.16, color: INK }
+  const sLede: CSSProperties = { fontFamily: PRINT_TEXT_FONT, fontSize: pt(scale.bodyPt), fontWeight: 400, lineHeight: 1.3, color: INK, margin: 0, hyphens: 'none' }
+  const PAD = mm(46)
 
   return (
     <>
+      <PrintFonts />
       {/* clean white field, bled to the media edge */}
       <div style={{ position: 'absolute', inset: 0, background: BG }} />
 
       {/* trim layer — everything positioned in mm from the trim origin */}
       <div style={{ position: 'absolute', left: geo.bleedPx, top: geo.bleedPx, width: geo.trimWidthPx, height: geo.trimHeightPx }}>
 
-        {/* ── faint drop lines (image column → axis) behind everything ───────── */}
-        {items.map((_, i) => (
-          <div
-            key={`drop-${i}`}
-            style={{ ...at(slotCenter(i) - W_DROP / 2, IMG_BASELINE), width: mm(W_DROP), height: mm(AXIS_Y - IMG_BASELINE), background: DROP_INK }}
-          />
-        ))}
+        {/* ── editorial composition ─────────────────────────────────────────── */}
+        {LAYOUT.map((b, i) => {
+          if (b.kind === 'intro') {
+            return (
+              <div key={i} style={{ ...box(b.c, b.r, b.cw, b.rh), padding: PAD, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                <p style={{ ...sLede, margin: 0 }}>{intro.lede}</p>
+              </div>
+            )
+          }
 
-        {/* ── the row of dated frames ─────────────────────────────────────────── */}
-        {items.map((item, i) => {
-          const isNow = i === N - 1
-          const c = N > 1 ? i / (N - 1) : 1 // clarity 0 (noise) → 1 (clean image)
+          if (b.kind === 'year') {
+            const e = eras[b.era]
+            if (!e) return null
+            return (
+              <div key={i} style={{ ...box(b.c, b.r, b.cw, b.rh), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ ...sYear, fontSize: pt(scale.h1Pt), color: e.now ? KIT_BLUE : INK }}>{e.year}</span>
+                {e.now && (
+                  <span style={{ position: 'absolute', right: PAD, bottom: PAD, fontFamily: PRINT_TEXT_FONT, fontSize: pt(scale.eyebrowPt), fontWeight: 600, letterSpacing: pt(scale.eyebrowPt * 0.05), textTransform: 'uppercase', color: KIT_BLUE }}>
+                    Hoy
+                  </span>
+                )}
+              </div>
+            )
+          }
+
+          if (b.kind === 'plate') {
+            const e = eras[b.era]
+            if (!e) return null
+            return (
+              <div key={i} style={{ ...box(b.c, b.r, b.cw, b.rh), padding: PAD, boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+                <div style={sEyebrow}>{e.eyebrow}</div>
+                <div style={{ ...sTitle, marginTop: mm(18) }}>{e.title}</div>
+                <div style={{ ...sModel, marginTop: 'auto' }}>{e.model}</div>
+              </div>
+            )
+          }
+
+          if (b.kind === 'grid') {
+            const e = eras[b.era]
+            if (!e) return null
+            const cells = b.imgs.map((idx) => e.images[idx]).filter(Boolean) as EraImage[]
+            return (
+              <div key={i} style={{ ...box(b.c, b.r, b.cw, b.rh), display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', background: BG }}>
+                {cells.map((im, k) => (
+                  <div key={k} style={{ position: 'relative', overflow: 'hidden', background: BG }}>
+                    <Sample im={im} model={e.model} now={e.now} mm={mm} pt={pt} eyebrowPt={scale.eyebrowPt} />
+                  </div>
+                ))}
+              </div>
+            )
+          }
+
+          // image
+          const e = eras[b.era]
+          const im = e?.images[b.img]
+          if (!e || !im) return null
           return (
-            <div key={`frame-${i}`}>
-              {/* the frame (real image, or the noise→clarity placeholder swatch) */}
-              <div
-                style={{
-                  ...at(slotLeft(i), IMG_TOP),
-                  width: mm(slotW),
-                  height: mm(slotH),
-                  border: `${mm(W_FRAME)}px solid ${HAIRLINE}`,
-                  boxSizing: 'border-box',
-                  overflow: 'hidden',
-                  background: BG,
-                }}
-              >
-                <Frame item={item} c={c} mm={mm} pt={pt} slotWmm={slotW} />
-              </div>
-
-              {/* caption: era (eyebrow) + model, centred under the frame */}
-              <div style={{ ...at(slotLeft(i), CAP_Y), width: mm(slotW), textAlign: 'center' }}>
-                <div style={{ fontFamily: TEXT_FONT, fontSize: pt(28), fontWeight: 600, letterSpacing: pt(0.6), textTransform: 'uppercase', color: isNow ? KIT_BLUE : INK_SOFT, lineHeight: 1.2 }}>
-                  {item.era}
-                </div>
-                <div style={{ marginTop: mm(8), fontFamily: TEXT_FONT, fontSize: pt(40), fontWeight: 500, color: INK, lineHeight: 1.12 }}>
-                  {item.model}
-                </div>
-              </div>
+            <div key={i} style={{ ...box(b.c, b.r, b.cw, b.rh), overflow: 'hidden', background: BG }}>
+              <Sample im={im} model={e.model} now={e.now} mm={mm} pt={pt} eyebrowPt={scale.eyebrowPt} />
             </div>
           )
         })}
 
-        {/* ── horizon axis: fade-in (pre-history) · ink · blue under «now» ───── */}
-        <div style={{ ...at(FADE_IN, AXIS_Y - H_EJE / 2), width: mm(slotLeft(0) - FADE_IN), height: mm(H_EJE), background: `linear-gradient(to right, rgba(26,26,26,0), ${INK})` }} />
-        <div style={{ ...at(slotLeft(0), AXIS_Y - H_EJE / 2), width: mm(slotLeft(N - 1) - slotLeft(0)), height: mm(H_EJE), background: INK }} />
-        <div style={{ ...at(slotLeft(N - 1), AXIS_Y - H_EJE / 2), width: mm(TL_END - slotLeft(N - 1)), height: mm(H_EJE), background: KIT_BLUE }} />
-
-        {/* year ruler ticks dropping from the axis to the numerals */}
-        {items.map((_, i) => {
-          const isNow = i === N - 1
-          return (
-            <div key={`ytick-${i}`} style={{ ...at(slotCenter(i) - W_YTICK / 2, AXIS_Y), width: mm(W_YTICK), height: mm(H_YTICK), background: isNow ? KIT_BLUE : INK }} />
-          )
-        })}
-
-        {/* «now» origin disc on the axis */}
-        <div style={{ ...at(slotCenter(N - 1) - DISC_D / 2, AXIS_Y - DISC_D / 2), width: mm(DISC_D), height: mm(DISC_D), borderRadius: '50%', background: KIT_BLUE }} />
-
-        {/* big year numerals below the axis; HOY tag under «now» */}
-        {items.map((item, i) => {
-          const isNow = i === N - 1
-          return (
-            <div key={`year-${i}`} style={{ ...at(slotLeft(i), YEAR_Y), width: mm(slotW), textAlign: 'center' }}>
-              <div style={{ fontFamily: DISPLAY_FONT, fontSize: pt(150), fontWeight: 500, letterSpacing: pt(-1.5), lineHeight: 1, color: isNow ? KIT_BLUE : INK }}>{item.year}</div>
-              {isNow && (
-                <div style={{ marginTop: mm(10), fontFamily: TEXT_FONT, fontSize: pt(34), fontWeight: 600, letterSpacing: pt(1), textTransform: 'uppercase', color: KIT_BLUE }}>HOY</div>
-              )}
-            </div>
-          )
-        })}
+        {/* ── seam overlay: fine panel joints across the whole wall (on top) ──── */}
+        <SeamGrid geo={geo} tileW={tileW} tileH={tileH} W={W} H={H} />
       </div>
     </>
   )
 }
 
-/* ── one frame's interior: a real image, or the noise→clarity placeholder ──── */
-function Frame({ item, c, mm, pt, slotWmm }: { item: Item; c: number; mm: (v: number) => number; pt: (v: number) => number; slotWmm: number }) {
-  const src = typeof item.src === 'string' && item.src.trim() ? item.src.trim() : ''
+/* ── one sample: a real image, or a labelled tonal placeholder ─────────────── */
+function Sample({ im, model, now, mm, pt, eyebrowPt }: { im: EraImage; model: string; now?: boolean; mm: (v: number) => number; pt: (v: number) => number; eyebrowPt: number }) {
+  const src = typeof im.src === 'string' && im.src.trim() ? im.src.trim() : ''
   if (src) {
     const path = staticFile(src.replace(/^\/+/, '').replace(/^public\//, ''))
     const style: CSSProperties = { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }
-    // Remotion's <Img> waits for the bitmap to decode (deterministic still); the
-    // bare <img> is correct for the live preview where there is no render context.
-    return getRemotionEnvironment().isRendering ? <Img src={path} alt={`${item.year} · ${item.model}`} style={style} /> : <img src={path} alt={`${item.year} · ${item.model}`} style={style} />
+    return getRemotionEnvironment().isRendering ? <Img src={path} alt={im.subject} style={style} /> : <img src={path} alt={im.subject} style={style} />
   }
-
-  // Placeholder: an abstract monochrome swatch that runs from noisy/muddy (early)
-  // to a crisp tonal image (late) — a meaningful stand-in until the real PNG lands.
-  const lightTone = gray(lerp(196, 234, c))
-  const darkTone = gray(lerp(150, 40, c))
-  const noiseOpacity = 0.16 * (1 - c)
-  const hatchMm = lerp(5, 13, c) // finer hatch early reads as noise
-  const tonal = `linear-gradient(158deg, ${lightTone} 0%, ${darkTone} 100%)`
-  const noise =
-    noiseOpacity > 0.005
-      ? `repeating-linear-gradient(45deg, rgba(0,0,0,${noiseOpacity}) 0 ${mm(hatchMm)}px, rgba(255,255,255,0) ${mm(hatchMm)}px ${mm(hatchMm * 2)}px), ` +
-        `repeating-linear-gradient(-45deg, rgba(0,0,0,${noiseOpacity * 0.7}) 0 ${mm(hatchMm)}px, rgba(255,255,255,0) ${mm(hatchMm)}px ${mm(hatchMm * 2)}px), `
-      : ''
+  // Placeholder — a soft tonal field naming the era's model, so the mockup reads as
+  // "the <model> sample goes here" until the real PNG lands.
+  const tonal = now ? 'linear-gradient(152deg, #e9eef6 0%, #c9d3e2 100%)' : 'linear-gradient(152deg, #eceae6 0%, #cfcbc2 100%)'
   return (
-    <div style={{ position: 'absolute', inset: 0, background: noise + tonal }}>
-      <div style={{ position: 'absolute', left: mm(slotWmm * 0.05), bottom: mm(slotWmm * 0.05), fontFamily: TEXT_FONT, fontSize: pt(22), fontWeight: 600, letterSpacing: pt(1.4), textTransform: 'uppercase', color: c > 0.5 ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.4)' }}>
-        muestra
-      </div>
+    <div style={{ position: 'absolute', inset: 0, background: tonal, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: mm(30), boxSizing: 'border-box' }}>
+      <div style={{ fontFamily: PRINT_TEXT_FONT, fontSize: pt(eyebrowPt * 0.62), fontWeight: 600, letterSpacing: pt(1.6), textTransform: 'uppercase', color: now ? KIT_BLUE : 'rgba(26,26,26,0.5)' }}>muestra</div>
+      <div style={{ marginTop: mm(6), fontFamily: PRINT_TEXT_FONT, fontSize: pt(eyebrowPt * 0.82), fontWeight: 500, lineHeight: 1.14, color: 'rgba(26,26,26,0.78)' }}>{model}</div>
+    </div>
+  )
+}
+
+/* ── seam overlay — uniform panel joints drawn on top of all content ────────── */
+function SeamGrid({ geo, tileW, tileH, W, H }: { geo: PrintPageProps['geo']; tileW: number; tileH: number; W: number; H: number }) {
+  const { mm } = geo
+  const SW = 2 // seam thickness (mm)
+  const lines: CSSProperties[] = []
+  for (let c = 1; c < COLS; c++) lines.push({ position: 'absolute', left: mm(c * tileW - SW / 2), top: 0, width: mm(SW), height: mm(H), background: SEAM })
+  for (let r = 1; r < ROWS; r++) lines.push({ position: 'absolute', left: 0, top: mm(r * tileH - SW / 2), width: mm(W), height: mm(SW), background: SEAM })
+  return (
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      {lines.map((s, i) => (
+        <div key={i} style={s} />
+      ))}
     </div>
   )
 }

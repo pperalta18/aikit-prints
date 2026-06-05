@@ -1,8 +1,8 @@
 {
   "id": "marco-15-w-1",
-  "title": "Marco vacío 15-W-1 — Acento vertical S5/S6 — identidad cálida (4×2.50 m)",
+  "title": "15-W-1 — Señal próxima sección «04 · Ineficiencias del humano» (4×2.50 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
-  "pageComponentId": "blank",
+  "pageComponentId": "proxima-sala",
   "theme": "light",
   "dimensions": {
     "trimWidthMm": 4000,
@@ -22,6 +22,15 @@
     "frameWallInvId": 15,
     "wallId": "wall-14",
     "frameId": "15-W-1",
-    "side": -1
+    "side": -1,
+    "readingDistanceM": 4,
+    "edge": "right",
+    "eyebrow": "Próxima sección",
+    "num": "04",
+    "sala": "Ineficiencias del humano",
+    "salaLines": ["Ineficiencias", "del humano"],
+    "arrow": "right",
+    "showFilete": true,
+    "showTick": false
   }
 }

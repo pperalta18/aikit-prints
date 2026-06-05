@@ -88,10 +88,7 @@ export function Escala9E1({ doc, geo }: PrintPageProps) {
       <div style={{ position: 'absolute', left: geo.bleedPx, top: geo.bleedPx, width: geo.trimWidthPx, height: geo.trimHeightPx }}>
         {/* ── header, top-left ── */}
         <div style={{ position: 'absolute', left: mm(marginX), top: mm(H * 0.085), width: mm(W * 0.5) }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: mm(scale.capHeights.eyebrowMm * 0.8) }}>
-            <span style={{ width: mm(scale.capHeights.eyebrowMm * 2.6), height: Math.max(1, mm(scale.capHeights.eyebrowMm * 0.16)), background: pal.accent }} />
-            <span style={tipoEyebrow(geo, scale.eyebrowPt, pal.muted)}>Tamaño de modelos · 1958 → hoy</span>
-          </div>
+          <span style={tipoEyebrow(geo, scale.eyebrowPt, pal.muted)}>Tamaño de modelos · 1958 → hoy</span>
           <div style={{ ...tipoH2(geo, scale.h2Pt, pal), marginTop: mm(H * 0.035) }}>Setenta años de escala</div>
           <div style={{ ...tipoEyebrow(geo, microPt, pal.muted), textTransform: 'none', letterSpacing: 0, fontWeight: 400, lineHeight: 1.4, marginTop: mm(H * 0.028), maxWidth: mm(W * 0.3) }}>
             El área de cada modelo es su número de parámetros. Las franjas son sus capas — la profundidad de la red.
@@ -267,7 +264,7 @@ function Gpt4Cue({
           <polyline points={`${arrowW - arrowH * 0.7},${arrowH * 0.16} ${arrowW},${arrowH / 2} ${arrowW - arrowH * 0.7},${arrowH * 0.84}`} fill="none" stroke={pal.accent} strokeWidth={Math.max(1, mm(1.2))} strokeLinejoin="round" strokeLinecap="round" />
         </svg>
       </div>
-      <div style={{ ...tipoEyebrow(geo, microPt, pal.muted), textTransform: 'none', letterSpacing: 0, marginTop: mm(H * 0.02), lineHeight: 1.4 }}>
+      <div style={{ ...tipoEyebrow(geo, subPt, pal.muted), textTransform: 'none', letterSpacing: 0, marginTop: mm(H * 0.02), lineHeight: 1.4 }}>
         {factor} GPT-2. No cabe a escala en esta pared.
       </div>
     </div>

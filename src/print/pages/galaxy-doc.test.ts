@@ -129,8 +129,10 @@ describe('galaxy — renders real content (names only, nothing clipped)', () => 
     expect(left).toContain('Café') // galaxy half
     expect(left).toContain('50%') // ring discs
     expect(left).toContain('Inteligencia de los modelos') // chart title
-    expect(left).toContain('Artificial Analysis') // chart source
-    expect(left).toContain('Gemini 3.1 Pro') // a frontier point
+    expect(left).toContain('Artificial Analysis') // chart source / watermark
+    expect(left).toContain('FECHA DE LANZAMIENTO') // x axis
+    expect(left).toContain('OpenAI') // provider legend
+    expect(left).toContain('Anthropic') // provider legend
   })
 
   it('the right wall renders its galaxy half by name (chart half reserved)', () => {

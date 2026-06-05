@@ -1,8 +1,8 @@
 {
   "id": "marco-11-e-2",
-  "title": "Marco vacío 11-E-2 — Nave E — aceleración (12.25×2.50 m)",
+  "title": "11-E-2 — Señal próxima sección «05 · Cuellos de botella» (12.25×2.50 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
-  "pageComponentId": "blank",
+  "pageComponentId": "proxima-sala",
   "theme": "light",
   "dimensions": {
     "trimWidthMm": 12250,
@@ -22,6 +22,15 @@
     "frameWallInvId": 11,
     "wallId": "wall-10",
     "frameId": "11-E-2",
-    "side": 1
+    "side": 1,
+    "readingDistanceM": 4,
+    "edge": "left",
+    "eyebrow": "Próxima sección",
+    "num": "05",
+    "sala": "Cuellos de botella",
+    "salaLines": ["Cuellos", "de botella"],
+    "arrow": "left",
+    "showFilete": true,
+    "showTick": false
   }
 }

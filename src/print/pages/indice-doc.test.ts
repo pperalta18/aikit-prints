@@ -4,25 +4,27 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { PRINT_PAGES, getPrintPage } from './index'
-import { Tipografia } from './tipografia.tsx'
-import { TIPOGRAFIA_INV_ID, eventTypeScale } from './tipografia'
+import { Indice } from './indice.tsx'
+import { eventTypeScale } from './tipografia'
 import { isLegibleAtDistance, minCapHeightMm } from './wayfinding'
 import { buildGeometry } from '../geometry'
 import type { PrintDoc, PrintPageProps } from '../types'
 import { DEFAULT_WALL_HEIGHT_M, findWallByInvId, resolveWallHeight } from '../space/eventLayout'
 
 /**
- * tipografia (print 5-S-1) doc + registration tests
- * ─────────────────────────────────────────────────
+ * indice (print 5-S-1) doc + registration tests
+ * ──────────────────────────────────────────────
  * The type-scale maths lives in `tipografia.ts` and is unit-tested there. This file
- * covers the *authoring* of print **5-S-1**: `public/prints/marco-5-s-1/doc.json` and
- * its registration. Unlike the eye-band code pages this is a **full-wall vinyl** —
- * the trim equals the whole 9.5 × 2.5 m wall and the bleed wraps the edge — so the
- * fit checks assert trim == wall, not media ≤ wall. The page is identified by the
- * marco convention (`frameWallInvId`), not `props.invId`, so it stays out of the
- * planned-piece audits; its museographic honesty is proven here directly.
+ * covers the *authoring* of print **5-S-1** — `public/prints/marco-5-s-1/doc.json` —
+ * which now carries the editorial **índice** (table of contents of the whole show)
+ * instead of the earlier four-heading bridge piece. Like the other full-wall vinyls
+ * its trim equals the whole 9.5 × 2.5 m wall and the bleed wraps the edge, so the fit
+ * checks assert trim == wall. Identified by the marco convention (`frameWallInvId`),
+ * not `props.invId`, so it stays out of the planned-piece audits; its museographic
+ * honesty (now a *relatively small*, but still legible, index) is proven here directly.
  */
 
+const INV_ID = 5 // wall 5 (`wall-4`), the S5→S6 bridge
 const DOC_PATH = fileURLToPath(new URL('../../../public/prints/marco-5-s-1/doc.json', import.meta.url))
 const doc = JSON.parse(readFileSync(DOC_PATH, 'utf8')) as PrintDoc
 
@@ -33,22 +35,21 @@ function readingDistanceM(): number {
   return typeof v === 'number' ? v : 3
 }
 
-describe('tipografia (5-S-1) — registration', () => {
-  it('is registered under its pageComponentId and resolves to the Tipografia page', () => {
-    expect(doc.pageComponentId).toBe('tipografia')
-    expect(getPrintPage(doc.pageComponentId)).toBe(Tipografia)
-    expect(PRINT_PAGES[doc.pageComponentId]).toBe(Tipografia)
+describe('indice (5-S-1) — registration', () => {
+  it('is registered under its pageComponentId and resolves to the Indice page', () => {
+    expect(doc.pageComponentId).toBe('indice')
+    expect(getPrintPage(doc.pageComponentId)).toBe(Indice)
+    expect(PRINT_PAGES[doc.pageComponentId]).toBe(Indice)
   })
 
   it('is the print 5-S-1 doc', () => {
     expect(doc.id).toBe('marco-5-s-1')
     expect(doc.props?.frameId).toBe('5-S-1')
-    expect(doc.props?.frameWallInvId).toBe(TIPOGRAFIA_INV_ID)
-    expect(TIPOGRAFIA_INV_ID).toBe(5)
+    expect(doc.props?.frameWallInvId).toBe(INV_ID)
   })
 })
 
-describe('tipografia (5-S-1) — print contract', () => {
+describe('indice (5-S-1) — print contract', () => {
   it('is a CMYK / FOGRA39 / PDF-X print like the rest of the wall-graphics family', () => {
     expect(doc.color.mode).toBe('cmyk')
     expect(doc.color.iccProfile).toBe('icc/CoatedFOGRA39.icc')
@@ -73,8 +74,8 @@ describe('tipografia (5-S-1) — print contract', () => {
   })
 })
 
-describe('tipografia (5-S-1) — physical fit to wall 5 (S5→S6 bridge, full-wall vinyl)', () => {
-  const wall = findWallByInvId(TIPOGRAFIA_INV_ID)
+describe('indice (5-S-1) — physical fit to wall 5 (S5→S6 bridge, full-wall vinyl)', () => {
+  const wall = findWallByInvId(INV_ID)
 
   it('targets the registered S5/S6 bridge wall (9.5 m run)', () => {
     expect(wall).toBeDefined()
@@ -98,42 +99,48 @@ describe('tipografia (5-S-1) — physical fit to wall 5 (S5→S6 bridge, full-wa
   })
 })
 
-describe('tipografia (5-S-1) — the authored canvas is legible at its reading distance', () => {
-  it('every type level clears the museographic floor, with a dominant H1', () => {
+describe('indice (5-S-1) — a small, but legible, index at its reading distance', () => {
+  it('every rendered level clears the museographic floor, with a small (not monumental) title', () => {
     const dist = readingDistanceM()
     const ratio = typeof doc.props?.ratio === 'number' ? doc.props.ratio : undefined
-    const h1CapFraction = typeof doc.props?.h1CapFraction === 'number' ? doc.props.h1CapFraction : undefined
+    const titleCapFraction = typeof doc.props?.titleCapFraction === 'number' ? doc.props.titleCapFraction : undefined
     const scale = eventTypeScale({
       trimHeightMm: doc.dimensions.trimHeightMm,
       readingDistanceM: dist,
       ratio,
-      h1CapFraction,
+      h1CapFraction: titleCapFraction,
     })
     expect(scale.minCapHeightMm).toBeCloseTo(minCapHeightMm(dist), 9)
-    for (const cap of Object.values(scale.capHeights)) {
+    // The índice renders only the title (h1), the number (h3), the deck (body) and the
+    // eyebrow — those are the levels that must clear the floor (h2/h4 are unused here).
+    for (const cap of [scale.capHeights.h1Mm, scale.capHeights.h3Mm, scale.capHeights.bodyMm, scale.capHeights.eyebrowMm]) {
       expect(isLegibleAtDistance(cap, dist)).toBe(true)
     }
-    // H1 is a true protagonist on the 2.5 m wall (hundreds of mm of cap-height).
-    expect(scale.capHeights.h1Mm).toBeGreaterThanOrEqual(300)
-    expect(scale.capHeights.h1Mm).toBeGreaterThan(scale.capHeights.h2Mm)
+    // The title leads the row but is kept *small* on the wall (an índice, not a hero):
+    expect(scale.capHeights.h1Mm).toBeGreaterThan(scale.capHeights.bodyMm)
+    expect(scale.capHeights.h1Mm).toBeLessThan(80)
   })
 })
 
-describe('tipografia (5-S-1) — renders real content (not a blank page)', () => {
+describe('indice (5-S-1) — renders the index (not a blank page)', () => {
   function render() {
     const geo = buildGeometry(doc.dimensions, doc.dpi)
     const props: PrintPageProps = { doc, geo }
-    return renderToStaticMarkup(createElement(Tipografia, props))
+    return renderToStaticMarkup(createElement(Indice, props))
   }
 
-  it('renders the eyebrow, the four headings, a paragraph snippet and the lockup', () => {
+  it('renders every room title and a deck (no eyebrow / masthead / footer)', () => {
     const html = render()
-    expect(html).toContain('S5') // the locator eyebrow (S5 → S6 · El puente)
-    expect(html).toContain('Coste marginal') // H1
-    expect(html).toContain('abundante') // H2
-    expect(html).toContain('Ya pasó antes') // H3
-    expect(html).toContain('vuelve a pasar') // H4
-    expect(html).toContain('coste cero') // a body paragraph snippet
-    expect(html).toContain('AiKit Live')
+    // the six rooms of the show, top→bottom
+    expect(html).toContain('Disrupción sensorial')
+    expect(html).toContain('Del mito al dato')
+    expect(html).toContain('Velocidad de progreso')
+    expect(html).toContain('Ineficiencias del humano')
+    expect(html).toContain('Cuellos de botella')
+    expect(html).toContain('La historia se repite')
+    expect(html).toContain('Sala de cine') // a deck (S4)
+    // stripped chrome: no eyebrow, no masthead word, no lockup.
+    expect(html).not.toContain('Economía de guerra')
+    expect(html).not.toContain('AiKit Live')
   })
 })

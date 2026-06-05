@@ -1,8 +1,8 @@
 {
   "id": "marco-13-s-1",
-  "title": "13-S-1 — La Naranja Mecánica: cada asset del juego ya existe (6.50×2.50 m)",
+  "title": "13-S-1 — Señal próxima sección «06 · La historia se repite» (6.50×2.50 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
-  "pageComponentId": "naranja-mecanica",
+  "pageComponentId": "proxima-sala",
   "theme": "light",
   "dimensions": {
     "trimWidthMm": 6500,
@@ -22,6 +22,16 @@
     "frameWallInvId": 13,
     "wallId": "wall-12",
     "frameId": "13-S-1",
-    "side": 1
+    "side": 1,
+    "readingDistanceM": 4,
+    "edge": "right",
+    "eyebrow": "Próxima sección",
+    "num": "06",
+    "sala": "La historia se repite",
+    "salaLines": ["La historia", "se repite"],
+    "subtitle": "Validación histórica · «Ya pasó antes»",
+    "arrow": "right",
+    "showFilete": true,
+    "showTick": false
   }
 }

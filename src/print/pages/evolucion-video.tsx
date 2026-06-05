@@ -1,214 +1,249 @@
 import type { CSSProperties } from 'react'
 import { Img, staticFile, getRemotionEnvironment } from 'remotion'
-import { KIT_BLUE, DISPLAY_FONT, TEXT_FONT } from '@/lib/neumorphism'
+import { KIT_BLUE } from '@/lib/neumorphism'
 import type { PrintPageProps } from '../types'
+import { PrintFonts, PRINT_DISPLAY_HAIR } from '../printFonts'
+import { tipoPalette } from './tipografia-kit'
+import { eventTypeScale } from './tipografia'
 
 /**
- * evolucion-video — wall 2-E-IMAGE (Nave O · cámara VÍDEO, 7.5 × 2.5 m).
+ * evolucion-video — wall 2-E-IMAGE (Nave O · cámara VÍDEO, 6.75 × 2.5 m).
  * ──────────────────────────────────────────────────────────────────────
- * **Will Smith comiendo espaguetis** — el meme-prueba del progreso del vídeo IA.
- * El mismo prompt, año tras año: cada año es una **columna de frames** (una tira
- * vertical del mismo instante del vídeo) y la calidad sube de izquierda a derecha
- * — de la papilla deforme de 2023 a algo físicamente coherente hoy (hockey-stick).
+ * **Will Smith comiendo espaguetis** — el meme-prueba del progreso del vídeo IA,
+ * montado como **dos tiras de película** sobre fondo blanco. Sin texto: sólo el
+ * **año** y los **fotogramas reales**. La franja de arriba son frames del modelo
+ * viejo (2023, la papilla deforme de ModelScope) y la de abajo del modelo de hoy
+ * (fotorrealista). El contraste entre las dos tiras *es* el mensaje; el presente
+ * se marca por color (KIT_BLUE), no por palabras.
  *
- * Cada año lleva un KPI honesto-ilustrativo (duración · resolución) que también
- * crece. El presente (HOY) va en KIT_BLUE.
+ * Tratamiento **editorial / de exposición**: las dos tiras forman un bloque
+ * centrado en el alto de la pared, con celuloide casi-negro, perforaciones finas
+ * de 35 mm, filetes de registro que abrazan el fotograma y las imágenes
+ * *image-forward* (márgenes de banda delgados para que mande la imagen). El año es
+ * un **folio hairline** (más contenido que un titular) **sobre un filete a todo el
+ * ancho** —gris para el pasado, KIT_BLUE para el presente— que hace de pie editorial
+ * de cada tira; el presente (2026) además lleva un filete azul de un pelo alrededor.
  *
- * Placeholder de momento: cada frame es un *swatch* que va de muy distorsionado
- * y ruidoso (años tempranos) a limpio (años recientes), con variación por frame
- * para simular movimiento. Para meter frames reales, deja PNGs bajo `assets/` y
- * rellena `item.frames` (un path por frame de la columna) — el layout no cambia.
+ * Los fotogramas son PNGs reales extraídos de los vídeos, recortados a 3:2, en
+ * `public/prints/marco-2-e-image/assets/{old,new}/`. El layout es data-driven:
+ * `doc.props.strips` puede sustituir las tiras; si no, usa los defaults de abajo.
  *
- * Autoría en milímetros desde el origen de trim, tipografía en puntos.
+ * Autoría en milímetros desde el origen de trim, tipografía en puntos vía la
+ * escala museográfica `eventTypeScale` (no se eligen pt a ojo).
  */
 
-const BG = '#ffffff'
-const INK = '#1a1a1a'
-const INK_SOFT = 'rgba(26,26,26,0.62)'
-const HAIRLINE = 'rgba(26,26,26,0.85)'
+const ASSET_DIR = 'prints/marco-2-e-image/assets'
+const seq = (sub: string, n: number) =>
+  Array.from({ length: n }, (_, i) => `${ASSET_DIR}/${sub}/${String(i + 1).padStart(2, '0')}.png`)
 
-type Item = {
-  /** Year of the sample, e.g. "2023". */
+type Strip = {
+  /** The only label on the piece — the year numeral over the strip. */
   year: string
-  /** Short era label (eyebrow above the column). */
-  era: string
-  /** KPI line that grows hockey-stick: duración · resolución. */
-  kpi: string
-  /** Optional real frame PNGs under `public/` (one per frame of the column). */
-  frames?: string[]
+  /** Real frame PNGs under `public/` (one per cell of the strip). */
+  frames: string[]
+  /** Marks the present strip — year + keyline go KIT_BLUE. */
+  now?: boolean
 }
 
 type Props = {
-  items?: Item[]
-  /** Frames stacked per year-column (default 3). */
-  framesPerColumn?: number
+  strips?: Strip[]
+  /** Real reading distance to the wall, metres. Default 3. */
+  readingDistanceM?: number
 }
 
-/** The progress of AI video, same prompt year by year — defaults; doc can override. */
-const DEFAULT_ITEMS: Item[] = [
-  { year: '2023', era: 'Pesadilla deforme', kpi: '~2 s · 256p · incoherente' },
-  { year: '2024', era: 'Toma forma', kpi: '~20 s · 480p' },
-  { year: '2025', era: 'Movimiento creíble', kpi: '~60 s · 1080p' },
-  { year: '2026', era: 'Indistinguible', kpi: 'minutos · 4K · física correcta' },
+/** The before/after of AI video — the same prompt, two years apart. */
+const DEFAULT_STRIPS: Strip[] = [
+  { year: '2023', frames: seq('old', 8) },
+  { year: '2026', frames: seq('new', 8), now: true },
 ]
 
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t
-}
-/** Deterministic pseudo-random in [0,1) from two ints (per-frame variation). */
-function rnd(i: number, f: number): number {
-  const x = Math.sin(i * 12.9898 + f * 78.233) * 43758.5453
-  return x - Math.floor(x)
+/* ── film-strip proportions (fractions of one frame / of the band) ─────────────── */
+const AR = 3 / 2 // classic 35mm still-frame aspect (w : h)
+const GAP_FRAC = 0.022 // inter-frame frame-line (and side pad) ÷ frame width — thin
+const PAD_Y_FRAC = 0.092 // sprocket margin top/bottom ÷ frame height — slim, image-forward
+const DISPLAY_CAP_RATIO = 0.72 // Universal Sans Display cap ÷ em (year numeral em height)
+
+type StripGeom = { frameW: number; frameH: number; gap: number; padX: number; padY: number; bandH: number; bandW: number }
+function computeStripGeom(contentW: number, n: number): StripGeom {
+  const frameW = contentW / (n + GAP_FRAC * (n + 1))
+  const gap = GAP_FRAC * frameW
+  const frameH = frameW / AR
+  const padY = frameH * PAD_Y_FRAC
+  return { frameW, frameH, gap, padX: gap, padY, bandH: frameH + 2 * padY, bandW: contentW }
 }
 
 export function EvolucionVideo({ doc, geo }: PrintPageProps) {
   const { mm, pt } = geo
+  const pal = tipoPalette(doc.theme)
   const p = (doc.props ?? {}) as Props
-  const items = Array.isArray(p.items) && p.items.length ? p.items : DEFAULT_ITEMS
-  const FPC = Math.max(2, Math.min(5, Math.round(p.framesPerColumn ?? 3)))
+  const strips = Array.isArray(p.strips) && p.strips.length ? p.strips : DEFAULT_STRIPS
+  const readingDistanceM = typeof p.readingDistanceM === 'number' && p.readingDistanceM > 0 ? p.readingDistanceM : 3
 
   const W = geo.dims.trimWidthMm
   const H = geo.dims.trimHeightMm
-  const N = items.length
+
+  // Museographic type scale — only the year numeral uses it (the sole text).
+  // A restrained editorial folio, not a billboard: smaller than the protagonist
+  // H1 would be, sized so the *frames* lead and the year captions them.
+  const t = eventTypeScale({ trimHeightMm: H, readingDistanceM, h1CapFraction: 0.038, ratio: 1.7 })
+
+  const MX = W * 0.04
+  const contentW = W - 2 * MX
 
   const at = (leftMm: number, topMm: number): CSSProperties => ({ position: 'absolute', left: mm(leftMm), top: mm(topMm) })
 
-  /* ── horizontal grid — year columns + gutters tile the content width ──────── */
-  const MX = W * 0.04
-  const CONTENT_X0 = MX
-  const CONTENT_W = W - 2 * MX
-  const GUTTER_FRAC = 0.34
-  const slotW = CONTENT_W / (N + (N - 1) * GUTTER_FRAC)
-  const PITCH = slotW * (1 + GUTTER_FRAC)
-  const slotLeft = (i: number) => CONTENT_X0 + i * PITCH
-  const slotCenter = (i: number) => slotLeft(i) + slotW / 2
-
-  /* ── vertical grid — header, the frame strip, year numerals ──────────────── */
-  const STRIP_TOP = H * 0.33
-  const STRIP_BOTTOM = H * 0.82
-  const stripH = STRIP_BOTTOM - STRIP_TOP
-  const FRAME_GAP = H * 0.012
-  const frameW = slotW
-  // frame height from a 16:9 aspect, but never taller than the strip allows
-  const frameH = Math.min((frameW * 9) / 16, (stripH - (FPC - 1) * FRAME_GAP) / FPC)
-  const colH = frameH * FPC + FRAME_GAP * (FPC - 1)
-  const STRIP_Y0 = STRIP_TOP + (stripH - colH) / 2 // vertically centre the strip
-  const KPI_Y = STRIP_Y0 - H * 0.028 // era + kpi above the column
-  const YEAR_Y = STRIP_Y0 + colH + H * 0.022 // big year numeral below the column
-
-  const W_FRAME = 1.4
+  // Vertical rhythm: each strip is one "unit" = [year folio · lead · film band],
+  // and the units are stacked with a breathing mid-gap and centred on the wall.
+  const yearEmMm = t.capHeights.h1Mm / DISPLAY_CAP_RATIO // the numeral's em box height
+  const YEAR_LEAD = H * 0.04 // air between the year+rule caption and its film band
+  const MID_GAP = H * 0.09 // breathing room between the two strips
+  const RULE_W = 1.4 // mm — a true hairline rule, thick enough to read at distance
+  const bandH = (i: number) => computeStripGeom(contentW, strips[i].frames.length).bandH
+  const unitH = (i: number) => yearEmMm + YEAR_LEAD + bandH(i)
+  const totalH = strips.reduce((sum, _s, i) => sum + unitH(i), 0) + (strips.length - 1) * MID_GAP
+  const top0 = Math.max(H * 0.05, (H - totalH) / 2)
+  const unitTop = (i: number) => top0 + strips.slice(0, i).reduce((s, _x, j) => s + unitH(j) + MID_GAP, 0)
+  const bandTop = (i: number) => unitTop(i) + yearEmMm + YEAR_LEAD
 
   return (
     <>
-      <div style={{ position: 'absolute', inset: 0, background: BG }} />
+      <PrintFonts />
+      <div style={{ position: 'absolute', inset: 0, background: pal.bg }} />
 
       <div style={{ position: 'absolute', left: geo.bleedPx, top: geo.bleedPx, width: geo.trimWidthPx, height: geo.trimHeightPx }}>
-
-        {/* ── header (top-left) ────────────────────────────────────────────────── */}
-        <div style={{ ...at(MX, H * 0.07), width: mm(CONTENT_W) }}>
-          <div style={{ fontFamily: TEXT_FONT, fontSize: pt(30), fontWeight: 600, letterSpacing: pt(1.2), textTransform: 'uppercase', color: INK_SOFT }}>
-            S3 · Nave O · Vídeo generado por IA
-          </div>
-          <div style={{ marginTop: mm(18), fontFamily: DISPLAY_FONT, fontSize: pt(120), fontWeight: 500, letterSpacing: pt(-1.6), lineHeight: 1.0, color: INK }}>
-            Will Smith comiendo espaguetis
-          </div>
-          <div style={{ marginTop: mm(20), fontFamily: TEXT_FONT, fontSize: pt(38), fontWeight: 400, lineHeight: 1.28, color: INK_SOFT, maxWidth: mm(CONTENT_W * 0.6) }}>
-            El mismo prompt, año tras año. ¿A esta velocidad, qué habrá el año que viene?
-          </div>
-        </div>
-
-        {/* ── the year columns (each a vertical strip of frames) ───────────────── */}
-        {items.map((item, i) => {
-          const isNow = i === N - 1
-          const c = N > 1 ? i / (N - 1) : 1 // 0 (deformed) → 1 (clean)
-          const accent = isNow ? KIT_BLUE : INK
-          const frames = Array.isArray(item.frames) ? item.frames : []
+        {strips.map((strip, s) => {
+          const g = computeStripGeom(contentW, strip.frames.length)
+          const top = bandTop(s)
+          const now = !!strip.now
+          const accent = now ? KIT_BLUE : pal.ink
+          // The folio rule: full-band hairline underlining the year — present in
+          // KIT_BLUE, past a quiet grey. The editorial device that captions each strip.
+          const ruleColor = now ? KIT_BLUE : pal.muted
           return (
-            <div key={`col-${i}`}>
-              {/* era + kpi above the column */}
-              <div style={{ ...at(slotLeft(i), KPI_Y), width: mm(slotW), textAlign: 'center', transform: 'translateY(-100%)' }}>
-                <div style={{ fontFamily: TEXT_FONT, fontSize: pt(30), fontWeight: 600, letterSpacing: pt(0.6), textTransform: 'uppercase', color: isNow ? KIT_BLUE : INK_SOFT, lineHeight: 1.2 }}>
-                  {item.era}
-                </div>
-                <div style={{ marginTop: mm(5), fontFamily: TEXT_FONT, fontSize: pt(26), fontWeight: 500, color: INK_SOFT }}>
-                  {item.kpi}
-                </div>
+            <div key={`strip-${s}`}>
+              {/* the only label: the year folio, hairline, sitting on its rule */}
+              <div
+                style={{
+                  ...at(MX, top - YEAR_LEAD),
+                  transform: 'translateY(-100%)',
+                  fontFamily: PRINT_DISPLAY_HAIR,
+                  fontSize: pt(t.h1Pt),
+                  fontWeight: 400,
+                  letterSpacing: pt(-t.h1Pt * 0.015),
+                  lineHeight: 1,
+                  color: accent,
+                }}
+              >
+                {strip.year}
               </div>
 
-              {/* the stacked frames */}
-              {Array.from({ length: FPC }).map((_, f) => {
-                const top = STRIP_Y0 + f * (frameH + FRAME_GAP)
-                return (
-                  <div
-                    key={`frame-${i}-${f}`}
-                    style={{
-                      ...at(slotCenter(i) - frameW / 2, top),
-                      width: mm(frameW),
-                      height: mm(frameH),
-                      border: `${mm(W_FRAME)}px solid ${isNow ? KIT_BLUE : HAIRLINE}`,
-                      boxSizing: 'border-box',
-                      overflow: 'hidden',
-                      background: BG,
-                    }}
-                  >
-                    <VideoFrame src={frames[f]} c={c} i={i} f={f} mm={mm} pt={pt} frameWmm={frameW} />
-                  </div>
-                )
-              })}
+              {/* the folio rule — full band width, underlining the year as one caption unit */}
+              <div style={{ ...at(MX, top - YEAR_LEAD), width: mm(g.bandW), height: mm(RULE_W), background: ruleColor }} />
 
-              {/* big year numeral below the column; HOY tag on the present */}
-              <div style={{ ...at(slotLeft(i), YEAR_Y), width: mm(slotW), textAlign: 'center' }}>
-                <div style={{ fontFamily: DISPLAY_FONT, fontSize: pt(140), fontWeight: 500, letterSpacing: pt(-1.5), lineHeight: 1, color: accent }}>{item.year}</div>
-                {isNow && (
-                  <div style={{ marginTop: mm(8), fontFamily: TEXT_FONT, fontSize: pt(34), fontWeight: 600, letterSpacing: pt(1), textTransform: 'uppercase', color: KIT_BLUE }}>HOY</div>
-                )}
-              </div>
+              <FilmStrip geo={geo} leftMm={MX} topMm={top} g={g} frames={strip.frames} now={now} bg={pal.bg} />
             </div>
           )
         })}
-
-        {/* ── footnote ─────────────────────────────────────────────────────────── */}
-        <div style={{ ...at(MX, H * 0.955), width: mm(CONTENT_W) }}>
-          <div style={{ fontFamily: TEXT_FONT, fontSize: pt(22), fontWeight: 400, color: INK_SOFT, lineHeight: 1.3 }}>
-            Frames de muestra del mismo vídeo generado cada año. KPIs ilustrativos (duración · resolución). Las modalidades avanzan todas a la vez — no hay freno.
-          </div>
-        </div>
       </div>
     </>
   )
 }
 
-/* ── one video frame: a real PNG, or the deformed→clean placeholder swatch ──── */
-function VideoFrame({ src, c, i, f, mm, pt, frameWmm }: { src?: string; c: number; i: number; f: number; mm: (v: number) => number; pt: (v: number) => number; frameWmm: number }) {
-  const path = typeof src === 'string' && src.trim() ? src.trim() : ''
-  if (path) {
-    const resolved = staticFile(path.replace(/^\/+/, '').replace(/^public\//, ''))
-    const style: CSSProperties = { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }
-    return getRemotionEnvironment().isRendering ? <Img src={resolved} style={style} /> : <img src={resolved} alt="" style={style} />
-  }
+/* ── one film strip: black celluloid band, punched sprockets, a row of frames ──── */
+function FilmStrip({
+  geo,
+  leftMm,
+  topMm,
+  g,
+  frames,
+  now,
+  bg,
+}: {
+  geo: PrintPageProps['geo']
+  leftMm: number
+  topMm: number
+  g: StripGeom
+  frames: string[]
+  now: boolean
+  bg: string
+}) {
+  const { mm } = geo
+  const BAND = '#0a0a0b' // a deep, neutral celluloid black (no warm cast)
+  const REG = '#1b1b1f' // the image-edge registration line — a half-tone above black
 
-  // Placeholder: a warm spaghetti-ish tone that goes from warped/noisy (early) to
-  // clean (late). Per-frame variation (rnd) shifts the warp so a column reads as
-  // successive frames of motion, more chaotic the earlier the year.
-  const warp = (1 - c) * (0.5 + rnd(i, f)) // earlier years warp harder
-  const angle = lerp(120, 158, c) + (rnd(i, f) - 0.5) * 80 * (1 - c)
-  const sauce = `hsl(${lerp(18, 24, c)}, ${lerp(38, 70, c)}%, ${lerp(38, 52, c)}%)` // tomato
-  const noodle = `hsl(${lerp(40, 46, c)}, ${lerp(30, 64, c)}%, ${lerp(60, 78, c)}%)` // pasta
-  const tonal = `linear-gradient(${angle}deg, ${noodle} 0%, ${sauce} ${lerp(40, 64, c)}%, #5a2718 100%)`
-  const noiseOpacity = 0.34 * warp
-  const hatchMm = lerp(4, 12, c)
-  const noise =
-    noiseOpacity > 0.01
-      ? `repeating-linear-gradient(${angle + 30}deg, rgba(0,0,0,${noiseOpacity}) 0 ${mm(hatchMm)}px, rgba(255,255,255,0) ${mm(hatchMm)}px ${mm(hatchMm * 2)}px), ` +
-        `repeating-linear-gradient(${angle - 60}deg, rgba(255,255,255,${noiseOpacity * 0.6}) 0 ${mm(hatchMm * 0.7)}px, rgba(0,0,0,0) ${mm(hatchMm * 0.7)}px ${mm(hatchMm * 1.6)}px), `
-      : ''
+  // Perforations: 4 per frame width (the 35mm "KS" standard), fine rounded slots
+  // centred in each sprocket margin and run the full band so the strip reads as
+  // real film without shouting. Kept small + precise — the elegance is in restraint.
+  const pitch = g.frameW / 4
+  const holeW = pitch * 0.36
+  const holeH = g.padY * 0.3
+  const holeR = Math.min(holeW, holeH) * 0.26
+  const count = Math.max(2, Math.floor(g.bandW / pitch))
+  const startX = (g.bandW - (count - 1) * pitch) / 2
+  const holesX = Array.from({ length: count }, (_, i) => startX + i * pitch)
+
+  const hole = (cx: number, cyMm: number): CSSProperties => ({
+    position: 'absolute',
+    left: mm(cx - holeW / 2),
+    top: mm(cyMm - holeH / 2),
+    width: mm(holeW),
+    height: mm(holeH),
+    borderRadius: mm(holeR),
+    background: bg,
+  })
+
   return (
-    <div style={{ position: 'absolute', inset: 0, background: noise + tonal, filter: warp > 0.4 ? 'contrast(0.9)' : 'none' }}>
-      {f === 0 && (
-        <div style={{ position: 'absolute', left: mm(frameWmm * 0.04), top: mm(frameWmm * 0.04), fontFamily: TEXT_FONT, fontSize: pt(20), fontWeight: 600, letterSpacing: pt(1.2), textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)' }}>
-          muestra
+    <div
+      style={{
+        position: 'absolute',
+        left: mm(leftMm),
+        top: mm(topMm),
+        width: mm(g.bandW),
+        height: mm(g.bandH),
+        background: BAND,
+        // a hairline KIT_BLUE keyline marks the present strip without shouting
+        boxShadow: now ? `0 0 0 ${mm(1.4)}px ${KIT_BLUE}` : 'none',
+      }}
+    >
+      {/* image-edge registration lines — a half-tone rule kissing the image top
+          and bottom, so the frame area reads as a precisely seated plate */}
+      <div style={{ position: 'absolute', left: 0, top: mm(g.padY - 0.8), width: mm(g.bandW), height: mm(0.8), background: REG }} />
+      <div style={{ position: 'absolute', left: 0, top: mm(g.padY + g.frameH), width: mm(g.bandW), height: mm(0.8), background: REG }} />
+
+      {/* top + bottom sprocket rows */}
+      {holesX.map((cx, i) => (
+        <div key={`ht-${i}`} style={hole(cx, g.padY / 2)} />
+      ))}
+      {holesX.map((cx, i) => (
+        <div key={`hb-${i}`} style={hole(cx, g.bandH - g.padY / 2)} />
+      ))}
+
+      {/* the frames, separated by black frame-lines (the gap shows the band) */}
+      {frames.map((src, i) => (
+        <div
+          key={`f-${i}`}
+          style={{
+            position: 'absolute',
+            left: mm(g.padX + i * (g.frameW + g.gap)),
+            top: mm(g.padY),
+            width: mm(g.frameW),
+            height: mm(g.frameH),
+            overflow: 'hidden',
+            background: '#000',
+          }}
+        >
+          <VideoFrame src={src} />
         </div>
-      )}
+      ))}
     </div>
   )
+}
+
+/* ── one real frame PNG, cover-cropped to the cell ─────────────────────────────── */
+function VideoFrame({ src }: { src: string }) {
+  const path = typeof src === 'string' ? src.trim() : ''
+  if (!path) return <div style={{ position: 'absolute', inset: 0, background: '#1a1a1a' }} />
+  const resolved = staticFile(path.replace(/^\/+/, '').replace(/^public\//, ''))
+  const style: CSSProperties = { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }
+  return getRemotionEnvironment().isRendering ? <Img src={resolved} style={style} /> : <img src={resolved} alt="" style={style} />
 }

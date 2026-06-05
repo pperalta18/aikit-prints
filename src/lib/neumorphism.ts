@@ -35,6 +35,33 @@ export const BRAND = {
 
 export type BrandColor = keyof typeof BRAND
 
+/**
+ * AiKit brand neutrals — the grey scale from the "Economía de guerra" Figma
+ * library ("03 Color" board). Single source of truth for greys on brand
+ * surfaces (signage, credentials, screen UI). Figma semantic names noted; the
+ * three resolved variables are `Muted` (#F4F4FA), `Muted foreground` (#6C6C89)
+ * and `Foreground` (#1E1E20).
+ *
+ * Distinct from the print typography ground `TIPO_LIGHT`, which is deliberately
+ * pure white (#fff) because it targets physical CMYK paper, not a screen.
+ */
+export const GRAY = {
+  /** #F4F4FA — Figma "Muted". Lightest ground / surface. */
+  surface: '#f4f4fa',
+  /** #E6E6F4 — subtle raised fill over the surface. */
+  raised: '#e6e6f4',
+  /** #DBDBF0 — hairlines, borders, ghost/de-emphasised fills. */
+  line: '#dbdbf0',
+  /** #6C6C89 — Figma "Muted foreground". Muted labels / secondary text. */
+  muted: '#6c6c89',
+  /** #282833 — secondary foreground, one step up from muted. */
+  soft: '#282833',
+  /** #1E1E20 — Figma "Foreground". Primary ink. */
+  ink: '#1e1e20',
+} as const
+
+export type GrayToken = keyof typeof GRAY
+
 export type LightSource = 'tl' | 'tr' | 'bl' | 'br'
 
 export type NeoTheme = {

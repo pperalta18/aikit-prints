@@ -1,4 +1,5 @@
 import raw from './event-layout.json'
+import type { FurnitureItem, FurnitureKind } from './furniture'
 
 /**
  * Event-space layout model
@@ -50,10 +51,19 @@ export type RawElement = Partial<WallRegistry> & {
   w: number
   h: number
   /**
-   * Physical wall height in metres (the vertical extent, not a floor dimension).
-   * Optional: walls without it fall back to {@link DEFAULT_WALL_HEIGHT_M}.
+   * Physical height in metres (the vertical extent, not a floor dimension). On a
+   * wall it's the wall height (fallback {@link DEFAULT_WALL_HEIGHT_M}); on a piece
+   * of furniture it's the object's own height (`sy`, fallback to its kind default).
    */
   alturaM?: number
+  /** Furniture only: separation from the floor in metres (lifts the base off y=0). */
+  elevacionM?: number
+  /**
+   * Stable code id for a wall added in the 3D editor (no inventory `invId`). Read
+   * in preference to the index/`invId` fallback so an added wall keeps its id —
+   * and never collides with a catalogue wall's `wall-(invId-1)` — across saves.
+   */
+  wallId?: string
   rotation?: number
   modelId?: string
   animation?: string
@@ -64,6 +74,13 @@ type RawLayout = {
   version: number
   spaceWidth: number
   spaceDepth: number
+  /**
+   * Single global height (metres) the 3D editor applies to *every* wall — the
+   * venue's walls are uniform. Optional: absent falls back to
+   * {@link DEFAULT_WALL_HEIGHT_M}. Stored once at the root rather than stamped on
+   * each wall, so per-wall `alturaM` (measured-height) data stays meaningful.
+   */
+  wallHeight?: number
   elements: RawElement[]
   exportedAt?: string
 }
@@ -82,6 +99,17 @@ const OFF_Z = -SPACE_DEPTH / 2
  * model height is recorded on the element. See `specs/wall-graphics.md`.
  */
 export const DEFAULT_WALL_HEIGHT_M = 2.5
+
+/**
+ * The saved global wall height (metres) the 3D editor seeds its height control
+ * from, or `undefined` when the layout has none yet (then the scene starts on
+ * {@link DEFAULT_WALL_HEIGHT_M}). The single source of truth for "all walls share
+ * one height".
+ */
+export const WALL_HEIGHT: number | undefined =
+  typeof layout.wallHeight === 'number' && Number.isFinite(layout.wallHeight) && layout.wallHeight > 0
+    ? layout.wallHeight
+    : undefined
 
 /**
  * Normalise a raw `alturaM` to a usable wall height. A height is only honoured
@@ -160,10 +188,11 @@ function toWall(e: RawElement, i: number): Wall {
   const { height, explicit } = normalizeWallHeight(e.alturaM)
   return {
     ...b,
-    // Code id is derived from the stable inventory id (`wall-(invId-1)`), not the
-    // array position, so retiring a wall (e.g. #17, the confesionario) never shifts
-    // the ids of the walls after it. Unregistered surfaces (glass) keep array order.
-    id: `wall-${e.invId != null ? e.invId - 1 : i}`,
+    // Code id: an editor-added wall carries its own stable `wallId`; otherwise it's
+    // derived from the inventory id (`wall-(invId-1)`), not the array position, so
+    // retiring a wall (e.g. #17, the confesionario) never shifts the ids after it.
+    // Unregistered surfaces (glass) keep array order.
+    id: e.wallId ?? `wall-${e.invId != null ? e.invId - 1 : i}`,
     normalAxis,
     length: normalAxis === 'x' ? b.sz : b.sx,
     thickness: normalAxis === 'x' ? b.sx : b.sz,
@@ -173,12 +202,69 @@ function toWall(e: RawElement, i: number): Wall {
   }
 }
 
-export const WALLS: Wall[] = byType('wall').map(toWall)
+/**
+ * Assign every wall element a unique code id. A catalogue wall keeps its inventory
+ * id (`wall-(invId-1)`); an editor-added wall keeps its explicit `wallId`, unless
+ * that clashes with a catalogue id — e.g. a gap in the invId sequence (retired
+ * #17) leaves `wall-25` free for invId 26 while an added wall also grabbed
+ * `wall-25` — in which case it's bumped to a fresh `wall-new-N`. Shared by
+ * {@link WALLS} and {@link loadWallItems} so the static and editable wall views
+ * never disagree, and selecting/dragging an added wall can never hit a catalogue
+ * wall by id.
+ */
+function wallIds(elements: RawElement[]): string[] {
+  const used = new Set<string>()
+  for (const e of elements) if (e.invId != null) used.add(`wall-${e.invId - 1}`)
+  let n = 0
+  return elements.map((e, i) => {
+    if (e.invId != null) return `wall-${e.invId - 1}`
+    let id = e.wallId ?? `wall-${i}`
+    while (used.has(id)) id = `wall-new-${n++}`
+    used.add(id)
+    return id
+  })
+}
+
+const WALL_ELEMENTS = byType('wall')
+const WALL_IDS = wallIds(WALL_ELEMENTS)
+export const WALLS: Wall[] = WALL_ELEMENTS.map((e, i) => ({ ...toWall(e, i), id: WALL_IDS[i] }))
 /** Glass partitions — rendered like walls but transparent; also mountable. */
 export const GLASS: Wall[] = byType('glass').map((e, i) => ({ ...toWall(e, i), id: `glass-${i}` }))
 export const TABLES: FootprintBox[] = byType('table').map(toBox)
 export const BARS: FootprintBox[] = byType('bar').map(toBox)
 export const PLANTS: FootprintBox[] = byType('plant').map(toBox)
+
+/**
+ * The movable furniture (tables, bar, plants) resolved to editable world-space
+ * items — the seed the 3D scene drags / adds / removes and writes back to the
+ * layout (see `./furniture`). Ids are stable per kind (`table-0`, `bar-0`, …) and
+ * match {@link FurnitureItem.id} / `nextFurnitureId`'s scheme, so a saved file
+ * reopens to the same items. Walls, glass, spawn and the crowd are *not* movable
+ * and are excluded here.
+ */
+export function loadFurnitureItems(): FurnitureItem[] {
+  const counters: Partial<Record<FurnitureKind, number>> = {}
+  const items: FurnitureItem[] = []
+  for (const e of layout.elements) {
+    if (e.type !== 'table' && e.type !== 'bar' && e.type !== 'plant') continue
+    const kind: FurnitureKind = e.type
+    const b = toBox(e)
+    const n = counters[kind] ?? 0
+    counters[kind] = n + 1
+    items.push({
+      id: `${kind}-${n}`,
+      kind,
+      cx: b.cx,
+      cz: b.cz,
+      sx: b.sx,
+      sz: b.sz,
+      ...(typeof e.alturaM === 'number' && e.alturaM > 0 ? { sy: e.alturaM } : {}),
+      ...(typeof e.elevacionM === 'number' && e.elevacionM > 0 ? { elevation: e.elevacionM } : {}),
+      ...(e.rotation != null ? { rotation: e.rotation } : {}),
+    })
+  }
+  return items
+}
 export const SPAWNS: FootprintBox[] = byType('spawn').map(toBox)
 
 /** A person/agent reduced to a position + facing (the planner's "model" rows). */
@@ -199,6 +285,124 @@ export const PEOPLE: Person[] = byType('model').map((e) => {
     groupId: e.groupId,
   }
 })
+
+/* ── editable walls ───────────────────────────────────────────────────────────
+ * The 3D scene lets the operator move / rotate / add / remove walls and write the
+ * result back to the layout, with one global height for every wall. These helpers
+ * are the bridge: read the wall elements into world-space editable items, resolve
+ * an item back to the same `Wall` the rest of the system consumes (so an unedited
+ * wall is byte-for-byte the wall it was — prints stay put), and convert an item
+ * back to a planner element for the JSON. Walls rotate in 90° steps, so they stay
+ * axis-aligned and the normal axis is always derived from the footprint.
+ */
+
+/** A wall reduced to its editable world-space footprint + its registry, if any. */
+export type EditableWall = {
+  /** Stable id — `wall-(invId-1)` for catalogue walls, `wall-new-N` for added ones. */
+  id: string
+  cx: number
+  cz: number
+  sx: number
+  sz: number
+  /**
+   * The wall's own measured height (metres), preserved untouched across edits. The
+   * scene renders every wall at the *global* height instead, so this is data — not
+   * a render input — kept so a measured wall keeps its `alturaM` after a round-trip.
+   */
+  alturaM?: number
+  /** Wall-graphics registry (catalogue walls); absent on freshly-added walls. */
+  registry?: WallRegistry
+}
+
+const roundMm = (m: number) => Math.round(m * 1000) / 1000
+
+/**
+ * Read the wall elements into editable world-space items. Ids match {@link toWall}
+ * exactly (`wall-(invId-1)`, or the array index when unregistered), so a saved
+ * placement keyed on a wall id still resolves after a round-trip.
+ */
+export function loadWallItems(): EditableWall[] {
+  return WALL_ELEMENTS.map((e, i) => {
+    const b = toBox(e)
+    return {
+      id: WALL_IDS[i],
+      cx: b.cx,
+      cz: b.cz,
+      sx: b.sx,
+      sz: b.sz,
+      ...(typeof e.alturaM === 'number' && e.alturaM > 0 ? { alturaM: e.alturaM } : {}),
+      registry: toRegistry(e),
+    }
+  })
+}
+
+/**
+ * Resolve an editable wall to the `Wall` the renderer / mounting math consume, at
+ * the given global height. Derivation mirrors {@link toWall} (normal = thin axis),
+ * so for an unmodified item this returns the same wall as the static set, only
+ * with the uniform height applied.
+ */
+export function resolveEditableWall(item: EditableWall, height: number): Wall {
+  const normalAxis: 'x' | 'z' = item.sx <= item.sz ? 'x' : 'z'
+  return {
+    cx: item.cx,
+    cz: item.cz,
+    sx: item.sx,
+    sz: item.sz,
+    id: item.id,
+    normalAxis,
+    length: normalAxis === 'x' ? item.sz : item.sx,
+    thickness: normalAxis === 'x' ? item.sx : item.sz,
+    height,
+    hasExplicitHeight: true,
+    registry: item.registry,
+  }
+}
+
+/** A fresh id for an added wall: `wall-new-N`, one past the highest such suffix. */
+export function nextWallId(items: EditableWall[]): string {
+  let max = -1
+  for (const it of items) {
+    const m = /^wall-new-(\d+)$/.exec(it.id)
+    if (m) {
+      const n = Number(m[1])
+      if (n > max) max = n
+    }
+  }
+  return `wall-new-${max + 1}`
+}
+
+/**
+ * Convert an editable wall back to a planner element for `event-layout.json`. The
+ * global height lives at the layout root (not here), so this writes only the
+ * footprint, the wall's *own* preserved `alturaM` (if it had one), and the
+ * registry — a catalogue wall's inventory data survives the round-trip untouched.
+ */
+export function wallItemToElement(item: EditableWall): Record<string, unknown> {
+  const el: Record<string, unknown> = {
+    type: 'wall',
+    x: roundMm(item.cx - item.sx / 2 - OFF_X),
+    y: roundMm(item.cz - item.sz / 2 - OFF_Z),
+    w: roundMm(item.sx),
+    h: roundMm(item.sz),
+  }
+  if (typeof item.alturaM === 'number' && item.alturaM > 0) el.alturaM = roundMm(item.alturaM)
+  if (item.registry) {
+    const r = item.registry
+    el.invId = r.invId
+    el.sala = r.sala
+    el.tema = r.tema
+    el.rol = r.rol
+    el.track = r.track
+    el.research = r.research
+    el.estado = r.estado
+  } else {
+    // No inventory id → persist the stable code id so it survives the round-trip
+    // without colliding with a catalogue wall's index-derived id.
+    el.wallId = item.id
+  }
+  return el
+}
 
 /** Every mountable surface (walls + glass), for click-to-place. */
 export const MOUNTABLE: Wall[] = [...WALLS, ...GLASS]

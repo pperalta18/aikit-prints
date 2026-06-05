@@ -14,8 +14,8 @@
       "tema": "Bici / combustión",
       "rol": "Fondo combustión, sin texto",
       "track": "I",
-      "research": false,
-      "estado": "ok"
+      "estado": "ok",
+      "research": false
     },
     {
       "type": "wall",
@@ -28,8 +28,8 @@
       "tema": "Nave O (doble cara)",
       "rol": "Cara S1=combustión; cara S3=light-box zonal por cámara, aloja el HERO en INVESTMENT",
       "track": "H",
-      "research": true,
-      "estado": "prop"
+      "estado": "prop",
+      "research": true
     },
     {
       "type": "wall",
@@ -42,8 +42,8 @@
       "tema": "Umbral S2→S3 — banda-título de la nave",
       "rol": "Orienta y secuencia las 3 cámaras del showroom (IMAGE · TEXT+CODE · INVERSIÓN) con la tesis S3 'es inevitable'; tipográfica, puente demystify→velocidad",
       "track": "C",
-      "research": false,
-      "estado": "prop"
+      "estado": "prop",
+      "research": false
     },
     {
       "type": "wall",
@@ -56,8 +56,8 @@
       "tema": "Cuellos — Naranja Mecánica",
       "rol": "Light-box; branding zumo aprobado; glow escaparate; zonal/repetido; tagline TBD",
       "track": "I",
-      "research": false,
-      "estado": "ok"
+      "estado": "ok",
+      "research": false
     },
     {
       "type": "wall",
@@ -70,8 +70,8 @@
       "tema": "Puente S5→S6 — coste marginal → 0",
       "rol": "Transición del juego (coste marginal humano → 0) a la tesis histórica 'ya pasó antes'; registro cálido→histórico, sin data dump",
       "track": "H",
-      "research": false,
-      "estado": "prop"
+      "estado": "prop",
+      "research": false
     },
     {
       "type": "wall",
@@ -84,8 +84,8 @@
       "tema": "Cinema",
       "rol": "Proponer; negro mate, posible marquesina 'sala'; mantener muy oscuro",
       "track": "I",
-      "research": false,
-      "estado": "pend"
+      "estado": "pend",
+      "research": false
     },
     {
       "type": "wall",
@@ -98,8 +98,8 @@
       "tema": "Cinema",
       "rol": "Proponer; negro mate / textura cine; título mínimo elegante si lo hay",
       "track": "I",
-      "research": false,
-      "estado": "pend"
+      "estado": "pend",
+      "research": false
     },
     {
       "type": "wall",
@@ -112,8 +112,8 @@
       "tema": "Intro IA — tamaño de modelos",
       "rol": "Tamaño de modelos a escala (Perceptrón→2025-26); 'no es magia, es multiplicación de matrices'",
       "track": "C",
-      "research": true,
-      "estado": "prop"
+      "estado": "prop",
+      "research": true
     },
     {
       "type": "wall",
@@ -126,8 +126,8 @@
       "tema": "Perímetro O — combustión",
       "rol": "Combustión intensifica a lo largo del recorrido; único texto S1 = título expo en entrada",
       "track": "I",
-      "research": false,
-      "estado": "pend"
+      "estado": "pend",
+      "research": false
     },
     {
       "type": "wall",
@@ -140,13 +140,13 @@
       "tema": "Wayfinding",
       "rol": "Nombre + flecha a la siguiente zona",
       "track": "C",
-      "research": false,
-      "estado": "prop"
+      "estado": "prop",
+      "research": false
     },
     {
       "type": "wall",
-      "x": 19.5,
-      "y": 11.5,
+      "x": 19.492,
+      "y": 11.477,
       "w": 0.5,
       "h": 22,
       "invId": 11,
@@ -154,8 +154,8 @@
       "tema": "Nave E — aceleración",
       "rol": "Light-box; gráficos de aceleración zonales por cámara",
       "track": "C",
-      "research": true,
-      "estado": "prop"
+      "estado": "prop",
+      "research": true
     },
     {
       "type": "wall",
@@ -168,9 +168,8 @@
       "tema": "Divisoria 1 IMAGE (doble cara)",
       "rol": "Divisoria centrada IMAGE|TEXT+CODE. Entrada=marco/identidad pantallas IMAGE; reverso=confesionario / test de Turing",
       "track": "H",
-      "research": false,
-      "alturaM": 2,
-      "estado": "prop"
+      "estado": "prop",
+      "research": false
     },
     {
       "type": "wall",
@@ -183,8 +182,8 @@
       "tema": "Realidad — ya existe",
       "rol": "Mejoras del juego que ya existen: camiones autónomos, dark factories; 'no es utopía, está pasando'",
       "track": "I",
-      "research": true,
-      "estado": "prop"
+      "estado": "prop",
+      "research": true
     },
     {
       "type": "wall",
@@ -197,8 +196,8 @@
       "tema": "Micro-acento S5/S6 — cita tipográfica",
       "rol": "Pieza diminuta (1.5 m): acento tipográfico / señalética; una frase fuerte, sin datos por tamaño",
       "track": "C",
-      "research": false,
-      "estado": "prop"
+      "estado": "prop",
+      "research": false
     },
     {
       "type": "wall",
@@ -211,8 +210,8 @@
       "tema": "Acento vertical S5/S6 — identidad cálida",
       "rol": "Panel vertical pequeño (2.5 m): textura/identidad cálida coherente con Naranja Mecánica y el puente a S6; sin datos",
       "track": "I",
-      "research": false,
-      "estado": "prop"
+      "estado": "prop",
+      "research": false
     },
     {
       "type": "wall",
@@ -225,9 +224,8 @@
       "tema": "Divisoria 2 TEXT+CODE",
       "rol": "Divisoria centrada TEXT+CODE|INVERSIÓN. Code-gen: 3 líneas → app de 37 archivos; valor económico vs equipo real; dato PRs IA GitHub",
       "track": "C",
-      "research": true,
-      "alturaM": 2,
-      "estado": "prop"
+      "estado": "prop",
+      "research": true
     },
     {
       "type": "wall",
@@ -240,8 +238,8 @@
       "tema": "Bici / combustión",
       "rol": "Continúa #1, 'calentando'; sin texto",
       "track": "I",
-      "research": false,
-      "estado": "ok"
+      "estado": "ok",
+      "research": false
     },
     {
       "type": "wall",
@@ -254,8 +252,8 @@
       "tema": "'Eres una neurona' + cóctel",
       "rol": "(1) agrupación 'eres una neurona'; (2) registro cóctel/salida cálido; sólo 1 de ~4 paredes es real",
       "track": "H",
-      "research": false,
-      "estado": "prop"
+      "estado": "prop",
+      "research": false
     },
     {
       "type": "wall",
@@ -268,8 +266,8 @@
       "tema": "Pobreza — salones por siglos",
       "rol": "Salones por siglo → '¿cómo será el salón en 3-4 años?'; opcional 'Velázquez = X menús'",
       "track": "H",
-      "research": true,
-      "estado": "prop"
+      "estado": "prop",
+      "research": true
     },
     {
       "type": "wall",
@@ -282,8 +280,8 @@
       "tema": "Transición",
       "rol": "Proponer; transición cine-negro → branding zumo cálido",
       "track": "I",
-      "research": false,
-      "estado": "pend"
+      "estado": "pend",
+      "research": false
     },
     {
       "type": "wall",
@@ -296,8 +294,8 @@
       "tema": "Cubo central S2 — cara norte",
       "rol": "Cara norte del cubo expositivo central de S2 (Intro IA); graphic por definir",
       "track": "C",
-      "research": false,
-      "estado": "pend"
+      "estado": "pend",
+      "research": false
     },
     {
       "type": "wall",
@@ -310,8 +308,8 @@
       "tema": "Cubo central S2 — cara sur",
       "rol": "Cara sur del cubo expositivo central de S2 (Intro IA); graphic por definir",
       "track": "C",
-      "research": false,
-      "estado": "pend"
+      "estado": "pend",
+      "research": false
     },
     {
       "type": "wall",
@@ -324,8 +322,8 @@
       "tema": "Cubo central S2 — cara oeste",
       "rol": "Cara oeste del cubo expositivo central de S2 (Intro IA); graphic por definir",
       "track": "C",
-      "research": false,
-      "estado": "pend"
+      "estado": "pend",
+      "research": false
     },
     {
       "type": "wall",
@@ -338,8 +336,8 @@
       "tema": "Cubo central S2 — cara este",
       "rol": "Cara este del cubo expositivo central de S2 (Intro IA); graphic por definir",
       "track": "C",
-      "research": false,
-      "estado": "pend"
+      "estado": "pend",
+      "research": false
     },
     {
       "type": "wall",
@@ -352,8 +350,32 @@
       "tema": "Bici / combustión",
       "rol": "Fondo combustión, sin texto",
       "track": "I",
-      "research": false,
-      "estado": "ok"
+      "estado": "ok",
+      "research": false
+    },
+    {
+      "type": "wall",
+      "x": 13.521,
+      "y": 22.782,
+      "w": 3.5,
+      "h": 0.5,
+      "wallId": "wall-new-0"
+    },
+    {
+      "type": "wall",
+      "x": 15.153,
+      "y": 20.87,
+      "w": 0.2,
+      "h": 2.2,
+      "wallId": "wall-26"
+    },
+    {
+      "type": "wall",
+      "x": 12.984,
+      "y": 11.406,
+      "w": 0.5,
+      "h": 2.5,
+      "wallId": "wall-new-1"
     },
     {
       "type": "bar",
@@ -364,13 +386,6 @@
     },
     {
       "type": "table",
-      "x": 14,
-      "y": 29,
-      "w": 2.5,
-      "h": 3
-    },
-    {
-      "type": "table",
       "x": 2,
       "y": 23.5,
       "w": 3.5,
@@ -378,73 +393,222 @@
     },
     {
       "type": "table",
-      "x": 18.5,
-      "y": 12.5,
+      "x": 5.266,
+      "y": 16.715,
+      "w": 0.5,
+      "h": 1.5,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 15.144,
+      "y": 19.146,
+      "w": 0.3,
+      "h": 2.8,
+      "alturaM": 1.25,
+      "elevacionM": 0.85,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 14.132,
+      "y": 26.458,
+      "w": 0.5,
+      "h": 1.5,
+      "alturaM": 0.65,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 15.902,
+      "y": 26.375,
+      "w": 0.5,
+      "h": 1.5,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 3.193,
+      "y": 15.374,
       "w": 0.5,
       "h": 1.5
     },
     {
       "type": "table",
-      "x": 18.5,
-      "y": 14.5,
+      "x": 6.84,
+      "y": 15.246,
       "w": 0.5,
       "h": 1.5
     },
     {
       "type": "table",
-      "x": 18.5,
-      "y": 16.5,
+      "x": 28.569,
+      "y": 12.781,
       "w": 0.5,
       "h": 1.5
     },
     {
       "type": "table",
-      "x": 18.5,
-      "y": 18.5,
+      "x": 28.502,
+      "y": 16.368,
       "w": 0.5,
       "h": 1.5
     },
     {
       "type": "table",
-      "x": 11,
-      "y": 15,
+      "x": 26.735,
+      "y": 11.137,
       "w": 0.5,
-      "h": 1.5
+      "h": 1.5,
+      "rotation": 90
     },
     {
       "type": "table",
-      "x": 11,
-      "y": 17,
-      "w": 0.5,
-      "h": 1.5
+      "x": 13.892,
+      "y": 27.735,
+      "w": 2.7,
+      "h": 0.3,
+      "alturaM": 1.75,
+      "elevacionM": 0.5
+    },
+    {
+      "type": "plant",
+      "x": 27.137,
+      "y": 6.366,
+      "w": 0.8,
+      "h": 0.8
+    },
+    {
+      "type": "plant",
+      "x": 27.249,
+      "y": 4.989,
+      "w": 0.8,
+      "h": 0.8
+    },
+    {
+      "type": "plant",
+      "x": 25.148,
+      "y": 4.71,
+      "w": 0.8,
+      "h": 0.8
+    },
+    {
+      "type": "plant",
+      "x": 25.606,
+      "y": 2.033,
+      "w": 0.8,
+      "h": 0.8
+    },
+    {
+      "type": "plant",
+      "x": 27.295,
+      "y": 3.057,
+      "w": 0.8,
+      "h": 0.8
+    },
+    {
+      "type": "plant",
+      "x": 22.872,
+      "y": 2.19,
+      "w": 0.8,
+      "h": 0.8
+    },
+    {
+      "type": "plant",
+      "x": 27.637,
+      "y": 7.605,
+      "w": 0.8,
+      "h": 0.8
+    },
+    {
+      "type": "plant",
+      "x": 1.119,
+      "y": 38.984,
+      "w": 0.8,
+      "h": 0.8
+    },
+    {
+      "type": "plant",
+      "x": 0.361,
+      "y": 37.752,
+      "w": 0.8,
+      "h": 0.8
+    },
+    {
+      "type": "plant",
+      "x": 0.303,
+      "y": 36.326,
+      "w": 0.8,
+      "h": 0.8
     },
     {
       "type": "table",
-      "x": 24.5,
-      "y": 13,
-      "w": 3.5,
+      "x": 4.979,
+      "y": 13.57,
+      "w": 0.5,
+      "h": 1.5,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 24.812,
+      "y": 33.396,
+      "w": 2.5,
       "h": 3
     },
     {
       "type": "table",
-      "x": 20.5,
-      "y": 14.5,
+      "x": 25.084,
+      "y": 26.1,
       "w": 0.5,
       "h": 1.5
     },
     {
       "type": "table",
-      "x": 20.5,
-      "y": 16.5,
+      "x": 25.152,
+      "y": 23.912,
       "w": 0.5,
       "h": 1.5
     },
     {
       "type": "table",
-      "x": 20.5,
-      "y": 18.5,
+      "x": 24.375,
+      "y": 24.002,
       "w": 0.5,
       "h": 1.5
+    },
+    {
+      "type": "table",
+      "x": 24.382,
+      "y": 26.067,
+      "w": 0.5,
+      "h": 1.5
+    },
+    {
+      "type": "table",
+      "x": 13.274,
+      "y": 11.498,
+      "w": 0.3,
+      "h": 2,
+      "alturaM": 1.25,
+      "elevacionM": 0.85
+    },
+    {
+      "type": "table",
+      "x": 23.49,
+      "y": 30.869,
+      "w": 4.3,
+      "h": 0.3,
+      "alturaM": 1.6,
+      "elevacionM": 0.5
+    },
+    {
+      "type": "table",
+      "x": 24.07,
+      "y": 11.135,
+      "w": 0.5,
+      "h": 1.5,
+      "rotation": 90
     },
     {
       "type": "glass",
@@ -1705,5 +1869,6 @@
       "groupId": "g18"
     }
   ],
-  "exportedAt": "2026-06-04T09:17:28.648Z"
+  "exportedAt": "2026-06-04T09:17:28.648Z",
+  "wallHeight": 2.5
 }

@@ -1,31 +1,48 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { ContactShadows, Environment, Grid, Html, Lightformer, OrbitControls } from '@react-three/drei'
-import { InstancedMesh, MathUtils, Object3D, Texture, Vector3 } from 'three'
+import { InstancedMesh, MathUtils, Object3D, Plane, Vector3 } from 'three'
 import { KIT_BLUE, lightTheme, darkTheme } from '@/lib/neumorphism'
 import { buildGeometry } from '../geometry'
 import { getPrintPage } from '../pages'
 import { PrintStage } from '../PrintRenderer'
-import { faceCropUV, loadPrintFaceTexture } from './printFaceTexture'
+import { useLivePrintFaceTexture } from './printLiveTexture'
 import type { PrintDoc } from '../types'
 import {
-  BARS,
   DEFAULT_WALL_HEIGHT_M,
   GLASS,
   PEOPLE,
-  REGISTERED_WALLS,
   SPACE_DEPTH,
   SPACE_WIDTH,
   SPAWNS,
-  TABLES,
-  WALLS,
-  findWall,
-  findWallByInvId,
+  WALL_HEIGHT,
+  loadFurnitureItems,
+  loadWallItems,
+  nextWallId,
+  resolveEditableWall,
   resolveWallHeight,
+  wallItemToElement,
   wallsWithoutHeight,
+  type EditableWall,
   type FootprintBox,
   type Wall,
 } from '../space/eventLayout'
+import {
+  FURNITURE_DEFAULTS,
+  FURNITURE_LABEL,
+  FURNITURE_MAX_ELEVATION,
+  FURNITURE_MAX_HEIGHT,
+  FURNITURE_MAX_SIZE,
+  FURNITURE_MIN_ELEVATION,
+  FURNITURE_MIN_HEIGHT,
+  FURNITURE_MIN_SIZE,
+  furnitureElevation,
+  furnitureHeight,
+  furnitureToElements,
+  nextFurnitureId,
+  type FurnitureItem,
+  type FurnitureKind,
+} from '../space/furniture'
 import {
   HERO_INV_ID,
   HERO_PRINT_ID,
@@ -68,6 +85,9 @@ import {
 const HTML_TRANSFORM_FACTOR = 40 // drei <Html transform>: worldWidth = contentPx·scale/40
 const FACE_LONG_PX = 2048 // long-edge px the print DOM is painted at (walls viewed from afar)
 const M = (mm: number) => mm / 1000 // mm → metres (world units)
+// Nudge a pasted/duplicated piece off its source so the copy never lands hidden
+// exactly under the original (clamped back into the room after the offset).
+const FURNITURE_PASTE_OFFSET_M = 0.6
 // A print is a flat vinyl stuck onto the wall — it sits flush against the surface,
 // just a hair proud so it never z-fights the wall (no thick board, no light-box).
 const VINYL_SURFACE_OFFSET_M = 0.004
@@ -80,8 +100,13 @@ const WALL_COL = '#ffffff'
 const TABLE_COL = '#e3c79b'
 const BAR_COL = '#b1492f'
 const PERSON_COL = '#b3a0d6'
+const PLANT_COL = '#5f8f57'
+const POT_COL = '#8a6a4a'
 
 type Vec3 = [number, number, number]
+
+/** A tool armed in the "edit space" palette: a furniture kind, or a wall. */
+type SpaceTool = FurnitureKind | 'wall'
 
 // `Placement` (a print mounted on a wall) is defined in `../space/placements`,
 // alongside the persistence core that saves/loads the layout.
@@ -133,23 +158,271 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
   // spawn point — clutters the museographic view, so it's off by default; a single
   // toggle shows/hides all three together.
   const [showPeople, setShowPeople] = useState(false)
-  // Walls now take their height from per-wall data (`alturaM`); this slider only
-  // sets the fallback used by walls that carry no measured height yet (Phase 2).
-  const [fallbackHeight, setFallbackHeight] = useState(DEFAULT_WALL_HEIGHT_M)
+  // One global height for every wall (the venue's walls are uniform). Seeded from
+  // the saved `wallHeight`, else the brief's 2.5 m default; the slider drives it.
+  const [fallbackHeight, setFallbackHeight] = useState(WALL_HEIGHT ?? DEFAULT_WALL_HEIGHT_M)
   // Wall identity overlay: float `#N · sala` + tema over the 20 event walls so
   // mounting the right piece on the right wall stays unambiguous during production.
-  const [showLabels, setShowLabels] = useState(true)
+  // Off by default — the default view reads the space as built (toggle on to mount).
+  const [showLabels, setShowLabels] = useState(false)
   // Blank-frame base layer: every wall face papered with an empty white frame at
   // true scale, split where walls cut it (`computeWallFrames`). On by default.
   const [showFrames, setShowFrames] = useState(true)
-  // "Vista real": paint each print as a true depth-tested mesh texture (its exported
-  // PNG) instead of the floating <Html> overlay, so a wall in front hides the print
-  // behind it — the space reads like real life, nothing pops on top. Off by default
-  // (edit mode keeps the live, selectable Html faces).
-  const [realista, setRealista] = useState(false)
+  // "Vista real": paint each print as a true depth-tested mesh texture (the live page,
+  // rasterised) instead of the floating <Html> overlay, so a wall in front hides the
+  // print behind it — the space reads like real life, nothing pops on top. On by
+  // default (the space's primary view); toggle off for the live, selectable Html faces.
+  const [realista, setRealista] = useState(true)
   const cameraApi = useRef<{ setView: (pos: Vec3, target: Vec3) => void } | null>(null)
 
+  // Movable furniture (tables / bar / plants). Seeded from the layout file; the
+  // operator can drag, add and remove pieces in edit mode and write the result
+  // back to `event-layout.json`. Walls/glass/crowd are fixed and not edited here.
+  const [furniture, setFurniture] = useState<FurnitureItem[]>(() => loadFurnitureItems())
+  // Editable walls (move / rotate / add / remove), seeded from the layout. Every
+  // wall renders at one global height (`fallbackHeight`), so the venue's walls
+  // stay uniform. Glass and the crowd are not editable.
+  const [walls, setWalls] = useState<EditableWall[]>(() => loadWallItems())
+  // One "edit space" mode toggles furniture *and* wall editing together.
+  const [editFurniture, setEditFurniture] = useState(false)
+  const [selectedFurnId, setSelectedFurnId] = useState<string | null>(null)
+  const [selectedWallId, setSelectedWallId] = useState<string | null>(null)
+  // The tool primed to drop on the next floor click (a furniture kind, a wall, or
+  // null = none armed). Shared by the furniture + wall palette.
+  const [armed, setArmed] = useState<SpaceTool | null>(null)
+  const [savingFurniture, setSavingFurniture] = useState(false)
+  // Unsaved edits (true after any change, false on load + after a save).
+  const [furnitureDirty, setFurnitureDirty] = useState(false)
+  const [wallsDirty, setWallsDirty] = useState(false)
+  // Copy/paste clipboard: a full snapshot of the last copied furniture piece, kept
+  // in memory so it can be pasted any number of times (and survives deselection).
+  const [furnitureClipboard, setFurnitureClipboard] = useState<FurnitureItem | null>(null)
+
   const docById = useCallback((id: string) => docs.find((d) => d.id === id), [docs])
+
+  // Keep a furniture piece inside the room: clamp its centre so its footprint
+  // never spills past a wall (per axis, accounting for the piece's own size).
+  const clampToRoom = useCallback((cx: number, cz: number, sx: number, sz: number) => {
+    const halfX = Math.max(0, SPACE_WIDTH / 2 - sx / 2)
+    const halfZ = Math.max(0, SPACE_DEPTH / 2 - sz / 2)
+    return { cx: MathUtils.clamp(cx, -halfX, halfX), cz: MathUtils.clamp(cz, -halfZ, halfZ) }
+  }, [])
+
+  const addFurniture = useCallback(
+    (kind: FurnitureKind, x: number, z: number) => {
+      const { sx, sz } = FURNITURE_DEFAULTS[kind]
+      const id = nextFurnitureId(furniture, kind)
+      const { cx, cz } = clampToRoom(x, z, sx, sz)
+      setFurniture((cur) => [...cur, { id, kind, cx, cz, sx, sz }])
+      setSelectedFurnId(id)
+      setSelectedWallId(null)
+      setFurnitureDirty(true)
+    },
+    [furniture, clampToRoom],
+  )
+
+  const moveFurniture = useCallback(
+    (id: string, x: number, z: number) => {
+      setFurniture((cur) =>
+        cur.map((it) => (it.id === id ? { ...it, ...clampToRoom(x, z, it.sx, it.sz) } : it)),
+      )
+      setFurnitureDirty(true)
+    },
+    [clampToRoom],
+  )
+
+  const updateSelectedFurn = useCallback(
+    (patch: Partial<FurnitureItem>) => {
+      setFurniture((cur) =>
+        cur.map((it) => {
+          if (it.id !== selectedFurnId) return it
+          const merged = { ...it, ...patch }
+          // A resize can push the piece past a wall — re-clamp its centre to fit.
+          return { ...merged, ...clampToRoom(merged.cx, merged.cz, merged.sx, merged.sz) }
+        }),
+      )
+      setFurnitureDirty(true)
+    },
+    [selectedFurnId, clampToRoom],
+  )
+
+  const removeSelectedFurn = useCallback(() => {
+    setFurniture((cur) => cur.filter((it) => it.id !== selectedFurnId))
+    setSelectedFurnId(null)
+    setFurnitureDirty(true)
+  }, [selectedFurnId])
+
+  const selectedFurn = furniture.find((f) => f.id === selectedFurnId) ?? null
+
+  // Drop a fresh-id copy of `src` (all dimensions/rotation/height/elevation kept),
+  // nudged off the source and clamped into the room, then select it. The shared core
+  // of paste and duplicate.
+  const placeFurnitureCopy = useCallback(
+    (src: FurnitureItem) => {
+      const id = nextFurnitureId(furniture, src.kind)
+      const { cx, cz } = clampToRoom(
+        src.cx + FURNITURE_PASTE_OFFSET_M,
+        src.cz + FURNITURE_PASTE_OFFSET_M,
+        src.sx,
+        src.sz,
+      )
+      setFurniture((cur) => [...cur, { ...src, id, cx, cz }])
+      setSelectedFurnId(id)
+      setSelectedWallId(null)
+      setFurnitureDirty(true)
+    },
+    [furniture, clampToRoom],
+  )
+  // Copy stores a snapshot; paste drops it; duplicate drops a copy of the current
+  // selection directly (without disturbing the clipboard, so an earlier copy survives).
+  const copyFurniture = useCallback(() => {
+    if (selectedFurn) setFurnitureClipboard(selectedFurn)
+  }, [selectedFurn])
+  const pasteFurniture = useCallback(() => {
+    if (furnitureClipboard) placeFurnitureCopy(furnitureClipboard)
+  }, [furnitureClipboard, placeFurnitureCopy])
+  const duplicateFurniture = useCallback(() => {
+    if (selectedFurn) placeFurnitureCopy(selectedFurn)
+  }, [selectedFurn, placeFurnitureCopy])
+
+  /* ── editable walls ─────────────────────────────────────────────────────── */
+
+  // Resolve the editable walls to render/mounting `Wall`s at the single global
+  // height. An unedited wall resolves to the same id + geometry it had in the
+  // static set, so any print mounted on it (keyed by wall id) stays put.
+  const resolvedWalls = useMemo(
+    () => walls.map((w) => resolveEditableWall(w, fallbackHeight)),
+    [walls, fallbackHeight],
+  )
+  const registeredWalls = useMemo(
+    () => resolvedWalls.filter((w) => w.registry).sort((a, b) => a.registry!.invId - b.registry!.invId),
+    [resolvedWalls],
+  )
+  // Look up a mountable surface by id from the live (editable) walls + static glass.
+  const findWallLocal = useCallback(
+    (id: string): Wall | undefined => resolvedWalls.find((w) => w.id === id) ?? GLASS.find((g) => g.id === id),
+    [resolvedWalls],
+  )
+  const findWallByInvIdLocal = useCallback(
+    (invId: number) => resolvedWalls.find((w) => w.registry?.invId === invId),
+    [resolvedWalls],
+  )
+
+  const addWall = useCallback(
+    (x: number, z: number) => {
+      const sx = 4 // default: a 4 m run…
+      const sz = 0.2 // …0.2 m thick (rotate 90° to swap which axis runs)
+      const id = nextWallId(walls)
+      const { cx, cz } = clampToRoom(x, z, sx, sz)
+      setWalls((cur) => [...cur, { id, cx, cz, sx, sz }])
+      setSelectedWallId(id)
+      setSelectedFurnId(null)
+      setWallsDirty(true)
+    },
+    [walls, clampToRoom],
+  )
+
+  const moveWall = useCallback(
+    (id: string, x: number, z: number) => {
+      setWalls((cur) => cur.map((w) => (w.id === id ? { ...w, ...clampToRoom(x, z, w.sx, w.sz) } : w)))
+      setWallsDirty(true)
+    },
+    [clampToRoom],
+  )
+
+  const updateSelectedWall = useCallback(
+    (patch: Partial<EditableWall>) => {
+      setWalls((cur) =>
+        cur.map((w) => {
+          if (w.id !== selectedWallId) return w
+          const merged = { ...w, ...patch }
+          return { ...merged, ...clampToRoom(merged.cx, merged.cz, merged.sx, merged.sz) }
+        }),
+      )
+      setWallsDirty(true)
+    },
+    [selectedWallId, clampToRoom],
+  )
+
+  // Rotate 90°: swap the footprint's run/thickness axes about the centre. The wall
+  // stays axis-aligned, so its normal axis — and every mounting calculation — stays
+  // exact (no need to rework `wallRun` / `placementTransform` / frames).
+  const rotateSelectedWall = useCallback(() => {
+    setWalls((cur) => cur.map((w) => (w.id === selectedWallId ? { ...w, sx: w.sz, sz: w.sx } : w)))
+    setWallsDirty(true)
+  }, [selectedWallId])
+
+  const removeSelectedWall = useCallback(() => {
+    setWalls((cur) => cur.filter((w) => w.id !== selectedWallId))
+    setSelectedWallId(null)
+    setWallsDirty(true)
+  }, [selectedWallId])
+
+  const selectedWallItem = walls.find((w) => w.id === selectedWallId) ?? null
+
+  // Selecting one editable thing clears the other, so Delete + the side panel
+  // always act on a single, unambiguous selection.
+  const selectFurniture = useCallback((id: string) => {
+    setSelectedFurnId(id)
+    setSelectedWallId(null)
+  }, [])
+  const selectWall = useCallback((id: string) => {
+    setSelectedWallId(id)
+    setSelectedFurnId(null)
+  }, [])
+
+  const toggleEditFurniture = useCallback(() => {
+    setEditFurniture((p) => {
+      if (p) {
+        setArmed(null)
+        setSelectedFurnId(null)
+        setSelectedWallId(null)
+      }
+      return !p
+    })
+  }, [])
+
+  // Write the editable layout (furniture + walls) back into event-layout.json (dev
+  // endpoint). The dev plugin suppresses the file's HMR reload, so the in-memory
+  // state stays the source of truth and saving is seamless.
+  const saveLayout = useCallback(async () => {
+    setSavingFurniture(true)
+    try {
+      const res = await fetch('/api/event-layout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          furniture: furnitureToElements(furniture, SPACE_WIDTH, SPACE_DEPTH),
+          walls: walls.map((w) => wallItemToElement(w)),
+          wallHeight: fallbackHeight,
+        }),
+      })
+      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string }
+      if (res.ok && json.ok) {
+        setFurnitureDirty(false)
+        setWallsDirty(false)
+      } else {
+        console.error('[event-space] guardar espacio falló', json)
+        alert(`No se pudo guardar el espacio: ${json.error ?? res.statusText}`)
+      }
+    } catch (err) {
+      console.error('[event-space] guardar espacio falló', err)
+      alert('No se pudo guardar el espacio. ¿Está corriendo el servidor de dev (npm run dev)?')
+    } finally {
+      setSavingFurniture(false)
+    }
+  }, [furniture, walls, fallbackHeight])
+
+  // Auto-save: persist the layout a beat after the last edit, debounced so a drag
+  // writes once on release rather than every frame. Move / edit / rotate / delete
+  // all flip a dirty flag, so every change lands in the file on its own.
+  useEffect(() => {
+    if (!furnitureDirty && !wallsDirty) return
+    const t = setTimeout(() => {
+      void saveLayout()
+    }, 600)
+    return () => clearTimeout(t)
+  }, [furnitureDirty, wallsDirty, saveLayout])
 
   // Brief: "assume 2.5 m and warn if absent". The wall set is static (resolved at
   // module load), so flag every wall still on the fallback exactly once on mount.
@@ -227,25 +500,57 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
     setSelectedId(null)
   }, [selectedId])
 
-  // Delete / Backspace unmounts the selected print (unless a form field has focus,
-  // e.g. the print dropdown), so you can pick a wall and just hit delete.
+  // Delete / Backspace removes the current selection (unless a form field has
+  // focus, e.g. a dropdown). In edit-space mode the selected wall or furniture
+  // piece goes first; otherwise it unmounts the selected print.
   useEffect(() => {
-    if (!selectedId) return
     const onKey = (e: KeyboardEvent) => {
       const t = e.target
       if (t instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return
-      if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return
+      if (editFurniture && selectedWallId) {
+        e.preventDefault()
+        removeSelectedWall()
+      } else if (editFurniture && selectedFurnId) {
+        e.preventDefault()
+        removeSelectedFurn()
+      } else if (selectedId) {
         e.preventDefault()
         removeSelected()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [selectedId, removeSelected])
+  }, [selectedId, removeSelected, editFurniture, selectedFurnId, removeSelectedFurn, selectedWallId, removeSelectedWall])
+
+  // Copy (⌘/Ctrl+C), paste (⌘/Ctrl+V) and duplicate (⌘/Ctrl+D) the selected furniture
+  // piece, only while editing the space. Skipped when a form field has focus so the
+  // shortcuts never hijack a real text copy/paste.
+  useEffect(() => {
+    if (!editFurniture) return
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey) return
+      const t = e.target
+      if (t instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return
+      const k = e.key.toLowerCase()
+      if (k === 'c' && selectedFurnId) {
+        e.preventDefault()
+        copyFurniture()
+      } else if (k === 'v' && furnitureClipboard) {
+        e.preventDefault()
+        pasteFurniture()
+      } else if (k === 'd' && selectedFurnId) {
+        e.preventDefault()
+        duplicateFurniture()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [editFurniture, selectedFurnId, furnitureClipboard, copyFurniture, pasteFurniture, duplicateFurniture])
 
   const selected = placements.find((p) => p.id === selectedId) ?? null
   // Height of the wall the selected print hangs on — bounds its centre-height slider.
-  const selectedWall = selected ? findWall(selected.wallId) : undefined
+  const selectedWall = selected ? findWallLocal(selected.wallId) : undefined
   const selectedWallHeight = selectedWall ? resolveWallHeight(selectedWall, fallbackHeight) : fallbackHeight
 
   // Double-sided pieces (Phase 2): walls inv 2 & 12 carry distinct art per face.
@@ -260,7 +565,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
   const applyZones = useCallback(
     (count: number) => {
       if (!selected) return
-      const wall = findWall(selected.wallId)
+      const wall = findWallLocal(selected.wallId)
       const doc = docById(selected.printId)
       if (!wall || !doc) return
       const { runCenter } = wallRun(wall)
@@ -333,11 +638,11 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
   // operator can confirm the scale + placement. Re-mounting replaces the existing
   // hero (no duplicates). The exact placement maths live in `heroSolarPlacement`.
   const heroDoc = useMemo(() => docById(HERO_PRINT_ID), [docById])
-  const heroWall = useMemo(() => findWallByInvId(HERO_INV_ID), [])
+  const heroWall = useMemo(() => findWallByInvIdLocal(HERO_INV_ID), [findWallByInvIdLocal])
   const canMountHero = !!heroDoc && !!heroWall
   const mountHero = useCallback(() => {
     if (!heroWall || !heroDoc) return
-    const opposite = findWallByInvId(NAVE_OPPOSITE_INV_ID)
+    const opposite = findWallByInvIdLocal(NAVE_OPPOSITE_INV_ID)
     const placement = heroSolarPlacement({
       wall: heroWall,
       s3Reference: opposite ? { cx: opposite.cx, cz: opposite.cz } : undefined,
@@ -359,7 +664,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
         ? [normalCenter, placement.centerY, runCenter]
         : [runCenter, placement.centerY, normalCenter]
     setView(eye, target)
-  }, [heroWall, heroDoc, fallbackHeight, setView])
+  }, [heroWall, heroDoc, fallbackHeight, setView, findWallByInvIdLocal])
 
   // Phase 5 (S3 nave): mount wall 2's S3 face as a ZONED light-box per nave camera
   // — three bays (IMAGE / TEXT+CODE / INVERSIÓN) instead of one stretched poster —
@@ -367,7 +672,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
   // ship. Replaces any existing hero placement so re-mounting never duplicates.
   const mountHeroZoned = useCallback(() => {
     if (!heroWall || !heroDoc) return
-    const opposite = findWallByInvId(NAVE_OPPOSITE_INV_ID)
+    const opposite = findWallByInvIdLocal(NAVE_OPPOSITE_INV_ID)
     const plan = naveS3ZonedPlacements({
       wall: heroWall,
       s3Reference: opposite ? { cx: opposite.cx, cz: opposite.cz } : undefined,
@@ -393,7 +698,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
         ? [normalCenter, plan.centerY, heroP?.along ?? 0]
         : [heroP?.along ?? 0, plan.centerY, normalCenter]
     setView(eye, target)
-  }, [heroWall, heroDoc, fallbackHeight, setView])
+  }, [heroWall, heroDoc, fallbackHeight, setView, findWallByInvIdLocal])
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,#1b1e25 0%,#101218 100%)' }}>
@@ -426,19 +731,48 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
           <Lightformer intensity={0.8} position={[12, 4, -8]} scale={[8, 14, 1]} color="#cfe0ff" />
         </Environment>
 
-        <RoomFloor />
-        <Walls fallback={fallbackHeight} onPlace={placeOnWall} />
+        <RoomFloor
+          onFloorClick={
+            editFurniture && armed
+              ? (p) => (armed === 'wall' ? addWall(p.x, p.z) : addFurniture(armed, p.x, p.z))
+              : undefined
+          }
+        />
+        <Walls
+          walls={resolvedWalls}
+          editable={editFurniture}
+          selectedId={selectedWallId}
+          onSelect={selectWall}
+          onMove={moveWall}
+          onPlace={placeOnWall}
+        />
         <GlassPanels fallback={fallbackHeight} onPlace={placeOnWall} />
-        {showLabels && <WallLabels fallback={fallbackHeight} />}
-        {showFrames && <WallFrames fallback={fallbackHeight} showLabels={showLabels} docs={docs} realista={realista} />}
-        <Furniture />
-        {showPeople && <Tables />}
+        {showLabels && <WallLabels registered={registeredWalls} />}
+        {showFrames && (
+          <WallFrames
+            walls={resolvedWalls}
+            registered={registeredWalls}
+            findWall={findWallLocal}
+            fallback={fallbackHeight}
+            showLabels={showLabels}
+            docs={docs}
+            realista={realista}
+          />
+        )}
+        <FurniturePieces
+          items={furniture}
+          editable={editFurniture}
+          showTables={showPeople || editFurniture}
+          selectedId={selectedFurnId}
+          onSelect={selectFurniture}
+          onMove={moveFurniture}
+        />
         {showPeople && SPAWNS.map((s, i) => <SpawnMarker key={i} box={s} />)}
         {showPeople && <Crowd />}
 
         <Suspense fallback={null}>
           {placements.map((p) => {
-            const wall = findWall(p.wallId)
+            const wall = findWallLocal(p.wallId)
             const doc = docById(p.printId)
             if (!wall || !doc) return null
             return (
@@ -476,6 +810,26 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
         onSplitFaces={splitSelectedFaces}
         showPeople={showPeople}
         setShowPeople={setShowPeople}
+        editFurniture={editFurniture}
+        onToggleEditFurniture={toggleEditFurniture}
+        armed={armed}
+        setArmed={setArmed}
+        selectedFurn={selectedFurn}
+        updateSelectedFurn={updateSelectedFurn}
+        removeSelectedFurn={removeSelectedFurn}
+        furnitureCount={furniture.length}
+        furnitureClipboardKind={furnitureClipboard?.kind ?? null}
+        onCopyFurn={copyFurniture}
+        onPasteFurn={pasteFurniture}
+        onDuplicateFurn={duplicateFurniture}
+        selectedWall={selectedWallItem}
+        updateSelectedWall={updateSelectedWall}
+        rotateSelectedWall={rotateSelectedWall}
+        removeSelectedWall={removeSelectedWall}
+        wallCount={walls.length}
+        furnitureDirty={furnitureDirty || wallsDirty}
+        savingFurniture={savingFurniture}
+        onSaveFurniture={saveLayout}
         showLabels={showLabels}
         setShowLabels={setShowLabels}
         showFrames={showFrames}
@@ -502,10 +856,24 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
 
 /* ── room shell ───────────────────────────────────────────────────────────────*/
 
-function RoomFloor() {
+function RoomFloor({ onFloorClick }: { onFloorClick?: (point: Vector3) => void }) {
   return (
     <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, 0, 0]}
+        receiveShadow
+        onClick={
+          onFloorClick
+            ? (e: ThreeEvent<MouseEvent>) => {
+                e.stopPropagation()
+                onFloorClick(e.point)
+              }
+            : undefined
+        }
+        onPointerOver={onFloorClick ? () => (document.body.style.cursor = 'copy') : undefined}
+        onPointerOut={onFloorClick ? () => (document.body.style.cursor = '') : undefined}
+      >
         <planeGeometry args={[SPACE_WIDTH, SPACE_DEPTH]} />
         <meshStandardMaterial color={FLOOR} roughness={0.95} metalness={0} />
       </mesh>
@@ -525,35 +893,120 @@ function RoomFloor() {
   )
 }
 
-function Walls({ fallback, onPlace }: { fallback: number; onPlace: (w: Wall, p: Vector3) => void }) {
+// All walls. In edit mode each is selectable + draggable across the floor (its
+// height stays the global value); otherwise clicking it mounts the armed print —
+// the venue's original behaviour. Rotation (90°) and resize live in the side panel.
+function Walls({
+  walls,
+  editable,
+  selectedId,
+  onSelect,
+  onMove,
+  onPlace,
+}: {
+  walls: Wall[]
+  editable: boolean
+  selectedId: string | null
+  onSelect: (id: string) => void
+  onMove: (id: string, x: number, z: number) => void
+  onPlace: (w: Wall, p: Vector3) => void
+}) {
   return (
     <group>
-      {WALLS.map((w) => {
-        const h = resolveWallHeight(w, fallback)
-        return (
-          <mesh
-            key={w.id}
-            position={[w.cx, h / 2, w.cz]}
-            castShadow
-            receiveShadow
-            onClick={(e: ThreeEvent<MouseEvent>) => {
-              e.stopPropagation()
-              onPlace(w, e.point)
-            }}
-            onPointerOver={(e) => {
-              e.stopPropagation()
-              document.body.style.cursor = 'crosshair'
-            }}
-            onPointerOut={() => {
-              document.body.style.cursor = ''
-            }}
-          >
-            <boxGeometry args={[w.sx, h, w.sz]} />
-            <meshStandardMaterial color={WALL_COL} roughness={0.92} metalness={0} />
-          </mesh>
-        )
-      })}
+      {walls.map((w) => (
+        <WallMesh
+          key={w.id}
+          wall={w}
+          editable={editable}
+          selected={w.id === selectedId}
+          onSelect={onSelect}
+          onMove={onMove}
+          onPlace={onPlace}
+        />
+      ))}
     </group>
+  )
+}
+
+function WallMesh({
+  wall,
+  editable,
+  selected,
+  onSelect,
+  onMove,
+  onPlace,
+}: {
+  wall: Wall
+  editable: boolean
+  selected: boolean
+  onSelect: (id: string) => void
+  onMove: (id: string, x: number, z: number) => void
+  onPlace: (w: Wall, p: Vector3) => void
+}) {
+  const { controls } = useThree() as unknown as { controls: { enabled: boolean } | null }
+  const floor = useMemo(() => new Plane(new Vector3(0, 1, 0), 0), [])
+  const hit = useRef(new Vector3())
+  const drag = useRef<{ dx: number; dz: number } | null>(null)
+  const h = wall.height
+
+  const onDown = (e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation()
+    onSelect(wall.id)
+    if (!e.ray.intersectPlane(floor, hit.current)) return
+    drag.current = { dx: wall.cx - hit.current.x, dz: wall.cz - hit.current.z }
+    ;(e.target as Element).setPointerCapture?.(e.pointerId)
+    if (controls) controls.enabled = false
+    document.body.style.cursor = 'grabbing'
+  }
+  const onPointerMoveDrag = (e: ThreeEvent<PointerEvent>) => {
+    if (!drag.current) return
+    e.stopPropagation()
+    if (!e.ray.intersectPlane(floor, hit.current)) return
+    onMove(wall.id, hit.current.x + drag.current.dx, hit.current.z + drag.current.dz)
+  }
+  const onUp = (e: ThreeEvent<PointerEvent>) => {
+    if (!drag.current) return
+    e.stopPropagation()
+    drag.current = null
+    ;(e.target as Element).releasePointerCapture?.(e.pointerId)
+    if (controls) controls.enabled = true
+    document.body.style.cursor = ''
+  }
+
+  const handlers = editable
+    ? {
+        onPointerDown: onDown,
+        onPointerMove: onPointerMoveDrag,
+        onPointerUp: onUp,
+        onPointerOver: (e: ThreeEvent<PointerEvent>) => {
+          e.stopPropagation()
+          if (!drag.current) document.body.style.cursor = 'grab'
+        },
+        onPointerOut: () => !drag.current && (document.body.style.cursor = ''),
+      }
+    : {
+        onClick: (e: ThreeEvent<MouseEvent>) => {
+          e.stopPropagation()
+          onPlace(wall, e.point)
+        },
+        onPointerOver: (e: ThreeEvent<PointerEvent>) => {
+          e.stopPropagation()
+          document.body.style.cursor = 'crosshair'
+        },
+        onPointerOut: () => (document.body.style.cursor = ''),
+      }
+
+  return (
+    <mesh position={[wall.cx, h / 2, wall.cz]} castShadow receiveShadow {...handlers}>
+      <boxGeometry args={[wall.sx, h, wall.sz]} />
+      <meshStandardMaterial
+        color={WALL_COL}
+        roughness={0.92}
+        metalness={0}
+        emissive={selected && editable ? KIT_BLUE : '#000000'}
+        emissiveIntensity={selected && editable ? 0.4 : 0}
+      />
+    </mesh>
   )
 }
 
@@ -582,13 +1035,13 @@ function GlassPanels({ fallback, onPlace }: { fallback: number; onPlace: (w: Wal
 
 /* ── wall identity labels (Phase 0: which wall is which during production) ─────── */
 
-function WallLabels({ fallback }: { fallback: number }) {
+function WallLabels({ registered }: { registered: Wall[] }) {
   return (
     <>
-      {REGISTERED_WALLS.map((w) => {
+      {registered.map((w) => {
         const label = wallLabel(w)
         if (!label) return null
-        const y = resolveWallHeight(w, fallback) + 0.32
+        const y = w.height + 0.32
         return (
           <Html
             key={w.id}
@@ -631,38 +1084,169 @@ function WallLabels({ fallback }: { fallback: number }) {
   )
 }
 
-function Box({ box, height, y, color, roughness = 0.85 }: { box: FootprintBox; height: number; y: number; color: string; roughness?: number }) {
+/* ── movable furniture (tables / bar / plants) ───────────────────────────────── */
+
+// The mesh(es) for one furniture kind, modelled at the origin with its base on the
+// group's y=0 so the parent owns position (incl. elevation) + rotation. Built from
+// the footprint (sx·sz) and the editable object height `sy`, so a resized or
+// re-heighted piece keeps its proportions — nothing about the vertical is hardcoded.
+function FurnitureModel({ kind, sx, sz, sy }: { kind: FurnitureKind; sx: number; sz: number; sy: number }) {
+  if (kind === 'bar') {
+    // The body box IS the bar's height (`sy`, the "eje Y"); a thin counter sits proud
+    // on top so the silhouette reads as a bar at any height.
+    return (
+      <group>
+        <mesh position={[0, sy / 2, 0]} castShadow receiveShadow>
+          <boxGeometry args={[sx, sy, sz]} />
+          <meshStandardMaterial color={BAR_COL} roughness={0.6} metalness={0} />
+        </mesh>
+        <mesh position={[0, sy + 0.03, 0]} castShadow receiveShadow>
+          <boxGeometry args={[sx + 0.1, 0.06, sz + 0.1]} />
+          <meshStandardMaterial color="#7c2f1c" roughness={0.5} metalness={0} />
+        </mesh>
+      </group>
+    )
+  }
+  if (kind === 'plant') {
+    // Pot height scales gently with `sy`; the foliage sphere (footprint-sized) rides
+    // so its crown reaches `sy`, clamped to always sit above the pot.
+    const potR = Math.min(sx, sz) * 0.34
+    const foliageR = Math.min(sx, sz) * 0.5
+    const potH = Math.min(0.4, sy * 0.4)
+    const foliageCY = Math.max(potH + foliageR * 0.3, sy - foliageR)
+    return (
+      <group>
+        <mesh position={[0, potH / 2, 0]} castShadow receiveShadow>
+          <cylinderGeometry args={[potR * 0.78, potR, potH, 16]} />
+          <meshStandardMaterial color={POT_COL} roughness={0.8} metalness={0} />
+        </mesh>
+        <mesh position={[0, foliageCY, 0]} castShadow>
+          <sphereGeometry args={[foliageR, 14, 12]} />
+          <meshStandardMaterial color={PLANT_COL} roughness={0.85} metalness={0} />
+        </mesh>
+      </group>
+    )
+  }
+  // table
   return (
-    <mesh position={[box.cx, y, box.cz]} castShadow receiveShadow>
-      <boxGeometry args={[box.sx, height, box.sz]} />
-      <meshStandardMaterial color={color} roughness={roughness} metalness={0} />
+    <mesh position={[0, sy / 2, 0]} castShadow receiveShadow>
+      <boxGeometry args={[sx, sy, sz]} />
+      <meshStandardMaterial color={TABLE_COL} roughness={0.85} metalness={0} />
     </mesh>
   )
 }
 
-// Always-on furniture: the bar(s). Tables belong to the toggleable occupancy
-// overlay (they map the simulated crowd's use of the space), so they render in
-// their own `Tables` component gated by `showPeople`.
-function Furniture() {
+// A flat blue footprint highlight under the selected piece. Non-raycasting so it
+// never intercepts the drag that's moving the piece it marks.
+function SelectionFootprint({ sx, sz }: { sx: number; sz: number }) {
   return (
-    <group>
-      {BARS.map((b, i) => (
-        <group key={`b${i}`}>
-          <Box box={b} height={1.05} y={0.525} color={BAR_COL} roughness={0.6} />
-          <Box box={{ ...b, sx: b.sx + 0.1, sz: b.sz + 0.1 }} height={0.06} y={1.08} color="#7c2f1c" roughness={0.5} />
-        </group>
-      ))}
+    <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
+      <planeGeometry args={[sx + 0.14, sz + 0.14]} />
+      <meshBasicMaterial color={KIT_BLUE} transparent opacity={0.3} />
+    </mesh>
+  )
+}
+
+// One movable piece. In edit mode it's selectable and draggable across the floor
+// (pointer-captured ray → floor plane); otherwise it's inert scenery. Orbit is
+// suspended while dragging so the camera doesn't fight the drag.
+function FurnitureMesh({
+  item,
+  editable,
+  selected,
+  onSelect,
+  onMove,
+}: {
+  item: FurnitureItem
+  editable: boolean
+  selected: boolean
+  onSelect: (id: string) => void
+  onMove: (id: string, x: number, z: number) => void
+}) {
+  const { controls } = useThree() as unknown as { controls: { enabled: boolean } | null }
+  const floor = useMemo(() => new Plane(new Vector3(0, 1, 0), 0), [])
+  const hit = useRef(new Vector3())
+  const drag = useRef<{ dx: number; dz: number } | null>(null)
+
+  const onDown = (e: ThreeEvent<PointerEvent>) => {
+    if (!editable) return
+    e.stopPropagation()
+    onSelect(item.id)
+    if (!e.ray.intersectPlane(floor, hit.current)) return
+    drag.current = { dx: item.cx - hit.current.x, dz: item.cz - hit.current.z }
+    ;(e.target as Element).setPointerCapture?.(e.pointerId)
+    if (controls) controls.enabled = false
+    document.body.style.cursor = 'grabbing'
+  }
+  const onPointerMoveDrag = (e: ThreeEvent<PointerEvent>) => {
+    if (!drag.current) return
+    e.stopPropagation()
+    if (!e.ray.intersectPlane(floor, hit.current)) return
+    onMove(item.id, hit.current.x + drag.current.dx, hit.current.z + drag.current.dz)
+  }
+  const onUp = (e: ThreeEvent<PointerEvent>) => {
+    if (!drag.current) return
+    e.stopPropagation()
+    drag.current = null
+    ;(e.target as Element).releasePointerCapture?.(e.pointerId)
+    if (controls) controls.enabled = true
+    document.body.style.cursor = ''
+  }
+
+  return (
+    <group
+      position={[item.cx, furnitureElevation(item), item.cz]}
+      rotation={[0, ((item.rotation ?? 0) * Math.PI) / 180, 0]}
+      onPointerDown={editable ? onDown : undefined}
+      onPointerMove={editable ? onPointerMoveDrag : undefined}
+      onPointerUp={editable ? onUp : undefined}
+      onPointerOver={
+        editable
+          ? (e) => {
+              e.stopPropagation()
+              if (!drag.current) document.body.style.cursor = 'grab'
+            }
+          : undefined
+      }
+      onPointerOut={editable ? () => !drag.current && (document.body.style.cursor = '') : undefined}
+    >
+      <FurnitureModel kind={item.kind} sx={item.sx} sz={item.sz} sy={furnitureHeight(item)} />
+      {selected && editable && <SelectionFootprint sx={item.sx} sz={item.sz} />}
     </group>
   )
 }
 
-// Tables — part of the toggleable occupancy overlay (off by default).
-function Tables() {
+// All movable furniture. Tables stay tied to the occupancy reading (shown with the
+// crowd) unless we're editing; the bar and plants are permanent scenery.
+function FurniturePieces({
+  items,
+  editable,
+  showTables,
+  selectedId,
+  onSelect,
+  onMove,
+}: {
+  items: FurnitureItem[]
+  editable: boolean
+  showTables: boolean
+  selectedId: string | null
+  onSelect: (id: string) => void
+  onMove: (id: string, x: number, z: number) => void
+}) {
   return (
     <group>
-      {TABLES.map((t, i) => (
-        <Box key={`t${i}`} box={t} height={0.74} y={0.37} color={TABLE_COL} />
-      ))}
+      {items.map((it) =>
+        it.kind === 'table' && !showTables ? null : (
+          <FurnitureMesh
+            key={it.id}
+            item={it}
+            editable={editable}
+            selected={it.id === selectedId}
+            onSelect={onSelect}
+            onMove={onMove}
+          />
+        ),
+      )}
     </group>
   )
 }
@@ -754,19 +1338,25 @@ function frameDocRank(d: PrintDoc): number {
  * armed print can still mount on top).
  */
 function WallFrames({
+  walls,
+  registered,
+  findWall,
   fallback,
   showLabels,
   docs,
   realista,
 }: {
+  walls: Wall[]
+  registered: Wall[]
+  findWall: (id: string) => Wall | undefined
   fallback: number
   showLabels: boolean
   docs: PrintDoc[]
   realista: boolean
 }) {
   const frames = useMemo(
-    () => computeWallFrames({ walls: REGISTERED_WALLS, allWalls: WALLS, fallbackHeight: fallback }),
-    [fallback],
+    () => computeWallFrames({ walls: registered, allWalls: walls, fallbackHeight: fallback }),
+    [registered, walls, fallback],
   )
   // Join each frame to its print by `props.frameId` (every frame, not just arted
   // ones); when several docs claim a frame, the highest `frameDocRank` wins.
@@ -926,31 +1516,13 @@ function FramePrint({
 
 /* ── realista mode: the print as a true depth-tested mesh texture ────────────── */
 
-/** Load the print's exported PNG as a three texture when realista mode is on. */
-function usePrintFaceTexture(id: string, enabled: boolean): Texture | null {
-  const [tex, setTex] = useState<Texture | null>(null)
-  useEffect(() => {
-    if (!enabled) {
-      setTex(null)
-      return
-    }
-    let alive = true
-    loadPrintFaceTexture(id)
-      .then((t) => alive && setTex(t))
-      .catch(() => alive && setTex(null))
-    return () => {
-      alive = false
-    }
-  }, [id, enabled])
-  return tex
-}
-
 /**
  * The print face as a genuine textured plane — depth-tested, so a wall in front of
- * it hides it like real life (no floating <Html>). The texture is the exported PNG,
- * with the bleed cropped to the trim via UV ({@link faceCropUV}). Until the texture
- * is ready (or if it can't be produced) it falls back to a plain white plate, which
- * is still correctly occluded. Lit by the room so it reads as a vinyl on the wall.
+ * it hides it like real life (no floating <Html>). The texture is the **live page**
+ * rasterised to the trim ({@link useLivePrintFaceTexture}), so it tracks edits to the
+ * design automatically. Until the first raster lands (or if it fails) it falls back
+ * to a plain white plate, which is still correctly occluded. Lit by the room so it
+ * reads as a vinyl on the wall.
  */
 function PrintFaceMesh({
   doc,
@@ -965,22 +1537,7 @@ function PrintFaceMesh({
   interactive?: boolean
   onSelect?: () => void
 }) {
-  const geo = useMemo(() => buildGeometry(doc.dimensions, doc.dpi), [doc])
-  const tex = usePrintFaceTexture(doc.id, true)
-
-  useEffect(() => {
-    if (!tex) return
-    const { offset, repeat } = faceCropUV({
-      mediaWidthPx: geo.mediaWidthPx,
-      mediaHeightPx: geo.mediaHeightPx,
-      trimWidthPx: geo.trimWidthPx,
-      trimHeightPx: geo.trimHeightPx,
-      bleedPx: geo.bleedPx,
-    })
-    tex.offset.set(offset[0], offset[1])
-    tex.repeat.set(repeat[0], repeat[1])
-    tex.needsUpdate = true
-  }, [tex, geo])
+  const tex = useLivePrintFaceTexture(doc, true)
 
   return (
     <mesh
@@ -1194,6 +1751,26 @@ function Hud({
   onSplitFaces,
   showPeople,
   setShowPeople,
+  editFurniture,
+  onToggleEditFurniture,
+  armed,
+  setArmed,
+  selectedFurn,
+  updateSelectedFurn,
+  removeSelectedFurn,
+  furnitureCount,
+  furnitureClipboardKind,
+  onCopyFurn,
+  onPasteFurn,
+  onDuplicateFurn,
+  selectedWall,
+  updateSelectedWall,
+  rotateSelectedWall,
+  removeSelectedWall,
+  wallCount,
+  furnitureDirty,
+  savingFurniture,
+  onSaveFurniture,
   showLabels,
   setShowLabels,
   showFrames,
@@ -1229,6 +1806,26 @@ function Hud({
   onSplitFaces: () => void
   showPeople: boolean
   setShowPeople: (f: (p: boolean) => boolean) => void
+  editFurniture: boolean
+  onToggleEditFurniture: () => void
+  armed: SpaceTool | null
+  setArmed: (k: SpaceTool | null) => void
+  selectedFurn: FurnitureItem | null
+  updateSelectedFurn: (patch: Partial<FurnitureItem>) => void
+  removeSelectedFurn: () => void
+  furnitureCount: number
+  furnitureClipboardKind: FurnitureKind | null
+  onCopyFurn: () => void
+  onPasteFurn: () => void
+  onDuplicateFurn: () => void
+  selectedWall: EditableWall | null
+  updateSelectedWall: (patch: Partial<EditableWall>) => void
+  rotateSelectedWall: () => void
+  removeSelectedWall: () => void
+  wallCount: number
+  furnitureDirty: boolean
+  savingFurniture: boolean
+  onSaveFurniture: () => void
   showLabels: boolean
   setShowLabels: (f: (p: boolean) => boolean) => void
   showFrames: boolean
@@ -1288,6 +1885,9 @@ function Hud({
         <button onClick={() => setShowPeople((p) => !p)} title="Muestra/oculta la simulación de uso: personas, mesas y punto de spawn. Oculto por defecto." style={{ ...glassBtn, pointerEvents: 'auto', color: showPeople ? KIT_BLUE : '#c9cdd6' }}>
           👥 Personas {showPeople ? 'on' : 'off'}
         </button>
+        <button onClick={onToggleEditFurniture} title="Editar espacio: mover, añadir, girar y quitar mobiliario (mesas, barra, plantas) y paredes. Al activarlo se muestran y se pueden arrastrar todas las piezas." style={{ ...glassBtn, pointerEvents: 'auto', color: editFurniture ? KIT_BLUE : '#c9cdd6' }}>
+          ✏️ Editar espacio {editFurniture ? 'on' : 'off'}{editFurniture && furnitureDirty ? ' •' : ''}
+        </button>
         <button onClick={() => setShowFrames((p) => !p)} style={{ ...glassBtn, pointerEvents: 'auto', color: showFrames ? KIT_BLUE : '#c9cdd6' }}>
           ▦ Marcos {showFrames ? 'on' : 'off'}
         </button>
@@ -1326,6 +1926,28 @@ function Hud({
           boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
         }}
       >
+        {editFurniture && (
+          <SpaceEditPanel
+            armed={armed}
+            setArmed={setArmed}
+            selectedFurn={selectedFurn}
+            updateSelectedFurn={updateSelectedFurn}
+            removeSelectedFurn={removeSelectedFurn}
+            furnitureCount={furnitureCount}
+            clipboardKind={furnitureClipboardKind}
+            onCopy={onCopyFurn}
+            onPaste={onPasteFurn}
+            onDuplicate={onDuplicateFurn}
+            selectedWall={selectedWall}
+            updateSelectedWall={updateSelectedWall}
+            rotateSelectedWall={rotateSelectedWall}
+            removeSelectedWall={removeSelectedWall}
+            wallCount={wallCount}
+            dirty={furnitureDirty}
+            saving={savingFurniture}
+            onSave={onSaveFurniture}
+          />
+        )}
         <div style={{ fontSize: 13, fontWeight: 800 }}>Print a colgar</div>
         <select value={armedId ?? ''} onChange={(e) => setArmedId(e.target.value)} style={selectStyle}>
           {docs.map((d) => (
@@ -1409,9 +2031,9 @@ function Hud({
             </div>
           )}
 
-          <Slider label="Altura por defecto" value={fallbackHeight} display={`${fallbackHeight.toFixed(1)} m`} min={2.2} max={5} step={0.1} onChange={setFallbackHeight} />
+          <Slider label="Altura de paredes" value={fallbackHeight} display={`${fallbackHeight.toFixed(1)} m`} min={2.2} max={5} step={0.1} onChange={setFallbackHeight} />
           <div style={{ fontSize: 10, color: '#7c8190', lineHeight: 1.4 }}>
-            Solo afecta a muros sin altura medida; los que la tengan usan su <code>alturaM</code>.
+            Altura única para <b>todas</b> las paredes. Al guardar se escribe como <code>alturaM</code> en cada una.
           </div>
         </div>
 
@@ -1433,10 +2055,160 @@ function Hud({
         </div>
 
         <div style={{ fontSize: 10.5, color: '#7c8190', lineHeight: 1.5, marginTop: 'auto' }}>
-          Orbitar: arrastrar · zoom: rueda · caminar: WASD · subir/bajar: R/F · borrar print: Supr/⌫
+          Orbitar: arrastrar · zoom: rueda · caminar: WASD · subir/bajar: R/F · borrar selección: Supr/⌫ · editar espacio: modo ✏️ + arrastrar · copiar/pegar mueble: ⌘/Ctrl+C/V · duplicar: ⌘/Ctrl+D
         </div>
       </div>
     </>
+  )
+}
+
+/* ── space editor panel (furniture + walls; shown in the left column while editing) ── */
+
+const FURNITURE_ICON: Record<FurnitureKind, string> = { table: '🪑', bar: '🍸', plant: '🪴' }
+const TOOL_ICON: Record<SpaceTool, string> = { table: '🪑', bar: '🍸', plant: '🪴', wall: '🧱' }
+const TOOL_LABEL: Record<SpaceTool, string> = { table: 'Mesa', bar: 'Barra', plant: 'Planta', wall: 'Pared' }
+const SPACE_TOOLS: readonly SpaceTool[] = ['table', 'bar', 'plant', 'wall']
+const WALL_MAX_SIZE = Math.max(SPACE_WIDTH, SPACE_DEPTH)
+
+function SpaceEditPanel({
+  armed,
+  setArmed,
+  selectedFurn,
+  updateSelectedFurn,
+  removeSelectedFurn,
+  furnitureCount,
+  clipboardKind,
+  onCopy,
+  onPaste,
+  onDuplicate,
+  selectedWall,
+  updateSelectedWall,
+  rotateSelectedWall,
+  removeSelectedWall,
+  wallCount,
+  dirty,
+  saving,
+  onSave,
+}: {
+  armed: SpaceTool | null
+  setArmed: (k: SpaceTool | null) => void
+  selectedFurn: FurnitureItem | null
+  updateSelectedFurn: (patch: Partial<FurnitureItem>) => void
+  removeSelectedFurn: () => void
+  furnitureCount: number
+  clipboardKind: FurnitureKind | null
+  onCopy: () => void
+  onPaste: () => void
+  onDuplicate: () => void
+  selectedWall: EditableWall | null
+  updateSelectedWall: (patch: Partial<EditableWall>) => void
+  rotateSelectedWall: () => void
+  removeSelectedWall: () => void
+  wallCount: number
+  dirty: boolean
+  saving: boolean
+  onSave: () => void
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 14 }}>
+      <div style={{ fontSize: 13, fontWeight: 800, color: KIT_BLUE }}>✏️ Editar espacio</div>
+
+      <div>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: '#a7adba', marginBottom: 6 }}>Añadir</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {SPACE_TOOLS.map((k) => {
+            const on = armed === k
+            return (
+              <button
+                key={k}
+                onClick={() => setArmed(on ? null : k)}
+                style={{ ...glassBtn, flex: '1 0 42%', textAlign: 'center', color: on ? KIT_BLUE : '#c9cdd6', borderColor: on ? 'rgba(0,112,249,0.5)' : 'rgba(255,255,255,0.12)' }}
+              >
+                {TOOL_ICON[k]} {TOOL_LABEL[k]}
+              </button>
+            )
+          })}
+        </div>
+        <div style={{ fontSize: 10, color: '#7c8190', lineHeight: 1.45, marginTop: 6 }}>
+          {armed
+            ? `Haz click en el suelo para colocar ${armed === 'wall' ? 'una pared' : `una ${TOOL_LABEL[armed].toLowerCase()}`}.`
+            : 'Elige un tipo y click en el suelo. Click en una pieza/pared para editarla; arrástrala para moverla.'}
+        </div>
+        {clipboardKind && (
+          <button
+            onClick={onPaste}
+            title="Pegar una copia del último mueble copiado (⌘/Ctrl+V)"
+            style={{ ...glassBtn, width: '100%', marginTop: 8, color: KIT_BLUE, borderColor: 'rgba(0,112,249,0.5)' }}
+          >
+            📋 Pegar {FURNITURE_LABEL[clipboardKind]}
+          </button>
+        )}
+      </div>
+
+      {selectedWall ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 800 }}>
+            🧱 Pared · {selectedWall.id}
+            {selectedWall.registry ? ` · #${selectedWall.registry.invId}` : ''}
+          </div>
+          <Slider label="Tamaño X" value={selectedWall.sx} display={`${selectedWall.sx.toFixed(2)} m`} min={0.1} max={WALL_MAX_SIZE} step={0.1} onChange={(v) => updateSelectedWall({ sx: v })} />
+          <Slider label="Tamaño Z" value={selectedWall.sz} display={`${selectedWall.sz.toFixed(2)} m`} min={0.1} max={WALL_MAX_SIZE} step={0.1} onChange={(v) => updateSelectedWall({ sz: v })} />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={rotateSelectedWall} style={{ ...glassBtn, flex: 1 }}>⟳ Girar 90°</button>
+            <button onClick={removeSelectedWall} style={{ ...glassBtn, flex: 1, color: '#ff6b7d', borderColor: 'rgba(255,107,125,0.4)' }}>🗑 Quitar</button>
+          </div>
+          <div style={{ fontSize: 10, color: '#7c8190', lineHeight: 1.4 }}>
+            La altura es global para todas las paredes (control «Altura de paredes» más abajo).
+          </div>
+        </div>
+      ) : selectedFurn ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 800 }}>
+            {FURNITURE_ICON[selectedFurn.kind]} {FURNITURE_LABEL[selectedFurn.kind]} · {selectedFurn.id}
+          </div>
+          <Slider label="Ancho (X)" value={selectedFurn.sx} display={`${selectedFurn.sx.toFixed(1)} m`} min={FURNITURE_MIN_SIZE} max={FURNITURE_MAX_SIZE} step={0.1} onChange={(v) => updateSelectedFurn({ sx: v })} />
+          <Slider label="Fondo (Z)" value={selectedFurn.sz} display={`${selectedFurn.sz.toFixed(1)} m`} min={FURNITURE_MIN_SIZE} max={FURNITURE_MAX_SIZE} step={0.1} onChange={(v) => updateSelectedFurn({ sz: v })} />
+          <Slider label="Alto del objeto (Y)" value={furnitureHeight(selectedFurn)} display={`${furnitureHeight(selectedFurn).toFixed(2)} m`} min={FURNITURE_MIN_HEIGHT} max={FURNITURE_MAX_HEIGHT} step={0.05} onChange={(v) => updateSelectedFurn({ sy: v })} />
+          <Slider label="Separación del suelo" value={furnitureElevation(selectedFurn)} display={`${furnitureElevation(selectedFurn).toFixed(2)} m`} min={FURNITURE_MIN_ELEVATION} max={FURNITURE_MAX_ELEVATION} step={0.05} onChange={(v) => updateSelectedFurn({ elevation: v })} />
+          <Slider label="Rotación" value={selectedFurn.rotation ?? 0} display={`${Math.round(selectedFurn.rotation ?? 0)}°`} min={0} max={360} step={5} onChange={(v) => updateSelectedFurn({ rotation: v })} />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={onDuplicate} title="Duplicar esta pieza en el sitio (⌘/Ctrl+D)" style={{ ...glassBtn, flex: 1 }}>⧉ Duplicar</button>
+            <button onClick={onCopy} title="Copiar esta pieza al portapapeles (⌘/Ctrl+C)" style={{ ...glassBtn, flex: 1 }}>⎘ Copiar</button>
+          </div>
+          <button onClick={removeSelectedFurn} style={{ ...glassBtn, color: '#ff6b7d', borderColor: 'rgba(255,107,125,0.4)' }}>
+            🗑 Quitar pieza
+          </button>
+        </div>
+      ) : (
+        <div style={{ fontSize: 10.5, color: '#7c8190', lineHeight: 1.5 }}>
+          {furnitureCount} mueble(s) · {wallCount} pared(es). Selecciona una pieza o pared para editarla.
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span
+          style={{
+            fontSize: 10.5,
+            fontWeight: 700,
+            color: saving ? '#ffce6b' : dirty ? '#ffce6b' : '#7fcaa0',
+          }}
+        >
+          {saving ? '💾 Guardando…' : dirty ? '• Guardando cambios…' : '✓ Guardado en event-layout.json'}
+        </span>
+        <div style={{ flex: 1 }} />
+        <button
+          onClick={onSave}
+          disabled={saving}
+          title="Se guarda solo al editar. Pulsa para forzar la escritura de event-layout.json ahora."
+          style={{ ...glassBtn, fontSize: 11, padding: '5px 9px', opacity: saving ? 0.55 : 1 }}
+        >
+          Guardar ya
+        </button>
+      </div>
+      <div style={{ fontSize: 10, color: '#7c8190', lineHeight: 1.4 }}>
+        Mover, redimensionar, girar y quitar (mobiliario y paredes) se guardan solos en <code>event-layout.json</code>.
+      </div>
+    </div>
   )
 }
 

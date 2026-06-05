@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { BRAND } from '@/lib/neumorphism'
+import { KIT_BLUE } from '@/lib/neumorphism'
 import type { PrintGeometry } from '../geometry'
 import type { PrintTheme } from '../types'
 import { PRINT_DISPLAY_HAIR, PRINT_TEXT_FONT } from '../printFonts'
@@ -10,7 +10,8 @@ import { PRINT_DISPLAY_HAIR, PRINT_TEXT_FONT } from '../printFonts'
  * ──────────────────────────────────────────────────────────────────────────
  * One register, two grounds: an editorial / Swiss-modernist voice — Universal Sans
  * Display (hairline 250 cut) as the protagonist titling, Universal Sans Text for
- * body, one disciplined warm accent, hairline rules and a lot of air. *Muy fino,
+ * body, one disciplined accent (KIT_BLUE — the brand primary), hairline rules and
+ * a lot of air. *Muy fino,
  * muy simple.* It renders on **paper** (light) or **ink** (dark) chosen by the
  * doc's `theme`, so the same composition flips ground with a one-line doc change
  * and the dark ground stays one family with the velocity-room walls.
@@ -53,19 +54,19 @@ export const TIPO_LIGHT: TipoPalette = {
   muted: '#8a8a8a',
   faint: '#b6b6b6',
   hairline: 'rgba(20,20,20,0.18)',
-  accent: BRAND.orange,
+  accent: KIT_BLUE,
 }
 
-/** Dark register — deep ink, warm white. One family with the velocity-room walls. */
+/** Dark register — deep neutral ink, cool white. No warm/cream cast. */
 export const TIPO_DARK: TipoPalette = {
   bg: '#0c0e13',
-  field: 'radial-gradient(120% 150% at 16% 30%, #16120c 0%, #0c0e13 58%, #050608 100%)',
-  ink: '#f3efe9',
-  inkSoft: '#cdc6ba',
-  muted: '#8d8678',
-  faint: '#5e584c',
-  hairline: 'rgba(243,239,233,0.16)',
-  accent: BRAND.orange,
+  field: 'radial-gradient(120% 150% at 16% 30%, #14161d 0%, #0c0e13 58%, #050609 100%)',
+  ink: '#f4f4fa',
+  inkSoft: '#c6c6d4',
+  muted: '#8c8ca4',
+  faint: '#56566b',
+  hairline: 'rgba(244,244,250,0.16)',
+  accent: KIT_BLUE,
 }
 
 export function tipoPalette(theme: PrintTheme): TipoPalette {

@@ -1,71 +1,103 @@
 /**
  * frontier-data — the "Frontier Language Model Intelligence over Time" dataset,
- * styled after Artificial Analysis (artificialanalysis.ai, Intelligence Index v4.0).
+ * faithful to Artificial Analysis (artificialanalysis.ai, Intelligence Index).
  * ──────────────────────────────────────────────────────────────────────────
- * Plots each frontier model's Artificial Analysis Intelligence Index (y) against
- * its release date (x), with a rising frontier line — square markers coloured by
- * provider, as on AA.
+ * Plots each model's Artificial Analysis Intelligence Index (y) against its
+ * release date (x). Square markers coloured by lab; each lab draws its own
+ * rising **stepped** progression line (its best index so far), exactly as on AA.
  *
- * ⚠ PROVISIONAL: the recent anchors (Gemini 3.1 Pro 57, Claude Opus 4.7 57, Opus 4.6
- * 53, Sonnet 4.6 51) are from public reporting (mid-2026); the earlier index values
- * are approximate and will be replaced with Pablo's exact Artificial Analysis export.
- * The chart renders a visible "datos provisionales" note until then. Source to cite:
- * Artificial Analysis — https://artificialanalysis.ai
+ * The points + provider colours are AUTO-GENERATED from the AA API by
+ * `npm run frontier:fetch` (see scripts/fetch-frontier.mjs) into
+ * `frontier-data.generated.ts`. This module only adds types, the decimal-year
+ * conversion and the chart helpers. Source to cite: Artificial Analysis.
  */
+import {
+  FRONTIER_RAW,
+  FRONTIER_PROVIDERS,
+  FRONTIER_GENERATED_AT,
+  FRONTIER_INDEX_VERSION,
+  type FrontierProvider,
+} from './frontier-data.generated'
 
-export type FrontierProvider = 'openai' | 'anthropic' | 'google' | 'xai' | 'meta' | 'deepseek' | 'mistral'
+export { FRONTIER_PROVIDERS, FRONTIER_GENERATED_AT, FRONTIER_INDEX_VERSION }
+export type { FrontierProvider }
 
 export type FrontierPoint = {
   id: string
-  /** Short label, e.g. "GPT-5". */
+  /** Model family name, e.g. "GPT-5.5". */
   label: string
   provider: FrontierProvider
   /** Release date as a decimal year (e.g. 2025.6 ≈ Aug 2025). */
   date: number
-  /** Artificial Analysis Intelligence Index (v4.0). */
+  /** Release date as YYYY-MM-DD (for tooltips / sorting). */
+  dateISO: string
+  /** Artificial Analysis Intelligence Index. */
   index: number
   /** Reasoning model (AA marks these with a lightbulb). */
-  reasoning?: boolean
+  reasoning: boolean
 }
 
-/** Provider display + the AA-style accent colour for its square markers. */
-export const FRONTIER_PROVIDERS: Record<FrontierProvider, { label: string; color: string }> = {
-  openai: { label: 'OpenAI', color: '#0f9d8c' },
-  anthropic: { label: 'Anthropic', color: '#cc785c' },
-  google: { label: 'Google', color: '#3b6fd4' },
-  xai: { label: 'xAI', color: '#1f1f1f' },
-  meta: { label: 'Meta', color: '#4267b2' },
-  deepseek: { label: 'DeepSeek', color: '#6b5ce0' },
-  mistral: { label: 'Mistral', color: '#e8642a' },
+/** Decimal year from a YYYY-MM-DD string (day-accurate enough to plot). */
+export function decimalYear(iso: string): number {
+  const [y, m, d] = iso.split('-').map(Number)
+  return y + ((m - 1) + (d - 1) / 31) / 12
 }
 
-/** Decimal year from yyyy-mm. */
-const ym = (y: number, m: number) => y + (m - 0.5) / 12
+/** Every charted model, oldest first. */
+export const FRONTIER_POINTS: FrontierPoint[] = FRONTIER_RAW.map((r) => ({
+  id: r.id,
+  label: r.label,
+  provider: r.provider,
+  date: decimalYear(r.date),
+  dateISO: r.date,
+  index: r.index,
+  reasoning: r.reasoning,
+})).sort((a, b) => a.date - b.date)
 
-/** ⚠ PROVISIONAL points — recent indices reported, earlier ones approximate. */
-export const FRONTIER_POINTS: FrontierPoint[] = [
-  { id: 'gpt-4', label: 'GPT-4', provider: 'openai', date: ym(2023, 3), index: 25 },
-  { id: 'claude-3-opus', label: 'Claude 3 Opus', provider: 'anthropic', date: ym(2024, 3), index: 30 },
-  { id: 'gpt-4o', label: 'GPT-4o', provider: 'openai', date: ym(2024, 5), index: 33 },
-  { id: 'claude-35-sonnet', label: 'Claude 3.5 Sonnet', provider: 'anthropic', date: ym(2024, 6), index: 35 },
-  { id: 'gemini-2', label: 'Gemini 2.0', provider: 'google', date: ym(2024, 12), index: 38 },
-  { id: 'o1', label: 'o1', provider: 'openai', date: ym(2024, 12), index: 40, reasoning: true },
-  { id: 'claude-37-sonnet', label: 'Claude 3.7 Sonnet', provider: 'anthropic', date: ym(2025, 2), index: 42, reasoning: true },
-  { id: 'gemini-25-pro', label: 'Gemini 2.5 Pro', provider: 'google', date: ym(2025, 3), index: 45, reasoning: true },
-  { id: 'o3', label: 'o3', provider: 'openai', date: ym(2025, 4), index: 47, reasoning: true },
-  { id: 'grok-4', label: 'Grok 4', provider: 'xai', date: ym(2025, 7), index: 48, reasoning: true },
-  { id: 'gpt-5', label: 'GPT-5', provider: 'openai', date: ym(2025, 8), index: 50, reasoning: true },
-  { id: 'deepseek-v3', label: 'DeepSeek V3.2', provider: 'deepseek', date: ym(2025, 9), index: 44, reasoning: true },
-  { id: 'gemini-3-pro', label: 'Gemini 3 Pro', provider: 'google', date: ym(2025, 11), index: 54, reasoning: true },
-  { id: 'opus-46', label: 'Claude Opus 4.6', provider: 'anthropic', date: ym(2026, 2), index: 53, reasoning: true },
-  { id: 'gemini-31-pro', label: 'Gemini 3.1 Pro', provider: 'google', date: ym(2026, 4), index: 57, reasoning: true },
-  { id: 'opus-47', label: 'Claude Opus 4.7', provider: 'anthropic', date: ym(2026, 5), index: 57, reasoning: true },
-]
+/** Real data now — no longer the provisional hand-typed anchors. */
+export const FRONTIER_PROVISIONAL = false
 
-/** True until Pablo's exact Artificial Analysis data replaces the approximate points. */
-export const FRONTIER_PROVISIONAL = true
+/** A lab's stepped progression line (best index so far) as SVG-ready points. */
+export type FrontierLabLine = {
+  provider: FrontierProvider
+  /** Polyline points [{ date, index }, …] tracing the staircase. */
+  points: Array<{ date: number; index: number }>
+}
 
-/** The frontier line: the running best index over time (the record-setters). */
+/**
+ * Per-lab staircase: each lab's running-best index over time, as a step line
+ * (horizontal until a new best ships, then a vertical jump). This is the
+ * signature AA look — one rising coloured line per lab, not a global envelope.
+ */
+export function frontierLabLines(points: FrontierPoint[] = FRONTIER_POINTS): FrontierLabLine[] {
+  const byProvider = new Map<FrontierProvider, FrontierPoint[]>()
+  for (const p of points) {
+    const arr = byProvider.get(p.provider) ?? []
+    arr.push(p)
+    byProvider.set(p.provider, arr)
+  }
+
+  const out: FrontierLabLine[] = []
+  // Emit in the legend (generated) provider order for stable z-order/legend.
+  for (const provider of Object.keys(FRONTIER_PROVIDERS) as FrontierProvider[]) {
+    const lab = byProvider.get(provider)
+    if (!lab || lab.length === 0) continue
+    const sorted = [...lab].sort((a, b) => a.date - b.date)
+    const line: Array<{ date: number; index: number }> = []
+    let best = -Infinity
+    for (const p of sorted) {
+      if (p.index > best) {
+        if (line.length > 0) line.push({ date: p.date, index: best }) // horizontal run to the new release…
+        line.push({ date: p.date, index: p.index }) // …then the step up
+        best = p.index
+      }
+    }
+    if (line.length > 0) out.push({ provider, points: line })
+  }
+  return out
+}
+
+/** The global frontier line: the running best index across all labs. */
 export function frontierEnvelope(points: FrontierPoint[] = FRONTIER_POINTS): FrontierPoint[] {
   const sorted = [...points].sort((a, b) => a.date - b.date)
   const out: FrontierPoint[] = []
@@ -79,9 +111,19 @@ export function frontierEnvelope(points: FrontierPoint[] = FRONTIER_POINTS): Fro
   return out
 }
 
-/** Distinct providers present, in first-seen order (for the legend). */
+/** Distinct providers present, in legend order (for the legend). */
 export function frontierProvidersPresent(points: FrontierPoint[] = FRONTIER_POINTS): FrontierProvider[] {
-  const seen: FrontierProvider[] = []
-  for (const p of points) if (!seen.includes(p.provider)) seen.push(p.provider)
-  return seen
+  const present = new Set(points.map((p) => p.provider))
+  return (Object.keys(FRONTIER_PROVIDERS) as FrontierProvider[]).filter((p) => present.has(p))
+}
+
+/** [min, max] decimal-year span of the data (for the x-axis domain). */
+export function frontierDateExtent(points: FrontierPoint[] = FRONTIER_POINTS): [number, number] {
+  const ds = points.map((p) => p.date)
+  return [Math.min(...ds), Math.max(...ds)]
+}
+
+/** Highest index in the data (for the y-axis headroom). */
+export function frontierMaxIndex(points: FrontierPoint[] = FRONTIER_POINTS): number {
+  return Math.max(...points.map((p) => p.index))
 }

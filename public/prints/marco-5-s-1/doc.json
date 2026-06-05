@@ -1,8 +1,8 @@
 {
   "id": "marco-5-s-1",
-  "title": "5-S-1 — Puente S5→S6 — coste marginal → 0 (tipografía) (9.50×2.50 m)",
+  "title": "5-S-1 — Puente S5→S6 — Índice del recorrido (9.50×2.50 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
-  "pageComponentId": "tipografia",
+  "pageComponentId": "indice",
   "theme": "light",
   "dimensions": {
     "trimWidthMm": 9500,
@@ -24,17 +24,18 @@
     "frameId": "5-S-1",
     "side": 1,
     "readingDistanceM": 3,
-    "eyebrow": "S5 → S6 · El puente",
-    "h1": "Coste marginal → 0",
-    "h2": "Lo escaso se vuelve abundante.",
-    "h3": "Ya pasó antes.",
-    "h4": "Y vuelve a pasar.",
-    "paragraphs": [
-      "Cada vez que producir algo se acerca al coste cero, deja de ser un lujo y pasa a estar en todas partes.",
-      "La luz, el cálculo, la información: primero caros, después invisibles."
+    "entries": [
+      { "no": "01", "title": "Disrupción sensorial", "deck": "El esfuerzo humano y su malinterpretación" },
+      { "no": "02", "title": "Del mito al dato", "deck": "Una experiencia de desmitificación técnica" },
+      { "no": "03", "title": "Velocidad de progreso", "deck": "Un paseo alrededor de la velocidad" },
+      { "no": "04", "title": "Ineficiencias del humano", "deck": "Sala de cine" },
+      { "no": "05", "title": "Cuellos de botella", "deck": "¿Qué nos aleja de la bonanza absoluta?" },
+      { "no": "06", "title": "La historia se repite", "deck": "Validación histórica · «Ya pasó antes»" }
     ],
-    "ratio": 1.9,
-    "h1CapFraction": 0.15,
-    "venue": "Finca El Olivar · 17·06·2026"
+    "marginXFraction": 0.02,
+    "columnWidthFraction": 0.28,
+    "separatorWidthFraction": 0.13,
+    "titleCapFraction": 0.016,
+    "ratio": 1.6
   }
 }

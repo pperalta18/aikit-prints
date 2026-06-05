@@ -64,7 +64,7 @@ const DEFAULTS: Required<Omit<Props, 'invId'>> = {
   readingDistanceM: 4,
   eyebrow: 'Próxima sala',
   sala: 'Sala 2',
-  title: 'Introducción a la inteligencia artificial',
+  title: 'Del mito al dato',
   arrow: 'left',
   accent: BRAND.blue,
   locator: 'S1 → S2',
@@ -96,8 +96,6 @@ export function WayfindingS1S2({ doc, geo }: PrintPageProps) {
   const blockMaxW = W * 0.46
   // The arrow is paired to the title cap-height so word and arrow read as one unit.
   const arrowMm = scale.capHeights.h1Mm * 1.15
-  // A short warm accent tick under the eyebrow — the only flourish (the tipografia voice).
-  const tickW = mm(scale.capHeights.eyebrowMm * 3.2)
 
   // The editorial frame: two hairlines top and bottom, the act centred between.
   const ruleTopY = H * 0.16
@@ -133,8 +131,7 @@ export function WayfindingS1S2({ doc, geo }: PrintPageProps) {
         >
           <Arrow geo={geo} dir={arrow} sizeMm={arrowMm} color={accent} weight={3.5} />
           <div style={{ maxWidth: mm(blockMaxW) }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: mm(scale.capHeights.eyebrowMm * 0.9), marginBottom: mm(H * 0.035) }}>
-              <span style={{ width: tickW, height: Math.max(1, mm(scale.capHeights.eyebrowMm * 0.34)), background: accent, flex: '0 0 auto' }} />
+            <div style={{ marginBottom: mm(H * 0.035) }}>
               <span style={tipoEyebrow(geo, scale.eyebrowPt, pal.muted)}>{eyebrow}</span>
             </div>
             <div style={tipoH1(geo, scale.h1Pt, pal)}>{title}</div>

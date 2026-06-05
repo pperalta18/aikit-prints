@@ -349,5 +349,18 @@
     },
     "dpi": 60,
     "updatedAt": "2026-06-04T00:00:00.000Z"
+  },
+  {
+    "id": "seccion-01-energia-artificial",
+    "title": "Sección 01 — La energía artificial (pared de sección, 4 × 2,5 m)",
+    "dimensions": {
+      "trimWidthMm": 4000,
+      "trimHeightMm": 2500,
+      "bleedMm": 0,
+      "safeMarginMm": 180,
+      "cropMarks": false
+    },
+    "dpi": 60,
+    "updatedAt": "2026-06-04T00:00:00.000Z"
   }
 ]
