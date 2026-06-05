@@ -1,7 +1,7 @@
 import type { PrintPageProps } from '../types'
 import type { PrintGeometry } from '../geometry'
 import { PrintFonts } from '../printFonts'
-import { type TipoPalette, TipoField, tipoEyebrow, tipoH2, tipoH4, tipoPalette } from './tipografia-kit'
+import { type TipoPalette, TipoField, tipoEyebrow, tipoH2, tipoH3, tipoH4, tipoPalette } from './tipografia-kit'
 import { eventTypeScale } from './tipografia'
 import { LayerStack, MiniMatrix } from './escala-modelos-kit'
 import {
@@ -115,7 +115,7 @@ export function Escala9E1({ doc, geo }: PrintPageProps) {
 
         {/* ── cross-wall cue: GPT-4 doesn't fit at scale ── */}
         {gpt4 && gpt2 && (
-          <Gpt4Cue geo={geo} pal={pal} W={W} marginX={marginX} cy={cy} H={H} namePt={scale.h2Pt} subPt={scale.eyebrowPt} microPt={microPt} factor={formatFactorEs(growthFactor(gpt2.value, gpt4.value))} />
+          <Gpt4Cue geo={geo} pal={pal} W={W} marginX={marginX} cy={cy} captionY={captionY} H={H} namePt={scale.h2Pt} subPt={scale.eyebrowPt} microPt={microPt} factor={formatFactorEs(growthFactor(gpt2.value, gpt4.value))} params={formatParamsEs(gpt4.value)} />
         )}
 
         {/* ── one discreet honesty line, bottom-left ── */}
@@ -231,42 +231,72 @@ function Gpt4Cue({
   W,
   marginX,
   cy,
+  captionY,
   H,
   namePt,
   subPt,
   microPt,
   factor,
+  params,
 }: {
   geo: PrintGeometry
   pal: TipoPalette
   W: number
   marginX: number
   cy: number
+  captionY: number
   H: number
   namePt: number
   subPt: number
   microPt: number
   factor: string
+  params: string
 }) {
   const { mm } = geo
-  const boxWmm = W * 0.2
-  const boxLeft = W - marginX - boxWmm
-  const arrowW = mm(boxWmm * 0.6)
-  const arrowH = mm(H * 0.045)
+  // GPT-4 reads as a fourth column on the same grid as the three model squares:
+  // its name heads the column, the magnitude is the wall's thesis (área ∝ parámetros),
+  // and the connector exits the wall on the model centre-line — GPT-4 is so vast it
+  // leaves this wall and *becomes* the next one (8-S-1, the monolith).
+  const colWmm = W * 0.22
+  const rightMm = W - marginX // the column's right edge rides the safe margin
+  const colLeft = rightMm - colWmm
+  const magPt = namePt * 0.72
+
+  // connector: from the column's left edge, sweeping right past the safe margin
+  // toward the wall edge — a wayfinding arrow to the companion wall.
+  const arrowStartMm = colLeft + colWmm * 0.12
+  const arrowEndMm = W - marginX * 0.22
+  const arrowWpx = mm(arrowEndMm - arrowStartMm)
+  const headH = mm(H * 0.05)
+  const stroke = Math.max(1, mm(1.3))
 
   return (
-    <div style={{ position: 'absolute', left: mm(boxLeft), top: mm(cy - H * 0.12), width: mm(boxWmm), textAlign: 'right' }}>
-      <div style={tipoEyebrow(geo, subPt, pal.muted)}>El siguiente</div>
-      <div style={{ ...tipoH2(geo, namePt, pal), marginTop: mm(H * 0.008) }}>GPT-4</div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: mm(H * 0.025) }}>
-        <svg width={arrowW} height={arrowH} viewBox={`0 0 ${arrowW} ${arrowH}`} style={{ overflow: 'visible' }}>
-          <line x1={0} y1={arrowH / 2} x2={arrowW - arrowH * 0.5} y2={arrowH / 2} stroke={pal.accent} strokeWidth={Math.max(1, mm(1.2))} />
-          <polyline points={`${arrowW - arrowH * 0.7},${arrowH * 0.16} ${arrowW},${arrowH / 2} ${arrowW - arrowH * 0.7},${arrowH * 0.84}`} fill="none" stroke={pal.accent} strokeWidth={Math.max(1, mm(1.2))} strokeLinejoin="round" strokeLinecap="round" />
+    <>
+      {/* the subject — a fourth column header, aligned above the model centre-line */}
+      <div style={{ position: 'absolute', left: mm(colLeft), top: mm(cy - H * 0.215), width: mm(colWmm), textAlign: 'right' }}>
+        <div style={tipoEyebrow(geo, subPt, pal.muted)}>El siguiente</div>
+        <div style={{ ...tipoH2(geo, namePt, pal), marginTop: mm(H * 0.012) }}>GPT-4</div>
+      </div>
+
+      {/* the magnitude — the killer number, carried in the single disciplined accent */}
+      <div style={{ position: 'absolute', left: mm(colLeft), top: mm(cy - H * 0.095), width: mm(colWmm), textAlign: 'right', whiteSpace: 'nowrap' }}>
+        <span style={{ ...tipoH3(geo, magPt, pal), color: pal.accent }}>{factor}</span>
+        <span style={{ ...tipoEyebrow(geo, subPt, pal.muted), marginLeft: mm(W * 0.006) }}>GPT-2</span>
+      </div>
+
+      {/* connector on the model centre-line, exiting the wall toward 8-S-1 */}
+      <div style={{ position: 'absolute', left: mm(arrowStartMm), top: mm(cy) - headH / 2, width: arrowWpx, height: headH }}>
+        <svg width={arrowWpx} height={headH} viewBox={`0 0 ${arrowWpx} ${headH}`} style={{ overflow: 'visible' }}>
+          <line x1={0} y1={headH / 2} x2={arrowWpx - headH * 0.5} y2={headH / 2} stroke={pal.accent} strokeWidth={stroke} />
+          <polyline points={`${arrowWpx - headH * 0.7},${headH * 0.16} ${arrowWpx},${headH / 2} ${arrowWpx - headH * 0.7},${headH * 0.84}`} fill="none" stroke={pal.accent} strokeWidth={stroke} strokeLinejoin="round" strokeLinecap="round" />
         </svg>
       </div>
-      <div style={{ ...tipoEyebrow(geo, subPt, pal.muted), textTransform: 'none', letterSpacing: 0, marginTop: mm(H * 0.02), lineHeight: 1.4 }}>
-        {factor} GPT-2. No cabe a escala en esta pared.
+
+      {/* honest detail on the common museum-label line, with the other captions */}
+      <div style={{ position: 'absolute', left: mm(colLeft), top: mm(captionY), width: mm(colWmm), textAlign: 'right' }}>
+        <div style={{ ...tipoEyebrow(geo, subPt, pal.muted), textTransform: 'none', letterSpacing: 0, fontWeight: 400, lineHeight: 1.4 }}>No cabe a escala en esta pared.</div>
+        <div style={{ ...tipoEyebrow(geo, microPt, pal.faint), marginTop: mm(6) }}>≈ {params} de parámetros</div>
       </div>
-    </div>
+    </>
   )
 }

@@ -82,17 +82,17 @@ const DEFAULT_ERAS: Era[] = [
     // The hero slot is a 2×2 grid (imgs 0-3): many dreamy early-diffusion attempts,
     // quartered by the wall seams. img 4 is the separate small plate below-left.
     images: [
-      { subject: 'retrato onírico, anatomía imprecisa (SD 1.5)', src: `${A}/2022-g1.png` },
-      { subject: 'paisaje de fantasía «trending on artstation» (SD 1.5)', src: `${A}/2022-g2.png` },
-      { subject: 'criatura onírica de formas imprecisas (SD 1.5)', src: `${A}/2022-g3.png` },
-      { subject: 'mano con dedos de más, anatomía imprecisa (SD 1.5)', src: `${A}/2022-g4.png` },
-      { subject: 'paisaje de fantasía «trending on artstation» (SD 1.5)', src: `${A}/2022-b.png` },
+      { subject: 'gesto con manos deformes, dedos de más y fundidos (SD 1.5)', src: `${A}/2022-g1.png` },
+      { subject: 'multitud en una fiesta, caras y manos derretidas (SD 1.5)', src: `${A}/2022-g2.png` },
+      { subject: 'bodegón con frutas deformes y colores imposibles, derretido (SD 1.5)', src: `${A}/2022-g3.png` },
+      { subject: 'calle de neón con texto ininteligible (SD 1.5)', src: `${A}/2022-g4.png` },
+      { subject: 'intento de gran composición renacentista, figuras sin rostro (SD 1.5)', src: `${A}/2022-b.png` },
     ],
   },
   {
     year: '2023',
     eyebrow: 'Difusión madura',
-    title: 'Gana nitidez',
+    title: 'Gana nitidez y comprensión del mundo',
     model: 'SDXL · Midjourney v5',
     images: [
       { subject: 'retrato fotográfico coherente (SDXL)', src: `${A}/2023-hero.png` },
@@ -118,9 +118,9 @@ const DEFAULT_ERAS: Era[] = [
     model: 'GPT Image 2',
     now: true,
     images: [
-      { subject: 'retrato fotorrealista (GPT Image 2)', src: `${A}/2026-hero.png` },
+      { subject: 'escena coral moderna, composición barroca fotorrealista (GPT Image 2)', src: `${A}/2026-hero.png` },
       { subject: 'escena callejera compleja (GPT Image 2)', src: `${A}/2026-b.png` },
-      { subject: 'bodegón fotográfico (GPT Image 2)', src: `${A}/2026-c.png` },
+      { subject: 'bodegón fotorrealista a la manera holandesa (GPT Image 2)', src: `${A}/2026-c.png` },
     ],
   },
 ]

@@ -28,15 +28,17 @@ import type { PrintGeometry } from '../geometry'
 
 /* ── roles ─────────────────────────────────────────────────────────────────── */
 
-export type CredRole = 'staff' | 'guest' | 'host' | 'speaker'
+export type CredRole = 'staff' | 'guest' | 'host' | 'speaker' | 'press'
 
-export const ROLES: CredRole[] = ['speaker', 'host', 'staff', 'guest']
+export const ROLES: CredRole[] = ['speaker', 'host', 'staff', 'guest', 'press']
 
 const MAGENTA = '#FF2D55'
 /** Near-white ink for the role word on dark / blue fields (Figma --muted). */
 const INK_LIGHT = '#f4f4fa'
 /** Muted ink for the role word on the light field (Figma --muted-foreground). */
 const INK_MUTED = '#6c6c89'
+/** Pure black ink — the PRESS card is monochrome: black role word + all-black lockup. */
+const INK_BLACK = '#0b0b0b'
 
 /* ── colourways ──────────────────────────────────────────────────────────────
  * The key relief is computed by the neumorphism engine (`elevation`) from a
@@ -62,11 +64,14 @@ const blueTheme: NeoTheme = {
 }
 
 /** Graphite relief theme — the engine darkTheme with a dimmer (softer) lit edge. */
-const graphiteTheme: NeoTheme = {
+export const graphiteTheme: NeoTheme = {
   ...darkTheme,
   highlight: '#272e39', // softened from #333d4b — the white edge was too strong
   shadow: 'rgba(0,0,0,0.42)',
 }
+
+/** The graphite key tray hairline (matches STAFF) — reused by the PRESS dark keyboard. */
+const GRAPHITE_TRAY = { hard: 'rgba(54,64,79,0.55)', soft: 'rgba(0,0,0,0.5)' } as const
 
 /** Engraved "Grid" hairline on the key tray's lower edge (hard line + soft groove). */
 export type Tray = { hard: string; soft: string }
@@ -77,6 +82,12 @@ export type Colorway = {
   theme: NeoTheme
   /** Lower-edge hairline of the key container. */
   tray: Tray
+  /**
+   * Optional override: paint the top key texture in a DIFFERENT tone than the field
+   * (its own relief theme + tray). PRESS uses this for a dark neumorphic keyboard
+   * strip over an otherwise light card. When unset, the keyboard uses `theme`/`tray`.
+   */
+  keyboard?: { theme: NeoTheme; tray: Tray }
   /** Role word colour — the hero masthead. */
   ink: string
   /** The role word exactly as it reads (casing is intentional: STAFF caps). */
@@ -129,6 +140,18 @@ export const COLORWAYS: Record<CredRole, Colorway> = {
     word: 'Guest',
     logo: { tone: 'light', markColor: KIT_BLUE, liveColor: MAGENTA, glow: true },
   },
+  // PRESS — prensa. Light card, MONOCHROME black (lockup + role word all black),
+  // but the top neumorphic key strip is DARK MODE (graphite relief over the light
+  // body) — the press card's one distinguishing twist.
+  press: {
+    tone: 'light',
+    theme: lightTheme,
+    tray: { hard: 'rgba(255,255,255,0.9)', soft: 'rgba(184,204,224,0.8)' },
+    keyboard: { theme: graphiteTheme, tray: GRAPHITE_TRAY },
+    ink: INK_BLACK,
+    word: 'Press',
+    logo: { tone: 'light', markColor: INK_BLACK, wordmarkColor: INK_BLACK, liveColor: INK_BLACK, glow: false },
+  },
 }
 
 /* ── layout proportions (fractions of the trim, straight from the A4 Figma) ──── */
@@ -175,7 +198,7 @@ export function Field({ cw }: { cw: Colorway }) {
  * at the foot. Each band extends past both side media edges (only the bottom line
  * shows) and clips its row at the bottom, meeting that line crisply. */
 
-export function Keyboard({ geo, cw }: { geo: PrintGeometry; cw: Colorway }) {
+export function Keyboard({ geo, cw, bleedTop = false }: { geo: PrintGeometry; cw: Colorway; bleedTop?: boolean }) {
   const W = geo.trimWidthPx
   const s = W * F.key
   const gap = W * F.gap
@@ -219,6 +242,12 @@ export function Keyboard({ geo, cw }: { geo: PrintGeometry; cw: Colorway }) {
 
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+      {/* When the keyboard tone differs from the field (PRESS: dark keys on a light
+          card), back the strip with a solid block that bleeds past the top + side
+          media edges, so the dark band runs clean off the trimmed top edge. */}
+      {bleedTop ? (
+        <div style={{ position: 'absolute', left: bandLeft, top: 0, width: bandWidth, height: band2Top + bandH, background: cw.theme.surface }} />
+      ) : null}
       <Band widths={ROW_TOP.widths} startX={ROW_TOP.startX} top={band1Top} />
       <Band widths={ROW_BOTTOM.widths} startX={ROW_BOTTOM.startX} top={band2Top} />
     </div>

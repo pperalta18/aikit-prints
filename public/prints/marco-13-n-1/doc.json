@@ -1,10 +1,9 @@
 {
   "id": "marco-13-n-1",
-  "title": "13-N-1 — La Naranja Mecánica: cada asset del juego ya existe (6.50×2.50 m)",
+  "title": "13-N-1 — (en blanco) (6.50×2.50 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "naranja-mecanica",
   "theme": "light",
-  "surface": "#f7f3e8",
   "dimensions": {
     "trimWidthMm": 6500,
     "trimHeightMm": 2500,

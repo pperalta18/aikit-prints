@@ -4,7 +4,7 @@
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "hogares",
   "theme": "light",
-  "surface": "#f7f3e8",
+  "surface": "#ffffff",
   "dimensions": {
     "trimWidthMm": 9750,
     "trimHeightMm": 2500,
@@ -30,7 +30,6 @@
       { "label": "Siglo VII", "numeral": "VII", "caption": "Casa comunal de madera y paja", "src": "prints/marco-11-e-1/assets/c07.png" },
       { "label": "Siglo X", "numeral": "X", "caption": "Vivienda feudal de piedra y tierra", "src": "prints/marco-11-e-1/assets/c10.png" },
       { "label": "Siglo XII", "numeral": "XII", "caption": "Casa de villa medieval", "src": "prints/marco-11-e-1/assets/c12.png" },
-      { "label": "Siglo XVII", "numeral": "XVII", "caption": "Hogar barroco", "src": "prints/marco-11-e-1/assets/c17.png" },
       { "label": "Siglo XIX", "numeral": "XIX", "caption": "Vivienda industrial", "src": "prints/marco-11-e-1/assets/c19.png" },
       { "label": "Siglo XX", "numeral": "XX", "caption": "Hogar moderno", "src": "prints/marco-11-e-1/assets/c20.png" },
       { "label": "Siglo XXI", "numeral": "XXI", "caption": "Hogar conectado", "src": "prints/marco-11-e-1/assets/c21.png" }

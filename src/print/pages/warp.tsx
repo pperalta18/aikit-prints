@@ -3,6 +3,7 @@ import { PrintFonts, PRINT_DISPLAY_HAIR, PRINT_TEXT_FONT } from '../printFonts'
 import { KIT_BLUE } from '@/lib/neumorphism'
 import { buildWarpField, type WarpCell, type WarpOpts } from './warp'
 import { placeWarpSpheres } from './warp-bodies'
+import { FrontierChart, type FrontierPalette } from './frontier-chart'
 
 /**
  * Warp — «Galaxia · warp espacio-tiempo» (canvas libre, los tres campos unidos).
@@ -51,6 +52,20 @@ type Props = Partial<Omit<WarpOpts, 'widthMm' | 'heightMm'>> & {
   centerMarkOffsetYMm?: number
   /** Draw the brand-blue core sphere (the AI mass) half-submerged, instead of a black hole. */
   showCoreSphere?: boolean
+  /** WALL SLICE: full continuous-canvas width (mm) + this wall's left offset (mm) within it. */
+  fullWidthMm?: number
+  originXMm?: number
+  /** A chart kept on top at a wall-local position (mm), e.g. the 2-E frontier-intelligence chart. */
+  chartOverlay?: { chart: string; xMm: number; yMm: number; wMm: number; hMm: number }
+}
+
+/** Editorial palette for the kept frontier chart (dark ink on its white plate). */
+const CHART_PAL: FrontierPalette = {
+  ink: '#1c1a16',
+  muted: '#938c80',
+  faint: '#b7b0a3',
+  hair: 'rgba(28,26,22,0.22)',
+  grid: 'rgba(28,26,22,0.22)',
 }
 
 type Palette = {
@@ -145,8 +160,12 @@ export function Warp({ doc, geo }: PrintPageProps) {
   const pal = doc.theme === 'dark' ? DARK : LIGHT
   const m = geo.mm
 
+  // This wall is a WINDOW into the full continuous canvas (the whole thing when standalone).
+  const fullW = props.fullWidthMm ?? geo.dims.trimWidthMm
+  const originX = props.originXMm ?? 0
+
   const field = buildWarpField({
-    widthMm: geo.dims.trimWidthMm,
+    widthMm: fullW,
     heightMm: geo.dims.trimHeightMm,
     ...props,
   })
@@ -167,10 +186,10 @@ export function Warp({ doc, geo }: PrintPageProps) {
     props.showSpheres === false
       ? []
       : placeWarpSpheres({
-          widthMm: geo.dims.trimWidthMm,
+          widthMm: fullW,
           heightMm: geo.dims.trimHeightMm,
           hole: { cx: coreCx, cy: coreCy, rx: coreR, ry: coreR },
-          seams: Array.isArray(props.seams) ? props.seams : [8250, 17750],
+          seams: Array.isArray(props.seams) ? props.seams : [5750, 15250],
           seamMarginMm: props.seamMarginMm,
           edgeMarginMm: props.edgeMarginMm,
           gapMm: props.bodyGapMm,
@@ -179,7 +198,31 @@ export function Warp({ doc, geo }: PrintPageProps) {
           labelFontFrac: props.labelFontFrac,
           labelMinMm: props.labelMinMm,
           labelMaxMm: props.labelMaxMm,
+          // keep the kept chart (wall-local → full-canvas) clear of spheres/labels
+          keepouts: props.chartOverlay
+            ? [{ x: originX + props.chartOverlay.xMm, y: props.chartOverlay.yMm, w: props.chartOverlay.wMm, h: props.chartOverlay.hMm }]
+            : undefined,
         }).placed
+
+  // Shift the whole canvas so this wall's window lands in the media (covers bleed).
+  const tx = geo.bleedPx - m(originX)
+  const ty = geo.bleedPx
+  const co = props.chartOverlay
+  const chartEl =
+    co && co.chart === 'frontier-intelligence' ? (
+      <div
+        style={{
+          position: 'absolute',
+          left: geo.bleedPx + m(co.xMm),
+          top: geo.bleedPx + m(co.yMm),
+          width: m(co.wMm),
+          height: m(co.hMm),
+          background: '#ffffff',
+        }}
+      >
+        <FrontierChart geo={geo} wMm={co.wMm} hMm={co.hMm} pal={CHART_PAL} />
+      </div>
+    ) : null
 
   return (
     <>
@@ -187,18 +230,9 @@ export function Warp({ doc, geo }: PrintPageProps) {
       {/* flat white ground — no gradients */}
       <div style={{ position: 'absolute', inset: 0, background: doc.surface ?? pal.field }} />
 
-      {/* trim layer — the warp is authored in mm and clipped to the trim */}
-      <div
-        style={{
-          position: 'absolute',
-          left: geo.bleedPx,
-          top: geo.bleedPx,
-          width: geo.trimWidthPx,
-          height: geo.trimHeightPx,
-          overflow: 'hidden',
-        }}
-      >
-        <svg width={geo.trimWidthPx} height={geo.trimHeightPx} style={{ position: 'absolute', inset: 0 }}>
+      {/* media clip → only this wall's window of the continuous canvas shows (covers bleed) */}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        <svg width={geo.mediaWidthPx} height={geo.mediaHeightPx} style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
           <defs>
             {/* one graphite sphere material — every ball the same (uniform dark) */}
             <radialGradient id="warpSphere" cx="50%" cy="50%" r="62%" fx="34%" fy="28%">
@@ -225,7 +259,8 @@ export function Warp({ doc, geo }: PrintPageProps) {
             </radialGradient>
           </defs>
 
-          {ordered.map((c) => (
+          <g transform={`translate(${tx} ${ty})`}>
+            {ordered.map((c) => (
             <path
               key={`${c.ring}-${c.spoke}`}
               d={cellPath(c, m)}
@@ -263,8 +298,11 @@ export function Warp({ doc, geo }: PrintPageProps) {
               <ellipse cx={m(s.cx - s.r * 0.33)} cy={m(s.cy - s.r * 0.36)} rx={m(s.r * 0.27)} ry={m(s.r * 0.18)} fill="url(#warpSpec)" />
             </g>
           ))}
+          </g>
         </svg>
 
+        {/* HTML overlays — labels + centre mark, in the same shifted frame */}
+        <div style={{ position: 'absolute', left: tx, top: ty }}>
         {/* labels — name on a small white plate (no border-radius), set below each sphere */}
         {spheres.map((s) => (
           <div
@@ -308,7 +346,7 @@ export function Warp({ doc, geo }: PrintPageProps) {
             const capMm = props.centerTitleCapMm ?? coreR * 0.105
             const titleFont = capMm / 0.72 // hairline display cap ≈ 0.72·em
             const title = props.centerTitle ?? 'Mercado alrededor de ChatGPT'
-            const offsetY = props.centerMarkOffsetYMm ?? -coreR * 0.2
+            const offsetY = props.centerMarkOffsetYMm ?? -coreR * 0.28
             return (
               <div
                 style={{
@@ -331,19 +369,24 @@ export function Warp({ doc, geo }: PrintPageProps) {
                     fontFamily: PRINT_TEXT_FONT,
                     fontWeight: 500,
                     fontSize: m(titleFont),
-                    lineHeight: 1.06,
+                    lineHeight: 1.08,
                     color: '#ffffff',
-                    maxWidth: m(coreR * 1.6),
-                    whiteSpace: 'pre-line', // respect explicit "\n" breaks, wrap long lines too
                     letterSpacing: m(-titleFont * 0.006),
                     textAlign: 'center',
                   }}
                 >
-                  {title}
+                  {title.split('\n').map((line, i) => (
+                    <div key={i} style={{ whiteSpace: 'nowrap' }}>
+                      {line}
+                    </div>
+                  ))}
                 </div>
               </div>
             )
           })()}
+        </div>
+
+        {chartEl}
       </div>
     </>
   )

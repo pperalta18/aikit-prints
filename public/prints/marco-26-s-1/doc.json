@@ -1,8 +1,8 @@
 {
   "id": "marco-26-s-1",
-  "title": "Marco vacío 26-S-1 — Bici / combustión (4.50×2.50 m)",
+  "title": "26-S-1 · Señal próxima sección «01 · El principio» (mitad izq · flecha →) — Bici / combustión (4.50×2.50 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
-  "pageComponentId": "blank",
+  "pageComponentId": "proxima-sala",
   "theme": "light",
   "dimensions": {
     "trimWidthMm": 4500,
@@ -22,6 +22,17 @@
     "frameWallInvId": 26,
     "wallId": "wall-25",
     "frameId": "26-S-1",
-    "side": 1
+    "side": 1,
+    "invId": 26,
+    "readingDistanceM": 4,
+    "eyebrow": "Próxima sección",
+    "num": "01",
+    "sala": "El principio",
+    "salaLines": ["El principio"],
+    "arrow": "right",
+    "showFilete": false,
+    "showTick": false,
+    "blockCenterXFraction": 0.25,
+    "eyeBandFraction": 0.5
   }
 }

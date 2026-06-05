@@ -80,6 +80,11 @@ type Props = {
   edgeInset?: number
   /** Vertical centre of the block, as a fraction of trim height (the eye band). Default 0.44. */
   eyeBandFraction?: number
+  /** Centre the whole tag's bounding box at this fraction of the trim *width* (with
+   *  `eyeBandFraction` as its vertical centre), instead of anchoring the filete to a
+   *  trim edge. E.g. 0.25 drops it in the middle of the left half of a wall split in two.
+   *  When set, `edge`/`edgeInset` only choose the internal row order + text alignment. */
+  blockCenterXFraction?: number
   /** Text-column max width, as a fraction of trim width — narrow so the name stacks. Default 0.15. */
   columnFraction?: number
   /** Optional logo/wordmark to sit in the open space opposite the tag (e.g. the next room's
@@ -109,6 +114,7 @@ const DEFAULTS: Required<
     | 'logoAlt'
     | 'logoCenterXFraction'
     | 'logoCenterYFraction'
+    | 'blockCenterXFraction'
   >
 > = {
   readingDistanceM: 4,
@@ -148,6 +154,11 @@ export function ProximaSala({ doc, geo }: PrintPageProps) {
   const edgeInset = typeof p.edgeInset === 'number' ? p.edgeInset : DEFAULTS.edgeInset
   const eyeBandFraction = typeof p.eyeBandFraction === 'number' ? p.eyeBandFraction : DEFAULTS.eyeBandFraction
   const columnFraction = typeof p.columnFraction === 'number' ? p.columnFraction : DEFAULTS.columnFraction
+  // When set, the whole tag is centred (bounding box) at this fraction of the width
+  // — e.g. 0.25 to sit it in the middle of the left half of a wall split in two —
+  // rather than hugging a trim edge.
+  const blockCenterXFraction = typeof p.blockCenterXFraction === 'number' ? p.blockCenterXFraction : undefined
+  const isCentered = blockCenterXFraction !== undefined
 
   const pal: TipoPalette = tipoPalette(doc.theme)
   const accent = p.accent ?? pal.accent
@@ -248,9 +259,9 @@ export function ProximaSala({ doc, geo }: PrintPageProps) {
         <div
           style={{
             position: 'absolute',
-            ...edgeAnchor,
+            ...(isCentered ? { left: `${(blockCenterXFraction as number) * 100}%` } : edgeAnchor),
             top: `${eyeBandFraction * 100}%`,
-            transform: 'translateY(-50%)',
+            transform: isCentered ? 'translate(-50%, -50%)' : 'translateY(-50%)',
             display: 'flex',
             // Right-anchored: filete hugs the right edge, so reverse the row order.
             flexDirection: isRight ? 'row-reverse' : 'row',

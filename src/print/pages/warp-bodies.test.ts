@@ -3,15 +3,15 @@ import { placeWarpSpheres, warpBodies, type WarpRegion, type PlaceOpts } from '.
 
 const SEAM_MARGIN = 220
 const EDGE_MARGIN = 170
-const SEAMS = [8250, 17750]
+const SEAMS = [5750, 15250] // unfold order [11-W | 5N1 | 2-E]
 const W = 23500
 const H = 2500
 
-// hole as the page projects it: holeCenterYFrac 0.6, foreshorten 0.42, holeR ≈ 812
+// hole as the page projects it: holeCenterXMm 10500 (5N1 centre), foreshorten 0.38, holeR ≈ 812
 const OPTS: PlaceOpts = {
   widthMm: W,
   heightMm: H,
-  hole: { cx: 13000, cy: 0.6 * H, rx: 812, ry: 812 * 0.42 },
+  hole: { cx: 10500, cy: 0.63 * H, rx: 812, ry: 812 * 0.38 },
   seams: SEAMS,
   seamMarginMm: SEAM_MARGIN,
   edgeMarginMm: EDGE_MARGIN,
@@ -24,19 +24,21 @@ const BANDS: Record<WarpRegion, [number, number]> = {
   right: [SEAMS[1] + SEAM_MARGIN, W - EDGE_MARGIN],
 }
 
-describe('warpBodies — region map mirrors the walls, with the director swaps', () => {
-  it('tags by wall, then applies Suiza↔Netflix / Noruega↔Vino / Argentina↔Smartphones', () => {
+describe('warpBodies — unfold [11-W | 5N1 | 2-E] with the director swaps', () => {
+  it('companies→left (11-W), nations+spanish→centre, sectors→right (2-E)', () => {
     const bodies = warpBodies()
     expect(bodies.length).toBe(16 + 4 + 18 + 15) // sectors + countries + spanish + companies
-    expect(bodies.find((b) => b.id === 'inditex')?.region).toBe('center') // spanish stays centre
-    expect(bodies.find((b) => b.id === 'portugal')?.region).toBe('center') // unswapped nation stays centre
-    // swaps: brands/markets → centre, nations → laterals
+    expect(bodies.find((b) => b.id === 'coca-cola')?.region).toBe('left') // a company → 11-W
+    expect(bodies.find((b) => b.id === 'whisky')?.region).toBe('right') // a sector → 2-E
+    expect(bodies.find((b) => b.id === 'inditex')?.region).toBe('center')
+    expect(bodies.find((b) => b.id === 'portugal')?.region).toBe('center')
+    // swaps: brands/markets → centre; nations → the lateral the swapped body came from
     expect(bodies.find((b) => b.id === 'netflix')?.region).toBe('center')
-    expect(bodies.find((b) => b.id === 'switzerland')?.region).toBe('right')
+    expect(bodies.find((b) => b.id === 'switzerland')?.region).toBe('left') // ↔ Netflix (a company, 11-W)
     expect(bodies.find((b) => b.id === 'vino')?.region).toBe('center')
-    expect(bodies.find((b) => b.id === 'norway')?.region).toBe('left')
+    expect(bodies.find((b) => b.id === 'norway')?.region).toBe('right') // ↔ Vino (a sector, 2-E)
     expect(bodies.find((b) => b.id === 'smartphones')?.region).toBe('center')
-    expect(bodies.find((b) => b.id === 'argentina')?.region).toBe('left')
+    expect(bodies.find((b) => b.id === 'argentina')?.region).toBe('right') // ↔ Smartphones (a sector, 2-E)
   })
 })
 
@@ -55,13 +57,10 @@ describe('placeWarpSpheres — seam-safe, edge-safe, collision-free', () => {
   it('never lets a sphere OR its label cross a seam / canvas edge', () => {
     for (const p of res.placed) {
       const [xMin, xMax] = BANDS[p.region]
-      // sphere fully inside its region band (so clear of both seams by ≥ margin)
       expect(p.cx - p.r).toBeGreaterThanOrEqual(xMin - 1e-6)
       expect(p.cx + p.r).toBeLessThanOrEqual(xMax + 1e-6)
-      // label plate fully inside the band too
       expect(p.labelBox.x).toBeGreaterThanOrEqual(xMin - 1e-6)
       expect(p.labelBox.x + p.labelBox.w).toBeLessThanOrEqual(xMax + 1e-6)
-      // vertical: inside the canvas with edge margin
       expect(p.cy - p.r).toBeGreaterThanOrEqual(EDGE_MARGIN - 1e-6)
       expect(p.labelBox.y + p.labelBox.h).toBeLessThanOrEqual(H - EDGE_MARGIN + 1e-6)
     }
@@ -72,7 +71,6 @@ describe('placeWarpSpheres — seam-safe, edge-safe, collision-free', () => {
       for (const p of res.placed) {
         const left = Math.min(p.cx - p.r, p.labelBox.x)
         const right = Math.max(p.cx + p.r, p.labelBox.x + p.labelBox.w)
-        // the item is entirely on one side of the gutter [seam-margin, seam+margin]
         const clearLeft = right <= seam - SEAM_MARGIN + 1e-6
         const clearRight = left >= seam + SEAM_MARGIN - 1e-6
         expect(clearLeft || clearRight).toBe(true)
@@ -97,6 +95,30 @@ describe('placeWarpSpheres — seam-safe, edge-safe, collision-free', () => {
         const b = res.placed[j]
         expect(Math.hypot(a.cx - b.cx, a.cy - b.cy)).toBeGreaterThanOrEqual(a.r + b.r - 1e-6)
       }
+    }
+  })
+})
+
+describe('placeWarpSpheres — keep-outs (e.g. the 2-E chart) clear of spheres + labels', () => {
+  // the frontier chart on 2-E, in full-canvas coords (originX 15250 + wall-local box)
+  const chart = { x: 15250 + 4619.25, y: 348, w: 3136.5, h: 1804 }
+  const res = placeWarpSpheres({ ...OPTS, keepouts: [chart] })
+
+  it('still places nearly every body', () => {
+    expect(res.placed.length).toBeGreaterThanOrEqual(warpBodies().length - 3)
+  })
+
+  it('no sphere and no label overlaps the chart rectangle', () => {
+    const clampN = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
+    const intersects = (px: number, py: number, pw: number, ph: number) =>
+      px < chart.x + chart.w && px + pw > chart.x && py < chart.y + chart.h && py + ph > chart.y
+    for (const p of res.placed) {
+      // sphere circle clears the chart (nearest point on the rect is ≥ r away)
+      const nx = clampN(p.cx, chart.x, chart.x + chart.w)
+      const ny = clampN(p.cy, chart.y, chart.y + chart.h)
+      expect(Math.hypot(p.cx - nx, p.cy - ny)).toBeGreaterThanOrEqual(p.r - 1e-6)
+      // label box doesn't intersect the chart
+      expect(intersects(p.labelBox.x, p.labelBox.y, p.labelBox.w, p.labelBox.h)).toBe(false)
     }
   })
 })

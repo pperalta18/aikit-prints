@@ -20,11 +20,14 @@ export function Credencial({ doc, geo }: PrintPageProps) {
   const role: CredRole = p.role && COLORWAYS[p.role] ? p.role : 'speaker'
   const cw = COLORWAYS[role]
   const L = layout(geo)
+  // PRESS overrides the key texture to a dark tone over its light field; other roles
+  // keep one tone (keyCw === cw). The dark strip then bleeds off the top trim edge.
+  const keyCw = cw.keyboard ? { ...cw, theme: cw.keyboard.theme, tray: cw.keyboard.tray } : cw
 
   return (
     <>
       <Field cw={cw} />
-      <Keyboard geo={geo} cw={cw} />
+      <Keyboard geo={geo} cw={keyCw} bleedTop={Boolean(cw.keyboard)} />
 
       {/* event lockup — centred, above the role word */}
       <div

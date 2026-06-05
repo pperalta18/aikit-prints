@@ -30,6 +30,8 @@
     "dispersion": 0.72,
     "bodyGapMm": 240,
     "perspectiveCompensate": false,
+    "holeCenterXMm": 10500,
+    "seams": [5750, 15250],
     "centerTitle": "Laboratorios de IA\ny GPUs"
   }
 }

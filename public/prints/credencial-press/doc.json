@@ -1,0 +1,24 @@
+{
+  "id": "credencial-press",
+  "title": "AiKit Live — Acreditación · Press",
+  "createdAt": "2026-06-05T00:00:00.000Z",
+  "pageComponentId": "credencial",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 105,
+    "trimHeightMm": 148,
+    "bleedMm": 3,
+    "safeMarginMm": 6,
+    "cropMarks": true
+  },
+  "dpi": 300,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "role": "press"
+  }
+}

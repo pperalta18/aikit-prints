@@ -1,9 +1,10 @@
 {
   "id": "marco-2-e-text-code",
-  "title": "Marco vacío 2-E-TEXT+CODE — Nave O (doble cara) (7×2.50 m)",
+  "title": "2-E-TEXT+CODE — Hitos de la inteligencia artificial (logros) (7×2.50 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
-  "pageComponentId": "blank",
+  "pageComponentId": "hitos",
   "theme": "light",
+  "surface": "#ffffff",
   "dimensions": {
     "trimWidthMm": 7000,
     "trimHeightMm": 2500,
@@ -11,11 +12,11 @@
     "safeMarginMm": 0,
     "cropMarks": false
   },
-  "dpi": 24,
+  "dpi": 36,
   "color": {
     "mode": "cmyk",
     "iccProfile": "icc/CoatedFOGRA39.icc",
-    "renderIntent": "perceptual",
+    "renderIntent": "relative",
     "pdfxVariant": "x1a"
   },
   "props": {
@@ -23,6 +24,8 @@
     "wallId": "wall-1",
     "frameId": "2-E-TEXT+CODE",
     "side": 1,
-    "zone": "TEXT+CODE"
+    "zone": "TEXT+CODE",
+    "eyebrow": "Hitos de la inteligencia artificial",
+    "readingDistanceM": 3
   }
 }

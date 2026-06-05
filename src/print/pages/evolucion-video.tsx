@@ -86,7 +86,7 @@ export function EvolucionVideo({ doc, geo }: PrintPageProps) {
   // Museographic type scale — only the year numeral uses it (the sole text).
   // A restrained editorial folio, not a billboard: smaller than the protagonist
   // H1 would be, sized so the *frames* lead and the year captions them.
-  const t = eventTypeScale({ trimHeightMm: H, readingDistanceM, h1CapFraction: 0.038, ratio: 1.7 })
+  const t = eventTypeScale({ trimHeightMm: H, readingDistanceM, h1CapFraction: 0.021, ratio: 1.7 })
 
   const MX = W * 0.04
   const contentW = W - 2 * MX

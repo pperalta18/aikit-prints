@@ -88,6 +88,9 @@ import { WarpV1 } from './warp-v1.tsx'
 // imagery — photos sized by format + solid orange cells + placeholders, filling the
 // whole wall. `mosaico.ts` (pure bay-packing) shares the basename → explicit `.tsx`.
 import { Mosaico } from './mosaico.tsx'
+// Code-track #2 (wall 2-E-TEXT+CODE): «Hitos de la IA» — editorial card catalogue
+// of AI accomplishments in science/maths/culture, each card a bespoke trophy image.
+import { Hitos } from './hitos'
 
 /**
  * Page registry — maps a `doc.pageComponentId` to its React component. Add a new
@@ -111,7 +114,7 @@ export const PRINT_PAGES: Record<string, PrintPageComponent> = {
   'acceso-restringido': AccesoRestringido,
   wifi: Wifi,
   mesa: Mesa,
-  // ── Accreditation cards (lanyard credentials: speaker · host · staff · guest) ──
+  // ── Accreditation cards (lanyard credentials: speaker · host · staff · guest · press) ──
   credencial: Credencial,
   // ── Image-track wall graphics (reusable full-bleed raster; one page, many docs) ──
   'raster-wall': RasterWall,
@@ -167,6 +170,8 @@ export const PRINT_PAGES: Record<string, PrintPageComponent> = {
   'warp-v1': WarpV1,
   // ── Brand mosaic (11-E-2 «La Naranja Mecánica»): full-height grid de marca (foto · sólido · placeholder) ──
   mosaico: Mosaico,
+  // ── Code-track #2 (2-E-TEXT+CODE): «Hitos de la IA» — catálogo editorial de logros, cada tarjeta un trofeo ──
+  hitos: Hitos,
 }
 
 export function getPrintPage(id: string): PrintPageComponent | undefined {

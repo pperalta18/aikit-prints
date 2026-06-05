@@ -1,9 +1,10 @@
 {
   "id": "marco-5-n-1",
-  "title": "Galaxia de mercados — 5N1 · el sol IA (fondo de la nave) (9.50×2.50 m)",
+  "title": "Galaxia · warp — 5N1 (slice centro, el núcleo) (9.50×2.50 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
-  "pageComponentId": "galaxy",
+  "pageComponentId": "warp",
   "theme": "light",
+  "surface": "#ffffff",
   "dimensions": {
     "trimWidthMm": 9500,
     "trimHeightMm": 2500,
@@ -23,6 +24,20 @@
     "wallId": "wall-4",
     "frameId": "5-N-1",
     "side": -1,
-    "panel": "back"
+    "fullWidthMm": 23500,
+    "originXMm": 5750,
+    "holeCenterXMm": 10500,
+    "seams": [5750, 15250],
+    "foreshorten": 0.38,
+    "holeCenterYFrac": 0.63,
+    "horizonYFrac": 0.35,
+    "funnelFalloff": 1.12,
+    "ringGrowth": 1.15,
+    "shadeSpanMm": 4200,
+    "shadeGamma": 1.12,
+    "dispersion": 0.72,
+    "bodyGapMm": 240,
+    "perspectiveCompensate": false,
+    "centerTitle": "Laboratorios de IA\ny GPUs"
   }
 }

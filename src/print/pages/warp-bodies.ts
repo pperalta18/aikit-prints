@@ -41,30 +41,37 @@ export type WarpBody = {
 /**
  * Director's manual moves (swaps): pull recognisable brands/markets into the centre,
  * push the nations out to the laterals — so it isn't all countries next to ChatGPT.
- * Suiza ↔ Netflix · Noruega ↔ Vino · Argentina ↔ Smartphones.
+ * Suiza ↔ Netflix · Noruega ↔ Vino · Argentina ↔ Smartphones. Regions use the canvas
+ * unfold order [11-W (left) · 5N1 (centre) · 2-E (right)]: Suiza→11-W (left),
+ * Noruega/Argentina→2-E (right).
  */
 const REGION_OVERRIDES: Record<string, WarpRegion> = {
   netflix: 'center',
-  switzerland: 'right',
+  switzerland: 'left',
   vino: 'center',
-  norway: 'left',
+  norway: 'right',
   smartphones: 'center',
-  argentina: 'left',
+  argentina: 'right',
 }
 
-/** Every non-core body tagged with the region (= print) it belongs to. */
+/**
+ * Every non-core body tagged with the region (= print) it belongs to. Unfold order is
+ * [11-W (left band) · 5N1 (centre) · 2-E (right band)] — companies on 11-W, nations +
+ * Spanish round the core on 5N1, sectors on 2-E.
+ */
 export function warpBodies(): WarpBody[] {
   const tag = (arr: GalaxyBodyDatum[], region: WarpRegion): WarpBody[] =>
     arr.map((b) => ({ id: b.id, label: b.label, value: b.value, group: b.group, region: REGION_OVERRIDES[b.id] ?? region }))
   return [
-    ...tag(GALAXY_SECTORS, 'left'), // 2-E
+    ...tag(GALAXY_COMPANIES, 'left'), // 11-W
     ...tag(GALAXY_COUNTRIES, 'center'), // 5N1
     ...tag(GALAXY_SPANISH, 'center'), // 5N1
-    ...tag(GALAXY_COMPANIES, 'right'), // 11-W
+    ...tag(GALAXY_SECTORS, 'right'), // 2-E
   ]
 }
 
-export type LabelBox = { x: number; y: number; w: number; h: number; fontMm: number }
+export type Rect = { x: number; y: number; w: number; h: number }
+export type LabelBox = Rect & { fontMm: number }
 
 export type PlacedSphere = {
   id: string
@@ -95,6 +102,8 @@ export type PlaceOpts = {
   seed?: number
   /** 0 = pack toward the hole (gravitational); 1 = spread evenly across the band. */
   dispersion?: number
+  /** Rectangles (mm) to keep clear of every sphere AND label — e.g. a fixed wall chart. */
+  keepouts?: Rect[]
   /** Label font size as a fraction of sphere radius (clamped to min/max). */
   labelFontFrac?: number
   labelMinMm?: number
@@ -126,14 +135,14 @@ function mulberry32(seed: number): () => number {
 }
 
 /** Circle (centre + radius) vs axis-aligned rect — true if they intersect. */
-function circleRect(cx: number, cy: number, r: number, b: LabelBox): boolean {
+function circleRect(cx: number, cy: number, r: number, b: Rect): boolean {
   const nx = clamp(cx, b.x, b.x + b.w)
   const ny = clamp(cy, b.y, b.y + b.h)
   return Math.hypot(cx - nx, cy - ny) < r
 }
 
 /** Two rects intersect within `gap`. */
-function rectRect(a: LabelBox, b: LabelBox, gap: number): boolean {
+function rectRect(a: Rect, b: Rect, gap: number): boolean {
   return a.x < b.x + b.w + gap && a.x + a.w + gap > b.x && a.y < b.y + b.h + gap && a.y + a.h + gap > b.y
 }
 
@@ -158,6 +167,7 @@ export function placeWarpSpheres(opts: PlaceOpts): PlaceResult {
   const gap = opts.gapMm ?? 120
   const seed = opts.seed ?? 7
   const dispersion = clamp(opts.dispersion ?? 0, 0, 1)
+  const keepouts = opts.keepouts ?? []
   const fontFrac = opts.labelFontFrac ?? 0.42
   const labelMin = opts.labelMinMm ?? 46
   const labelMax = opts.labelMaxMm ?? 120
@@ -244,6 +254,7 @@ export function placeWarpSpheres(opts: PlaceOpts): PlaceResult {
         if ((dx * dx) / (ex * ex) + (dy * dy) / (ey * ey) < 1) continue
         const lb: LabelBox = { x: c.x - d.w / 2, y: c.y + r + labelGap, w: d.w, h: d.h, fontMm: d.fontMm }
         if (ellipseRect(opts.hole.cx, opts.hole.cy, opts.hole.rx + gap, opts.hole.ry + gap, lb)) continue
+        if (keepouts.some((k) => circleRect(c.x, c.y, r + gap, k) || rectRect(lb, k, gap))) continue
         if (hitsExisting(c.x, c.y, r, lb)) continue
         placed.push({ id: body.id, label: body.label, group: body.group, region, cx: c.x, cy: c.y, r, toScale, labelBox: lb })
         done = true

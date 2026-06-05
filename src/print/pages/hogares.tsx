@@ -44,6 +44,19 @@ type Props = {
   readingDistanceM?: number
   /** The row of works — one painting per century. */
   items?: Item[]
+  /**
+   * Warm cream ground painted full-bleed behind the *pre-industrial* (left) part of
+   * the wall — the slow, distant past — then faded softly into the clean white half
+   * that carries the industrial revolution onward. The warm/cool split sets «el antes»
+   * apart from «el después» of the aceleración. Default cream `#ece2cc`.
+   */
+  historyGround?: string
+  /**
+   * The cream history ground stays solid through the work with this numeral and then
+   * fades out across the next gutter, *before* the industrial revolution. Default 'XII'
+   * (so the 19th-c. industrial home already sits on white); set '' to disable the band.
+   */
+  historyThroughNumeral?: string
 }
 
 /** El hogar a través de los siglos — defaults; the doc can override via props. */
@@ -74,6 +87,8 @@ export function Hogares({ doc, geo }: PrintPageProps) {
   const items = Array.isArray(p.items) && p.items.length ? p.items : DEFAULT_ITEMS
   const eyebrow = typeof p.eyebrow === 'string' ? p.eyebrow : 'El hogar a través de los siglos'
   const readingDistanceM = typeof p.readingDistanceM === 'number' ? p.readingDistanceM : 3
+  const historyGround = typeof p.historyGround === 'string' ? p.historyGround : '#ece7d6'
+  const historyThroughNumeral = typeof p.historyThroughNumeral === 'string' ? p.historyThroughNumeral : 'XII'
 
   const pal: TipoPalette = tipoPalette(doc.theme)
   const W = geo.dims.trimWidthMm
@@ -88,14 +103,26 @@ export function Hogares({ doc, geo }: PrintPageProps) {
   const at = (leftMm: number, topMm: number): CSSProperties => ({ position: 'absolute', left: mm(leftMm), top: mm(topMm) })
 
   /* ── horizontal grid (mm): frames + gutters tile the content width ─────────── */
-  const MX = W * 0.035
+  const MX = W * 0.065 // wider side margins — pull the row in from the wall edges
   const CONTENT_X0 = MX
   const CONTENT_W = W - 2 * MX
-  const GUTTER_FRAC = 0.2 // gutter as a fraction of a frame's width — gallery air
+  const GUTTER_FRAC = 0.05 // gutter as a fraction of a frame's width — tight gallery air
   const slotW = CONTENT_W / (N + (N - 1) * GUTTER_FRAC)
   const gutter = slotW * GUTTER_FRAC
   const PITCH = slotW + gutter
   const slotLeft = (i: number) => CONTENT_X0 + i * PITCH
+
+  /* ── cream "history" ground (full-bleed, left part) ────────────────────────── */
+  // Solid behind the pre-industrial works with a clean hard cut at the gutter before
+  // the industrial revolution — a warm/cool separation of the wall (px in media space
+  // so it bleeds past the trim on 3 sides). No gradient: a crisp vertical edge.
+  const histIdx = historyThroughNumeral ? items.findIndex((it) => it.numeral === historyThroughNumeral) : -1
+  let histBandWidthPx: number | null = null
+  if (histIdx >= 0) {
+    // hard edge at the gutter midpoint after the last pre-industrial work
+    const edgeMm = histIdx + 1 < N ? slotLeft(histIdx) + slotW + gutter / 2 : W
+    histBandWidthPx = geo.bleedPx + mm(edgeMm)
+  }
 
   /* ── vertical grid (mm): quiet header · the hung row · captions ────────────── */
   const HEADER_Y = H * 0.05
@@ -106,7 +133,7 @@ export function Hogares({ doc, geo }: PrintPageProps) {
   // The paintings hang *smaller* than their slot: shrink the frame uniformly (keeps
   // the 0.76 aspect) and centre it in its column, so the row reads as a line of small
   // works with generous gallery air between them rather than edge-to-edge plates.
-  const FRAME_SCALE = 0.74
+  const FRAME_SCALE = 0.68
   const frameW = slotW * FRAME_SCALE
   const paintingH = bandH * FRAME_SCALE
   const frameDX = (slotW - frameW) / 2 // re-centre the smaller frame in its slot
@@ -118,6 +145,22 @@ export function Hogares({ doc, geo }: PrintPageProps) {
     <>
       <PrintFonts />
       <TipoField pal={pal} />
+
+      {/* cream «history» ground — full-bleed behind the pre-industrial left, hard cut into white */}
+      {histBandWidthPx != null ? (
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: histBandWidthPx,
+            height: geo.trimHeightPx + geo.bleedPx * 2,
+            background: historyGround,
+            pointerEvents: 'none',
+          }}
+        />
+      ) : null}
 
       {/* trim layer — everything positioned in mm from the trim origin */}
       <div style={{ position: 'absolute', left: geo.bleedPx, top: geo.bleedPx, width: geo.trimWidthPx, height: geo.trimHeightPx }}>
@@ -134,7 +177,7 @@ export function Hogares({ doc, geo }: PrintPageProps) {
               fontWeight: 600,
               letterSpacing: pt(scale.eyebrowPt * 0.22),
               textTransform: 'uppercase',
-              color: pal.muted,
+              color: pal.ink,
               lineHeight: 1.1,
             }}
           >
