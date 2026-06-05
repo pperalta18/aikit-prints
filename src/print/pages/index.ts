@@ -74,6 +74,18 @@ import { SeccionEnergiaArtificial } from './seccion-01-energia-artificial'
 // Editorial table-of-contents wall (5-S-1, S5→S6 bridge): a narrow ruled «índice»
 // held to the left — nº · room · deck per entry, one KIT_BLUE «you-are-here» tick.
 import { Indice } from './indice'
+// Code-track #10 (10-N-1, S1→S2): «La última palabra» — a sea of phrases each missing
+// its final word (blank rule); filling any one needs a world model, not autocomplete.
+// `palabra-faltante.ts` (corpus + deterministic packer) shares the basename → explicit `.tsx`.
+import { PalabraFaltante } from './palabra-faltante.tsx'
+// Galaxia · warp espacio-tiempo (free-standing canvas «galaxia-warp», the three INVERSIÓN
+// walls joined): a gravity-well drawn por celdas, darkening into the IA+Nvidia black hole.
+// `warp.ts` (pure geometry) shares the basename → explicit `.tsx`.
+import { Warp } from './warp.tsx'
+// Brand mosaic wall (11-E-2 «La Naranja Mecánica»): a full-height grid of brand
+// imagery — photos sized by format + solid orange cells + placeholders, filling the
+// whole wall. `mosaico.ts` (pure bay-packing) shares the basename → explicit `.tsx`.
+import { Mosaico } from './mosaico.tsx'
 
 /**
  * Page registry — maps a `doc.pageComponentId` to its React component. Add a new
@@ -145,6 +157,12 @@ export const PRINT_PAGES: Record<string, PrintPageComponent> = {
   'seccion-01-energia-artificial': SeccionEnergiaArtificial,
   // ── Editorial índice (5-S-1, S5→S6 bridge): narrow ruled table-of-contents on the left ──
   indice: Indice,
+  // ── «La última palabra» (10-N-1, S1→S2): un mar de frases con la última palabra omitida ──
+  'palabra-faltante': PalabraFaltante,
+  // ── Galaxia · warp espacio-tiempo (canvas libre 23.5×2.5 m): pozo gravitatorio por celdas ──
+  warp: Warp,
+  // ── Brand mosaic (11-E-2 «La Naranja Mecánica»): full-height grid de marca (foto · sólido · placeholder) ──
+  mosaico: Mosaico,
 }
 
 export function getPrintPage(id: string): PrintPageComponent | undefined {

@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { Img, staticFile, getRemotionEnvironment } from 'remotion'
 import type { PrintPageProps } from '../types'
 import {
   type TipoPalette,
@@ -81,9 +82,35 @@ type Props = {
   eyeBandFraction?: number
   /** Text-column max width, as a fraction of trim width — narrow so the name stacks. Default 0.15. */
   columnFraction?: number
+  /** Optional logo/wordmark to sit in the open space opposite the tag (e.g. the next room's
+   *  brand). Path under `public/` (Remotion `staticFile`). When set, it's centred in the free
+   *  area: tag on the right → logo centred in the left region, and vice-versa. */
+  logoSrc?: string
+  /** Max width of the logo, in mm (the binding size; height follows the artwork's aspect). Default 1000. */
+  logoMaxWidthMm?: number
+  /** Alt text for the logo. */
+  logoAlt?: string
+  /** Override the logo's horizontal centre (fraction of trim width). Default: centre of the free region. */
+  logoCenterXFraction?: number
+  /** Override the logo's vertical centre (fraction of trim height). Default 0.5 (the wall's middle). */
+  logoCenterYFraction?: number
 }
 
-const DEFAULTS: Required<Omit<Props, 'invId' | 'accent' | 'salaLines' | 'num' | 'subtitle'>> = {
+const DEFAULTS: Required<
+  Omit<
+    Props,
+    | 'invId'
+    | 'accent'
+    | 'salaLines'
+    | 'num'
+    | 'subtitle'
+    | 'logoSrc'
+    | 'logoMaxWidthMm'
+    | 'logoAlt'
+    | 'logoCenterXFraction'
+    | 'logoCenterYFraction'
+  >
+> = {
   readingDistanceM: 4,
   eyebrow: 'Próxima sala',
   sala: 'La velocidad de escala',
@@ -173,6 +200,22 @@ export function ProximaSala({ doc, geo }: PrintPageProps) {
     ? { alignItems: 'flex-end', textAlign: 'right' }
     : { alignItems: 'flex-start', textAlign: 'left' }
 
+  // Optional logo, dropped into the open space opposite the tag. The tag reserves a band of
+  // `edgeInset + columnFraction` from its trim edge; the logo is centred in what's left, so it
+  // reads as the protagonist of the empty side without colliding with the marginal tag.
+  const logoSrc = p.logoSrc
+  const logoMaxWidthMm = typeof p.logoMaxWidthMm === 'number' ? p.logoMaxWidthMm : 1000
+  const tagBand = edgeInset + columnFraction
+  const logoCenterXFraction =
+    typeof p.logoCenterXFraction === 'number'
+      ? p.logoCenterXFraction
+      : isRight
+        ? (1 - tagBand) / 2 // tag on the right → centre the logo in the left region
+        : (1 + tagBand) / 2 // tag on the left → centre the logo in the right region
+  const logoCenterYFraction = typeof p.logoCenterYFraction === 'number' ? p.logoCenterYFraction : 0.5
+  const logoPath = logoSrc ? staticFile(logoSrc.replace(/^\/+/, '').replace(/^public\//, '')) : ''
+  const logoImgStyle: CSSProperties = { width: '100%', height: 'auto', display: 'block' }
+
   return (
     <>
       {/* print-owned @font-face (hairline cut); works in the app preview + export */}
@@ -181,6 +224,25 @@ export function ProximaSala({ doc, geo }: PrintPageProps) {
 
       {/* trim layer — everything positioned in mm from the trim origin */}
       <div style={{ position: 'absolute', left: geo.bleedPx, top: geo.bleedPx, width: geo.trimWidthPx, height: geo.trimHeightPx }}>
+        {/* optional logo — the next room's wordmark, centred in the free side opposite the tag */}
+        {logoSrc && (
+          <div
+            style={{
+              position: 'absolute',
+              left: `${logoCenterXFraction * 100}%`,
+              top: `${logoCenterYFraction * 100}%`,
+              transform: 'translate(-50%, -50%)',
+              width: mm(logoMaxWidthMm),
+            }}
+          >
+            {getRemotionEnvironment().isRendering ? (
+              <Img src={logoPath} alt={p.logoAlt ?? ''} style={logoImgStyle} />
+            ) : (
+              <img src={logoPath} alt={p.logoAlt ?? ''} style={logoImgStyle} />
+            )}
+          </div>
+        )}
+
         {/* the indicator: a vertical filete + a narrow text column, pinned to the
             left margin and centred on the eye band */}
         <div

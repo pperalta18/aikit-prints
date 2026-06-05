@@ -32,6 +32,9 @@
     "subtitle": "Validación histórica · «Ya pasó antes»",
     "arrow": "right",
     "showFilete": true,
-    "showTick": false
+    "showTick": false,
+    "logoSrc": "prints/marco-13-s-1/assets/la-naranja-mecanica.svg",
+    "logoAlt": "La Naranja Mecánica",
+    "logoMaxWidthMm": 1000
   }
 }

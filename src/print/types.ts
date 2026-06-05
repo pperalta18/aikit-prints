@@ -59,6 +59,14 @@ export type PrintDoc = {
   /** Key into the page registry (`src/print/pages/index.ts`). */
   pageComponentId: string
   theme: PrintTheme
+  /**
+   * Optional wall-ground override (any CSS colour). When set it replaces the
+   * themed `surface` painted full-bleed by `PrintStage` — e.g. a warm cream to
+   * make a "looking at the past" wall read as aged paper instead of the default
+   * cool white. Pages that paint their own ground read it too (`doc.surface ??
+   * <own default>`). Leave unset for the standard themed surface.
+   */
+  surface?: string
   dimensions: PrintDimensions
   /** Render resolution. Print floor + default is 300. */
   dpi: number

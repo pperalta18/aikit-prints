@@ -81,7 +81,7 @@ const A = 'prints/marco-11-w-text-code/assets'
 
 /** The growth of the context window — defaults; the doc can override via props. */
 const DEFAULT_ITEMS: Item[] = [
-  { model: 'GPT-2', year: '2019', tokens: 1024, tokenLabel: '1K', equiv: 'Unas páginas', equivSub: '≈ un correo largo', src: `${A}/doc-1-page.png`, aspect: 0.78, focus: 'center 42%' },
+  { model: 'GPT-2', year: '2019', tokens: 1024, tokenLabel: '1K', equiv: 'Un correo largo', equivSub: '≈ unas páginas', src: `${A}/doc-1-page.png`, aspect: 0.78, focus: 'center 42%' },
   { model: 'GPT-3.5', year: '2022', tokens: 4096, tokenLabel: '4K', equiv: 'Un artículo', equivSub: '≈ 3.000 palabras', src: `${A}/doc-2-story.png`, aspect: 1.0, focus: 'center center' },
   { model: 'GPT-4', year: '2023', tokens: 8192, tokenLabel: '8K', equiv: 'Un capítulo', equivSub: '≈ 20 páginas', src: `${A}/doc-3-chapter.png`, aspect: 1.3, focus: 'center center' },
   { model: 'Claude 2.1', year: '2023', tokens: 200000, tokenLabel: '200K', equiv: 'Una novela', equivSub: '≈ 500 páginas', src: `${A}/doc-4-novel.png`, aspect: 0.76, focus: 'center center' },
@@ -90,8 +90,8 @@ const DEFAULT_ITEMS: Item[] = [
 ]
 
 const DEFAULT_HEADER = {
-  title: 'De unas páginas a una saga entera.',
-  lede: 'La ventana de contexto es la memoria de trabajo de un modelo: cuánto texto puede leer y tener presente a la vez. En seis años pasó de un correo a una saga entera.',
+  title: 'De un correo a una saga entera.',
+  lede: 'Es la memoria de trabajo de un modelo: cuánto texto puede leer y tener presente a la vez. En seis años pasó de un correo a una saga entera.',
 }
 
 export function Contexto({ doc, geo }: PrintPageProps) {
@@ -112,9 +112,12 @@ export function Contexto({ doc, geo }: PrintPageProps) {
   const at = (leftMm: number, topMm: number): CSSProperties => ({ position: 'absolute', left: mm(leftMm), top: mm(topMm) })
 
   /* ── horizontal grid (mm): evenly-pitched milestone centres = the time axis ──── */
-  const MX = W * 0.035
-  const CONTENT_X0 = MX
-  const CONTENT_W = W - 2 * MX
+  // Asymmetric side margins — extra air on the left so the header and the row of
+  // plates breathe off the wall's left edge (a touch more room on the right too).
+  const ML = W * 0.06
+  const MR = W * 0.042
+  const CONTENT_X0 = ML
+  const CONTENT_W = W - ML - MR
   const PITCH = CONTENT_W / N
   const center = (i: number) => CONTENT_X0 + PITCH * (i + 0.5)
 
@@ -136,6 +139,7 @@ export function Contexto({ doc, geo }: PrintPageProps) {
   const plateW = (h: number, aspect: number) => Math.max(PITCH * 0.22, Math.min(PITCH * 0.92, h * aspect))
 
   /* type styles — sizes from the scale (exhibition law), not by eye */
+  const sKicker: CSSProperties = { fontFamily: PRINT_TEXT_FONT, fontSize: pt(scale.bodyPt * 0.92), fontWeight: 600, letterSpacing: pt(scale.bodyPt * 0.92 * 0.2), textTransform: 'uppercase', color: INK_FAINT, lineHeight: 1, margin: 0 }
   const sTitle: CSSProperties = { fontFamily: PRINT_DISPLAY_HAIR, fontSize: pt(scale.h1Pt), fontWeight: 400, letterSpacing: pt(-scale.h1Pt * 0.02), lineHeight: 0.98, color: INK, margin: 0 }
   const sLede: CSSProperties = { fontFamily: PRINT_TEXT_FONT, fontSize: pt(scale.bodyPt), fontWeight: 400, lineHeight: 1.4, color: INK_SOFT, margin: 0, hyphens: 'none' }
   const sEquiv: CSSProperties = { fontFamily: PRINT_DISPLAY_HAIR, fontSize: pt(scale.h3Pt), fontWeight: 400, letterSpacing: pt(-scale.h3Pt * 0.012), lineHeight: 0.98 }
@@ -152,9 +156,10 @@ export function Contexto({ doc, geo }: PrintPageProps) {
       {/* trim layer — everything positioned in mm from the trim origin */}
       <div style={{ position: 'absolute', left: geo.bleedPx, top: geo.bleedPx, width: geo.trimWidthPx, height: geo.trimHeightPx }}>
 
-        {/* ── header (top-left): statement · lede ────────────────────────────────── */}
-        <div style={{ ...at(MX, H * 0.07), width: mm(CONTENT_W * 0.5) }}>
-          <div style={sTitle}>{title}</div>
+        {/* ── header (top-left): concept kicker · statement · lede ───────────────── */}
+        <div style={{ ...at(ML, H * 0.07), width: mm(CONTENT_W * 0.5) }}>
+          <div style={sKicker}>La ventana de contexto</div>
+          <div style={{ ...sTitle, marginTop: mm(H * 0.014) }}>{title}</div>
           <div style={{ ...sLede, marginTop: mm(H * 0.022), maxWidth: mm(CONTENT_W * 0.31) }}>{lede}</div>
         </div>
 

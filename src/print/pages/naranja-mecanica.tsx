@@ -132,7 +132,8 @@ export function NaranjaMecanica({ doc, geo }: PrintPageProps) {
 
   return (
     <>
-      <div style={{ position: 'absolute', inset: 0, background: BG }} />
+      {/* wall ground — the doc may override it (e.g. a warm cream "past" wall) */}
+      <div style={{ position: 'absolute', inset: 0, background: doc.surface ?? BG }} />
 
       <div style={{ position: 'absolute', left: geo.bleedPx, top: geo.bleedPx, width: geo.trimWidthPx, height: geo.trimHeightPx }}>
 

@@ -1,6 +1,6 @@
 import type { CalculateMetadataFunction } from 'remotion'
 import { Fonts } from './fonts'
-import { PrintStage } from '@/print/PrintRenderer'
+import { PrintStage, type PrintViewport } from '@/print/PrintRenderer'
 import { buildGeometry, mediaSizePx } from '@/print/geometry'
 import { getPrintPage } from '@/print/pages'
 import { DISPLAY_FONT } from '@/lib/neumorphism'
@@ -33,21 +33,31 @@ export type PrintPageInput = {
   doc?: PrintDoc
   /** Preview-only trim/safe guides. Export passes false. */
   showGuides?: boolean
+  /**
+   * Render only this sub-rectangle of the media. The export pipeline sets it to
+   * tile wall-sized prints past Chrome's single-screenshot pixel limit; the
+   * composition is then sized to the tile, not the whole media. Omit for whole.
+   */
+  viewport?: PrintViewport
 }
 
 export const calculatePrintMetadata: CalculateMetadataFunction<PrintPageInput> = ({ props }) => {
   const doc = props.doc ?? DEFAULT_DOC
+  // A render-tile sizes the composition to the tile window; otherwise the whole media.
+  if (props.viewport) {
+    return { width: props.viewport.widthPx, height: props.viewport.heightPx, durationInFrames: 1, fps: 1 }
+  }
   const { width, height } = mediaSizePx(doc.dimensions, doc.dpi)
   return { width, height, durationInFrames: 1, fps: 1 }
 }
 
-export function PrintPageVideo({ doc = DEFAULT_DOC, showGuides = false }: PrintPageInput = {}) {
+export function PrintPageVideo({ doc = DEFAULT_DOC, showGuides = false, viewport }: PrintPageInput = {}) {
   const page = getPrintPage(doc.pageComponentId)
   const geo = buildGeometry(doc.dimensions, doc.dpi)
   return (
     <>
       <Fonts />
-      <PrintStage doc={doc} showGuides={showGuides}>
+      <PrintStage doc={doc} showGuides={showGuides} viewport={viewport}>
         {page ? page({ doc, geo }) : <MissingPage id={doc.pageComponentId} />}
       </PrintStage>
     </>

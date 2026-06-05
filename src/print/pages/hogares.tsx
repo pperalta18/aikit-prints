@@ -101,8 +101,18 @@ export function Hogares({ doc, geo }: PrintPageProps) {
   const HEADER_Y = H * 0.05
   const IMG_TOP = H * 0.15
   const IMG_BOTTOM = H * 0.73
-  const paintingH = IMG_BOTTOM - IMG_TOP
-  const CAP_TOP = H * 0.765
+  const bandH = IMG_BOTTOM - IMG_TOP
+
+  // The paintings hang *smaller* than their slot: shrink the frame uniformly (keeps
+  // the 0.76 aspect) and centre it in its column, so the row reads as a line of small
+  // works with generous gallery air between them rather than edge-to-edge plates.
+  const FRAME_SCALE = 0.74
+  const frameW = slotW * FRAME_SCALE
+  const paintingH = bandH * FRAME_SCALE
+  const frameDX = (slotW - frameW) / 2 // re-centre the smaller frame in its slot
+  const bandMidY = IMG_TOP + bandH / 2
+  const frameTop = bandMidY - paintingH / 2 // keep the row vertically centred in the band
+  const CAP_TOP = frameTop + paintingH + H * 0.035 // cartela rides just under the smaller frame
 
   return (
     <>
@@ -137,9 +147,9 @@ export function Hogares({ doc, geo }: PrintPageProps) {
           const t = N > 1 ? i / (N - 1) : 1 // 0 = oldest century, 1 = newest
           return (
             <div key={`work-${i}`}>
-              {/* the painting (real image, or the toned placeholder plate) */}
-              <div style={{ ...at(slotLeft(i), IMG_TOP), width: mm(slotW), height: mm(paintingH) }}>
-                <Painting item={item} t={t} mm={mm} pt={pt} pal={pal} slotWmm={slotW} />
+              {/* the painting (real image, or the toned placeholder plate) — hung smaller and centred in its column */}
+              <div style={{ ...at(slotLeft(i) + frameDX, frameTop), width: mm(frameW), height: mm(paintingH) }}>
+                <Painting item={item} t={t} mm={mm} pt={pt} pal={pal} slotWmm={frameW} />
               </div>
 
               {/* the cartela: century (title) + a short caption, centred below */}

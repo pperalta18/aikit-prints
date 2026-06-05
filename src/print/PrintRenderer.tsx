@@ -33,36 +33,63 @@ const FREEZE_CSS =
   '*,*::before,*::after{animation:none!important;animation-duration:0s!important;' +
   'transition:none!important;caret-color:transparent!important;}'
 
+/**
+ * A sub-rectangle of the full media to render in isolation — a *render-tile*. The
+ * page still lays out at full media size; the stage crops the composition to
+ * `[x, x+width) × [y, y+height)` by translating the media canvas. The export
+ * pipeline uses this to render wall-sized prints in a grid of abutting tiles
+ * (no overlap), past Chrome's single-screenshot pixel limit, then stitches them
+ * back losslessly. Omit for a whole-media render.
+ */
+export type PrintViewport = { xPx: number; yPx: number; widthPx: number; heightPx: number }
+
 export type PrintStageProps = {
   doc: PrintDoc
   children: ReactNode
   /** Preview-only trim/safe guides. NEVER rendered in export. Default false. */
   showGuides?: boolean
+  /** Render only this sub-rectangle of the media (a render-tile). Omit for whole. */
+  viewport?: PrintViewport
 }
 
-export function PrintStage({ doc, children, showGuides = false }: PrintStageProps) {
+export function PrintStage({ doc, children, showGuides = false, viewport }: PrintStageProps) {
   const geo = buildGeometry(doc.dimensions, doc.dpi)
   const theme = THEME_MAP[doc.theme] ?? lightTheme
+
+  // The full-media canvas. Whole-media render: it IS the composition (relative).
+  // Render-tile: it's translated by −viewport so the requested window lands at the
+  // composition origin, then cropped by the viewport wrapper below.
+  const media = (
+    <div
+      style={{
+        position: viewport ? 'absolute' : 'relative',
+        left: viewport ? -viewport.xPx : undefined,
+        top: viewport ? -viewport.yPx : undefined,
+        width: geo.mediaWidthPx,
+        height: geo.mediaHeightPx,
+        backgroundColor: doc.surface ?? theme.surface,
+        color: theme.textStrong,
+        fontFamily: TEXT_FONT,
+        overflow: 'hidden',
+      }}
+    >
+      <style>{FREEZE_CSS}</style>
+      {children}
+      {doc.dimensions.cropMarks && <CropMarks geo={geo} />}
+      {showGuides && <Guides geo={geo} />}
+    </div>
+  )
 
   return (
     <NeoThemeProvider theme={theme}>
       <PrintGeometryContext.Provider value={geo}>
-        <div
-          style={{
-            position: 'relative',
-            width: geo.mediaWidthPx,
-            height: geo.mediaHeightPx,
-            backgroundColor: theme.surface,
-            color: theme.textStrong,
-            fontFamily: TEXT_FONT,
-            overflow: 'hidden',
-          }}
-        >
-          <style>{FREEZE_CSS}</style>
-          {children}
-          {doc.dimensions.cropMarks && <CropMarks geo={geo} />}
-          {showGuides && <Guides geo={geo} />}
-        </div>
+        {viewport ? (
+          <div style={{ position: 'relative', width: viewport.widthPx, height: viewport.heightPx, overflow: 'hidden' }}>
+            {media}
+          </div>
+        ) : (
+          media
+        )}
       </PrintGeometryContext.Provider>
     </NeoThemeProvider>
   )

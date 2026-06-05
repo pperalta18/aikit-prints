@@ -93,7 +93,6 @@ export function FrontierChart({
   const sq = px(hMm * 0.0052) // half-side of a marker square
   const lineW = Math.max(1, px(hMm * 0.0024))
   const axisPt = px(hMm * 0.0165)
-  const labelPt = px(hMm * 0.0165)
 
   return (
     <div style={{ position: 'absolute', left: 0, top: 0, width: W, height: H }}>
@@ -104,11 +103,6 @@ export function FrontierChart({
         </text>
         <text x={mL} y={px(hMm * 0.092)} fontFamily={PRINT_TEXT_FONT} fontSize={px(hMm * 0.019)} fill={pal.muted} letterSpacing={px(0.6)}>
           {`ÍNDICE DE INTELIGENCIA · ARTIFICIAL ANALYSIS v${FRONTIER_INDEX_VERSION}`}
-        </text>
-
-        {/* watermark */}
-        <text x={mL + plotW} y={px(hMm * 0.06)} textAnchor="end" fontFamily={PRINT_TEXT_FONT} fontSize={px(hMm * 0.02)} fill={pal.faint} letterSpacing={px(0.4)}>
-          Artificial Analysis
         </text>
 
         {/* ── legend: provider dots, wrapping ───────────────────────────── */}
@@ -196,11 +190,6 @@ export function FrontierChart({
             rx={Math.max(1, px(0.5))}
           />
         ))}
-
-        {/* ── source / index note ───────────────────────────────────────── */}
-        <text x={mL} y={H - px(hMm * 0.018)} fontFamily={PRINT_TEXT_FONT} fontSize={px(hMm * 0.015)} fill={pal.faint}>
-          {`Fuente: Artificial Analysis · artificialanalysis.ai · Intelligence Index v${FRONTIER_INDEX_VERSION} · variante de máximo esfuerzo por modelo`}
-        </text>
       </svg>
     </div>
   )

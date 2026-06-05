@@ -1,0 +1,31 @@
+{
+  "id": "galaxia-warp",
+  "title": "Galaxia · warp espacio-tiempo — los tres campos unidos (23.50×2.50 m)",
+  "createdAt": "2026-06-05T00:00:00.000Z",
+  "pageComponentId": "warp",
+  "theme": "light",
+  "surface": "#ffffff",
+  "dimensions": {
+    "trimWidthMm": 23500,
+    "trimHeightMm": 2500,
+    "bleedMm": 0,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 16,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "foreshorten": 0.42,
+    "holeCenterYFrac": 0.6,
+    "horizonYFrac": 0.38,
+    "funnelFalloff": 1.18,
+    "ringGrowth": 1.15,
+    "shadeSpanMm": 4200,
+    "shadeGamma": 1.12
+  }
+}

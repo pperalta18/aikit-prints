@@ -85,7 +85,7 @@ const DEFAULT_ERAS: Era[] = [
       { subject: 'retrato onírico, anatomía imprecisa (SD 1.5)', src: `${A}/2022-g1.png` },
       { subject: 'paisaje de fantasía «trending on artstation» (SD 1.5)', src: `${A}/2022-g2.png` },
       { subject: 'criatura onírica de formas imprecisas (SD 1.5)', src: `${A}/2022-g3.png` },
-      { subject: 'sueño cósmico, arquitectura etérea (SD 1.5)', src: `${A}/2022-g4.png` },
+      { subject: 'mano con dedos de más, anatomía imprecisa (SD 1.5)', src: `${A}/2022-g4.png` },
       { subject: 'paisaje de fantasía «trending on artstation» (SD 1.5)', src: `${A}/2022-b.png` },
     ],
   },

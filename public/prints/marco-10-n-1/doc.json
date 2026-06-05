@@ -1,8 +1,8 @@
 {
   "id": "marco-10-n-1",
-  "title": "Marco vacío 10-N-1 — Wayfinding (6.50×2.50 m)",
-  "createdAt": "2026-06-04T00:00:00.000Z",
-  "pageComponentId": "blank",
+  "title": "La última palabra — 10-N-1 · S1→S2 · un mar de frases (6.50×2.50 m)",
+  "createdAt": "2026-06-05T00:00:00.000Z",
+  "pageComponentId": "palabra-faltante",
   "theme": "light",
   "dimensions": {
     "trimWidthMm": 6500,
@@ -11,17 +11,19 @@
     "safeMarginMm": 0,
     "cropMarks": false
   },
-  "dpi": 24,
+  "dpi": 36,
   "color": {
     "mode": "cmyk",
     "iccProfile": "icc/CoatedFOGRA39.icc",
-    "renderIntent": "perceptual",
+    "renderIntent": "relative",
     "pdfxVariant": "x1a"
   },
   "props": {
     "frameWallInvId": 10,
     "wallId": "wall-9",
     "frameId": "10-N-1",
-    "side": -1
+    "side": -1,
+    "readingDistanceM": 2.6,
+    "seed": 7
   }
 }

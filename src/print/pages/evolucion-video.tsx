@@ -10,19 +10,19 @@ import { eventTypeScale } from './tipografia'
  * evolucion-video — wall 2-E-IMAGE (Nave O · cámara VÍDEO, 6.75 × 2.5 m).
  * ──────────────────────────────────────────────────────────────────────
  * **Will Smith comiendo espaguetis** — el meme-prueba del progreso del vídeo IA,
- * montado como **dos tiras de película** sobre fondo blanco. Sin texto: sólo el
- * **año** y los **fotogramas reales**. La franja de arriba son frames del modelo
- * viejo (2023, la papilla deforme de ModelScope) y la de abajo del modelo de hoy
- * (fotorrealista). El contraste entre las dos tiras *es* el mensaje; el presente
+ * montado como **dos tiras de película** sobre fondo blanco. Sin texto: sólo una
+ * **referencia temporal relativa** y los **fotogramas reales**. La franja de arriba
+ * son frames del modelo viejo (hace 3 años, la papilla deforme de ModelScope) y la
+ * de abajo del modelo de hoy (fotorrealista, hace unos meses). El contraste entre las dos tiras *es* el mensaje; el presente
  * se marca por color (KIT_BLUE), no por palabras.
  *
  * Tratamiento **editorial / de exposición**: las dos tiras forman un bloque
  * centrado en el alto de la pared, con celuloide casi-negro, perforaciones finas
  * de 35 mm, filetes de registro que abrazan el fotograma y las imágenes
- * *image-forward* (márgenes de banda delgados para que mande la imagen). El año es
+ * *image-forward* (márgenes de banda delgados para que mande la imagen). La referencia temporal es
  * un **folio hairline** (más contenido que un titular) **sobre un filete a todo el
  * ancho** —gris para el pasado, KIT_BLUE para el presente— que hace de pie editorial
- * de cada tira; el presente (2026) además lleva un filete azul de un pelo alrededor.
+ * de cada tira; el presente además lleva un filete azul de un pelo alrededor.
  *
  * Los fotogramas son PNGs reales extraídos de los vídeos, recortados a 3:2, en
  * `public/prints/marco-2-e-image/assets/{old,new}/`. El layout es data-driven:
@@ -37,11 +37,12 @@ const seq = (sub: string, n: number) =>
   Array.from({ length: n }, (_, i) => `${ASSET_DIR}/${sub}/${String(i + 1).padStart(2, '0')}.png`)
 
 type Strip = {
-  /** The only label on the piece — the year numeral over the strip. */
+  /** The only label on the piece — a relative-time folio over the strip
+   *  (e.g. «hace 3 años» / «hace unos meses»), so it never reads as dated. */
   year: string
   /** Real frame PNGs under `public/` (one per cell of the strip). */
   frames: string[]
-  /** Marks the present strip — year + keyline go KIT_BLUE. */
+  /** Marks the present strip — label + keyline go KIT_BLUE. */
   now?: boolean
 }
 
@@ -51,10 +52,10 @@ type Props = {
   readingDistanceM?: number
 }
 
-/** The before/after of AI video — the same prompt, two years apart. */
+/** The before/after of AI video — the same prompt, relative time apart. */
 const DEFAULT_STRIPS: Strip[] = [
-  { year: '2023', frames: seq('old', 8) },
-  { year: '2026', frames: seq('new', 8), now: true },
+  { year: 'hace 3 años', frames: seq('old', 8) },
+  { year: 'hace unos meses', frames: seq('new', 8), now: true },
 ]
 
 /* ── film-strip proportions (fractions of one frame / of the band) ─────────────── */
