@@ -24,14 +24,19 @@ const BANDS: Record<WarpRegion, [number, number]> = {
   right: [SEAMS[1] + SEAM_MARGIN, W - EDGE_MARGIN],
 }
 
-describe('warpBodies — region map mirrors the three walls', () => {
-  it('tags sectors→left, nations+spanish→center, companies→right', () => {
+describe('warpBodies — region map mirrors the walls, with the director swaps', () => {
+  it('tags by wall, then applies Suiza↔Netflix / Noruega↔Vino / Argentina↔Smartphones', () => {
     const bodies = warpBodies()
     expect(bodies.length).toBe(16 + 4 + 18 + 15) // sectors + countries + spanish + companies
-    expect(bodies.find((b) => b.id === 'switzerland')?.region).toBe('center')
-    expect(bodies.find((b) => b.id === 'inditex')?.region).toBe('center')
-    expect(bodies.find((b) => b.id === 'smartphones')?.region).toBe('left')
-    expect(bodies.find((b) => b.id === 'netflix')?.region).toBe('right')
+    expect(bodies.find((b) => b.id === 'inditex')?.region).toBe('center') // spanish stays centre
+    expect(bodies.find((b) => b.id === 'portugal')?.region).toBe('center') // unswapped nation stays centre
+    // swaps: brands/markets → centre, nations → laterals
+    expect(bodies.find((b) => b.id === 'netflix')?.region).toBe('center')
+    expect(bodies.find((b) => b.id === 'switzerland')?.region).toBe('right')
+    expect(bodies.find((b) => b.id === 'vino')?.region).toBe('center')
+    expect(bodies.find((b) => b.id === 'norway')?.region).toBe('left')
+    expect(bodies.find((b) => b.id === 'smartphones')?.region).toBe('center')
+    expect(bodies.find((b) => b.id === 'argentina')?.region).toBe('left')
   })
 })
 

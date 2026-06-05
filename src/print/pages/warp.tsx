@@ -1,5 +1,6 @@
 import type { PrintPageProps } from '../types'
 import { PrintFonts, PRINT_DISPLAY_HAIR, PRINT_TEXT_FONT } from '../printFonts'
+import { KIT_BLUE } from '@/lib/neumorphism'
 import { buildWarpField, type WarpCell, type WarpOpts } from './warp'
 import { placeWarpSpheres } from './warp-bodies'
 
@@ -8,11 +9,11 @@ import { placeWarpSpheres } from './warp-bodies'
  * ──────────────────────────────────────────────────────────────────────────
  * The continuous gravity-well field for the three INVERSIÓN walls (2-E · 5N1 ·
  * 11-W), authored as ONE canvas so the warp is perfectly continuous before it is
- * sliced. Editorial register (director's call): **white field**, cells that darken
- * as they fall into the central black hole (= IA + Nvidia), the fine grid still
- * legible diving into the throat, and plain white with only the separation lines
- * far away. Strong 3D funnel (the reference look) via a tilted, non-converging
- * projection — see `warp.ts`. Spheres (the markets' caps) come later.
+ * sliced. Register (director): a **white field** with the warp radiating from the
+ * brand blue (KIT_BLUE) at the rim → white far away; a black hole at the centre
+ * holding the white ChatGPT mark + title; uniform graphite market spheres (area ∝
+ * valoración) with white label plates. Strong 3D funnel via a tilted, non-converging
+ * projection — see `warp.ts`. Seam-safe placement so the three prints cut clean.
  *
  * `doc.props` (all optional): holeCenterXMm · holeCenterYFrac · horizonYFrac ·
  * holeRadiusMm · foreshorten · funnelFalloff · ringGrowth · spokes · shadeSpanMm ·
@@ -33,6 +34,8 @@ type Props = Partial<Omit<WarpOpts, 'widthMm' | 'heightMm'>> & {
   edgeMarginMm?: number
   /** Min gap between bodies/labels (mm). */
   bodyGapMm?: number
+  /** 0 = packed toward the hole, 1 = spread across the band. */
+  dispersion?: number
   /** Placement seed. */
   bodySeed?: number
   /** Label sizing. */
@@ -44,6 +47,8 @@ type Props = Partial<Omit<WarpOpts, 'widthMm' | 'heightMm'>> & {
   centerTitle?: string
   centerLogoHeightMm?: number
   centerTitleCapMm?: number
+  /** Vertical nudge of the centre mark (mm; negative = up). */
+  centerMarkOffsetYMm?: number
 }
 
 type Palette = {
@@ -60,7 +65,8 @@ type Palette = {
 
 const LIGHT: Palette = {
   field: '#ffffff',
-  cellDark: '#0a0e1a',
+  // the warp radiates from the brand blue at the rim → white far away
+  cellDark: KIT_BLUE,
   cellLight: '#ffffff',
   line: '#9aa6b6',
   holeInk: '#06080e',
@@ -97,15 +103,6 @@ const smoothstep = (s: number) => s * s * (3 - 2 * s)
 function cellColor(shade: number, pal: Palette, gamma: number): string {
   const t = Math.pow(smoothstep(clamp(shade, 0, 1)), gamma)
   return mixHex(pal.cellDark, pal.cellLight, t)
-}
-
-// Sphere material lerps with the LOCAL background darkness so it always contrasts:
-// graphite on the white field (laterals) → luminous pearl on the dark basin (centre).
-const SPHERE_GRAPHITE = ['#b6c0d1', '#7c8799', '#2f3744', '#0a0d14']
-const SPHERE_PEARL = ['#ffffff', '#e3e9f3', '#aab5c7', '#6b7488']
-function sphereStops(lum: number): string[] {
-  const t = clamp(lum, 0, 1)
-  return SPHERE_GRAPHITE.map((g, i) => mixHex(g, SPHERE_PEARL[i], t))
 }
 
 /** The ChatGPT "blossom" knot only (the app-icon's white square is dropped) — filled white. */
@@ -145,22 +142,12 @@ export function Warp({ doc, geo }: PrintPageProps) {
           seamMarginMm: props.seamMarginMm,
           edgeMarginMm: props.edgeMarginMm,
           gapMm: props.bodyGapMm,
+          dispersion: props.dispersion,
           seed: props.bodySeed,
           labelFontFrac: props.labelFontFrac,
           labelMinMm: props.labelMinMm,
           labelMaxMm: props.labelMaxMm,
         }).placed
-
-  // Per-sphere luminosity from the LOCAL background darkness (so the centre balls pop):
-  // approximate the planar radius under the sphere, read the same ramp the cells use.
-  const litSpheres = spheres.map((s) => {
-    const dx = s.cx - field.hole.cx
-    const dy = (s.cy - field.hole.cy) / field.foreshorten
-    const planarR = Math.hypot(dx, dy)
-    const rawShade = clamp((planarR - field.holeRadiusMm) / field.shadeSpanMm, 0, 1)
-    const bgLight = Math.pow(smoothstep(rawShade), shadeGamma) // 0 = dark basin … 1 = white field
-    return { s, lum: clamp(1 - bgLight, 0, 1) }
-  })
 
   return (
     <>
@@ -181,23 +168,12 @@ export function Warp({ doc, geo }: PrintPageProps) {
       >
         <svg width={geo.trimWidthPx} height={geo.trimHeightPx} style={{ position: 'absolute', inset: 0 }}>
           <defs>
-            {/* per-sphere material — lerped toward luminous pearl where the background is dark */}
-            {litSpheres.map(({ s, lum }) => {
-              const st = sphereStops(lum)
-              return (
-                <radialGradient key={`g-${s.id}`} id={`sph-${s.id}`} cx="50%" cy="50%" r="62%" fx="34%" fy="28%">
-                  <stop offset="0%" stopColor={st[0]} />
-                  <stop offset="20%" stopColor={st[1]} />
-                  <stop offset="52%" stopColor={st[2]} />
-                  <stop offset="100%" stopColor={st[3]} />
-                </radialGradient>
-              )
-            })}
-            {/* soft halo to lift luminous spheres off the dark basin */}
-            <radialGradient id="warpHalo" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#dce6f4" stopOpacity="0.85" />
-              <stop offset="45%" stopColor="#dce6f4" stopOpacity="0.32" />
-              <stop offset="100%" stopColor="#dce6f4" stopOpacity="0" />
+            {/* one graphite sphere material — every ball the same (uniform dark) */}
+            <radialGradient id="warpSphere" cx="50%" cy="50%" r="62%" fx="34%" fy="28%">
+              <stop offset="0%" stopColor="#b6c0d1" />
+              <stop offset="20%" stopColor="#7c8799" />
+              <stop offset="52%" stopColor="#2f3744" />
+              <stop offset="100%" stopColor="#0a0d14" />
             </radialGradient>
             <radialGradient id="warpContact" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#080a10" stopOpacity="0.34" />
@@ -223,19 +199,15 @@ export function Warp({ doc, geo }: PrintPageProps) {
           {/* the black hole — area = IA + Nvidia */}
           <ellipse cx={m(field.hole.cx)} cy={m(field.hole.cy)} rx={m(field.hole.rx)} ry={m(field.hole.ry)} fill={pal.holeInk} />
 
-          {/* halos — lift luminous spheres off the dark basin (≈0 on the white field) */}
-          {litSpheres.map(({ s, lum }) =>
-            lum > 0.03 ? <circle key={`ha-${s.id}`} cx={m(s.cx)} cy={m(s.cy)} r={m(s.r * 1.5)} fill="url(#warpHalo)" opacity={0.5 * lum} /> : null,
-          )}
           {/* contact shadows (under the spheres, on the grid) */}
           {spheres.map((s) => (
             <ellipse key={`sh-${s.id}`} cx={m(s.cx)} cy={m(s.cy + s.r * 0.84)} rx={m(s.r * 0.98)} ry={m(s.r * 0.26)} fill="url(#warpContact)" />
           ))}
-          {/* the 3D spheres + specular highlight (softer specular on the pale pearls) */}
-          {litSpheres.map(({ s, lum }) => (
+          {/* the 3D spheres + specular highlight (all uniform graphite) */}
+          {spheres.map((s) => (
             <g key={`sp-${s.id}`}>
-              <circle cx={m(s.cx)} cy={m(s.cy)} r={m(s.r)} fill={`url(#sph-${s.id})`} />
-              <ellipse cx={m(s.cx - s.r * 0.33)} cy={m(s.cy - s.r * 0.36)} rx={m(s.r * 0.27)} ry={m(s.r * 0.18)} fill="url(#warpSpec)" opacity={1 - 0.55 * lum} />
+              <circle cx={m(s.cx)} cy={m(s.cy)} r={m(s.r)} fill="url(#warpSphere)" />
+              <ellipse cx={m(s.cx - s.r * 0.33)} cy={m(s.cy - s.r * 0.36)} rx={m(s.r * 0.27)} ry={m(s.r * 0.18)} fill="url(#warpSpec)" />
             </g>
           ))}
         </svg>
@@ -283,12 +255,13 @@ export function Warp({ doc, geo }: PrintPageProps) {
             const capMm = props.centerTitleCapMm ?? field.hole.ry * 0.15
             const titleFont = capMm / 0.72 // hairline display cap ≈ 0.72·em
             const title = props.centerTitle ?? 'Mercado alrededor de ChatGPT'
+            const offsetY = props.centerMarkOffsetYMm ?? -field.hole.ry * 0.22
             return (
               <div
                 style={{
                   position: 'absolute',
                   left: m(field.hole.cx),
-                  top: m(field.hole.cy),
+                  top: m(field.hole.cy + offsetY),
                   transform: 'translate(-50%, -50%)',
                   display: 'flex',
                   flexDirection: 'column',

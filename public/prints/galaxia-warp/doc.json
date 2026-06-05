@@ -26,6 +26,8 @@
     "funnelFalloff": 1.18,
     "ringGrowth": 1.15,
     "shadeSpanMm": 4200,
-    "shadeGamma": 1.12
+    "shadeGamma": 1.12,
+    "dispersion": 0.72,
+    "bodyGapMm": 240
   }
 }

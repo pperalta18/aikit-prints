@@ -38,10 +38,24 @@ export type WarpBody = {
   region: WarpRegion
 }
 
+/**
+ * Director's manual moves (swaps): pull recognisable brands/markets into the centre,
+ * push the nations out to the laterals — so it isn't all countries next to ChatGPT.
+ * Suiza ↔ Netflix · Noruega ↔ Vino · Argentina ↔ Smartphones.
+ */
+const REGION_OVERRIDES: Record<string, WarpRegion> = {
+  netflix: 'center',
+  switzerland: 'right',
+  vino: 'center',
+  norway: 'left',
+  smartphones: 'center',
+  argentina: 'left',
+}
+
 /** Every non-core body tagged with the region (= print) it belongs to. */
 export function warpBodies(): WarpBody[] {
   const tag = (arr: GalaxyBodyDatum[], region: WarpRegion): WarpBody[] =>
-    arr.map((b) => ({ id: b.id, label: b.label, value: b.value, group: b.group, region }))
+    arr.map((b) => ({ id: b.id, label: b.label, value: b.value, group: b.group, region: REGION_OVERRIDES[b.id] ?? region }))
   return [
     ...tag(GALAXY_SECTORS, 'left'), // 2-E
     ...tag(GALAXY_COUNTRIES, 'center'), // 5N1
@@ -79,6 +93,8 @@ export type PlaceOpts = {
   /** Minimum gap between any two bodies / labels (mm). */
   gapMm?: number
   seed?: number
+  /** 0 = pack toward the hole (gravitational); 1 = spread evenly across the band. */
+  dispersion?: number
   /** Label font size as a fraction of sphere radius (clamped to min/max). */
   labelFontFrac?: number
   labelMinMm?: number
@@ -141,6 +157,7 @@ export function placeWarpSpheres(opts: PlaceOpts): PlaceResult {
   const edgeMargin = opts.edgeMarginMm ?? 170
   const gap = opts.gapMm ?? 120
   const seed = opts.seed ?? 7
+  const dispersion = clamp(opts.dispersion ?? 0, 0, 1)
   const fontFrac = opts.labelFontFrac ?? 0.42
   const labelMin = opts.labelMinMm ?? 46
   const labelMax = opts.labelMaxMm ?? 120
@@ -201,17 +218,21 @@ export function placeWarpSpheres(opts: PlaceOpts): PlaceResult {
         continue
       }
 
-      // jittered grid candidates, nearest-to-hole first (gravitational fill)
+      // jittered grid candidates; ordering blends nearest-to-hole (gravitational) with a
+      // seeded random spread, so `dispersion` lerps from a tight core to an even scatter.
       const step = Math.max(64, r * 0.6)
-      const cands: Array<{ x: number; y: number; dist: number }> = []
+      const cands: Array<{ x: number; y: number; dist: number; rnd: number }> = []
       for (let x = cxLo; x <= cxHi; x += step) {
         for (let y = cyLo; y <= cyHi; y += step) {
           const cx = clamp(x + (rng() - 0.5) * step * 0.7, cxLo, cxHi)
           const cy = clamp(y + (rng() - 0.5) * step * 0.7, cyLo, cyHi)
-          cands.push({ x: cx, y: cy, dist: Math.hypot(cx - opts.hole.cx, cy - opts.hole.cy) })
+          cands.push({ x: cx, y: cy, dist: Math.hypot(cx - opts.hole.cx, cy - opts.hole.cy), rnd: rng() })
         }
       }
-      cands.sort((a, b) => a.dist - b.dist)
+      let maxD = 1
+      for (const c of cands) if (c.dist > maxD) maxD = c.dist
+      const key = (c: { dist: number; rnd: number }) => c.dist * (1 - dispersion) + c.rnd * maxD * dispersion
+      cands.sort((a, b) => key(a) - key(b))
 
       let done = false
       for (const c of cands) {
