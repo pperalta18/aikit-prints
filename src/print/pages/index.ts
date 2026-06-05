@@ -82,6 +82,8 @@ import { PalabraFaltante } from './palabra-faltante.tsx'
 // walls joined): a gravity-well drawn por celdas, darkening into the IA+Nvidia black hole.
 // `warp.ts` (pure geometry) shares the basename → explicit `.tsx`.
 import { Warp } from './warp.tsx'
+// Preserved previous version of the warp (commit c0e27d1): the black-hole centre.
+import { WarpV1 } from './warp-v1.tsx'
 // Brand mosaic wall (11-E-2 «La Naranja Mecánica»): a full-height grid of brand
 // imagery — photos sized by format + solid orange cells + placeholders, filling the
 // whole wall. `mosaico.ts` (pure bay-packing) shares the basename → explicit `.tsx`.
@@ -161,6 +163,8 @@ export const PRINT_PAGES: Record<string, PrintPageComponent> = {
   'palabra-faltante': PalabraFaltante,
   // ── Galaxia · warp espacio-tiempo (canvas libre 23.5×2.5 m): pozo gravitatorio por celdas ──
   warp: Warp,
+  // ── Galaxia · warp — versión anterior commiteada (agujero negro al centro) ──
+  'warp-v1': WarpV1,
   // ── Brand mosaic (11-E-2 «La Naranja Mecánica»): full-height grid de marca (foto · sólido · placeholder) ──
   mosaico: Mosaico,
 }

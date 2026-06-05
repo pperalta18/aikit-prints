@@ -5,6 +5,10 @@ import { buildWarpField, type WarpCell, type WarpOpts } from './warp'
 import { placeWarpSpheres } from './warp-bodies'
 
 /**
+ * WarpV1 — preserved PREVIOUS version (commit c0e27d1): brand-blue basin with the
+ * **black hole** at the centre (not the emerging sphere), uniform graphite spheres,
+ * region swaps + dispersion. Kept as its own print alongside the newer `warp`.
+ *
  * Warp — «Galaxia · warp espacio-tiempo» (canvas libre, los tres campos unidos).
  * ──────────────────────────────────────────────────────────────────────────
  * The continuous gravity-well field for the three INVERSIÓN walls (2-E · 5N1 ·
@@ -49,8 +53,6 @@ type Props = Partial<Omit<WarpOpts, 'widthMm' | 'heightMm'>> & {
   centerTitleCapMm?: number
   /** Vertical nudge of the centre mark (mm; negative = up). */
   centerMarkOffsetYMm?: number
-  /** Draw the brand-blue core sphere (the AI mass) half-submerged, instead of a black hole. */
-  showCoreSphere?: boolean
 }
 
 type Palette = {
@@ -116,31 +118,7 @@ function cellPath(cell: WarpCell, m: (v: number) => number): string {
   return cell.points.map((p, i) => `${i ? 'L' : 'M'}${m(p.x).toFixed(1)} ${m(p.y).toFixed(1)}`).join(' ') + 'Z'
 }
 
-/** The near (front) arc of the waterline ellipse — where the half-sunk sphere meets the surface. */
-function frontArcPath(cx: number, cy: number, R: number, ry: number, m: (v: number) => number): string {
-  const N = 40
-  let d = ''
-  for (let i = 0; i <= N; i++) {
-    const t = (Math.PI * i) / N // right vertex → bottom → left vertex (the near half)
-    d += `${i === 0 ? 'M' : 'L'}${m(cx + R * Math.cos(t)).toFixed(1)} ${m(cy + ry * Math.sin(t)).toFixed(1)}`
-  }
-  return d
-}
-
-/** Clip region = everything ABOVE the front waterline arc → clips the sphere to the emerging dome. */
-function domeClipPath(cx: number, cy: number, R: number, ry: number, m: (v: number) => number): string {
-  const pad = R * 1.5
-  // front arc (lower boundary), then a box around the top to enclose the upper region.
-  return (
-    frontArcPath(cx, cy, R, ry, m) +
-    `L${m(cx - R - pad).toFixed(1)} ${m(cy).toFixed(1)}` +
-    `L${m(cx - R - pad).toFixed(1)} ${m(cy - R - pad).toFixed(1)}` +
-    `L${m(cx + R + pad).toFixed(1)} ${m(cy - R - pad).toFixed(1)}` +
-    `L${m(cx + R + pad).toFixed(1)} ${m(cy).toFixed(1)}Z`
-  )
-}
-
-export function Warp({ doc, geo }: PrintPageProps) {
+export function WarpV1({ doc, geo }: PrintPageProps) {
   const props = (doc.props ?? {}) as Props
   const pal = doc.theme === 'dark' ? DARK : LIGHT
   const m = geo.mm
@@ -156,12 +134,6 @@ export function Warp({ doc, geo }: PrintPageProps) {
   // Draw far (light) first, near (dark) last → a crisp dark basin around the hole.
   const ordered = [...field.cells].sort((a, b) => b.rMid - a.rMid)
 
-  // The core sphere's silhouette = a circle of the throat radius. Market spheres keep clear
-  // of the WHOLE circle (not the foreshortened ellipse) so none is covered by the emerging dome.
-  const coreCx = field.hole.cx
-  const coreCy = field.hole.cy
-  const coreR = field.hole.rx
-
   // Market spheres — seam/edge-aware so the three prints cut through clean gutters.
   const spheres =
     props.showSpheres === false
@@ -169,7 +141,7 @@ export function Warp({ doc, geo }: PrintPageProps) {
       : placeWarpSpheres({
           widthMm: geo.dims.trimWidthMm,
           heightMm: geo.dims.trimHeightMm,
-          hole: { cx: coreCx, cy: coreCy, rx: coreR, ry: coreR },
+          hole: field.hole,
           seams: Array.isArray(props.seams) ? props.seams : [8250, 17750],
           seamMarginMm: props.seamMarginMm,
           edgeMarginMm: props.edgeMarginMm,
@@ -216,13 +188,6 @@ export function Warp({ doc, geo }: PrintPageProps) {
               <stop offset="0%" stopColor="#ffffff" stopOpacity="0.92" />
               <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
             </radialGradient>
-            {/* the AI-mass sphere — luminous brand blue with a BLUE sheen (no white highlight) */}
-            <radialGradient id="warpCore" cx="50%" cy="50%" r="64%" fx="35%" fy="26%">
-              <stop offset="0%" stopColor="#66a6ff" />
-              <stop offset="24%" stopColor="#2f86fb" />
-              <stop offset="54%" stopColor="#0070f9" />
-              <stop offset="100%" stopColor="#073a82" />
-            </radialGradient>
           </defs>
 
           {ordered.map((c) => (
@@ -235,22 +200,8 @@ export function Warp({ doc, geo }: PrintPageProps) {
               strokeLinejoin="round"
             />
           ))}
-          {/* the AI mass — a brand-blue sphere half-submerged in the warp it creates.
-              The throat (hole) is hidden: only the dome above the waterline shows. */}
-          {props.showCoreSphere === false ? (
-            <ellipse cx={m(coreCx)} cy={m(coreCy)} rx={m(field.hole.rx)} ry={m(field.hole.ry)} fill={pal.holeInk} />
-          ) : (
-            <g>
-              <clipPath id="warpDomeClip">
-                <path d={domeClipPath(coreCx, coreCy, coreR, field.hole.ry, m)} />
-              </clipPath>
-              <g clipPath="url(#warpDomeClip)">
-                <circle cx={m(coreCx)} cy={m(coreCy)} r={m(coreR)} fill="url(#warpCore)" />
-              </g>
-              {/* the waterline rim, drawn in front → the sphere reads as entering the surface */}
-              <path d={frontArcPath(coreCx, coreCy, coreR, field.hole.ry, m)} fill="none" stroke="#04244f" strokeOpacity={0.5} strokeWidth={Math.max(1, m(coreR * 0.022))} strokeLinecap="round" />
-            </g>
-          )}
+          {/* the black hole — area = IA + Nvidia */}
+          <ellipse cx={m(field.hole.cx)} cy={m(field.hole.cy)} rx={m(field.hole.rx)} ry={m(field.hole.ry)} fill={pal.holeInk} />
 
           {/* contact shadows (under the spheres, on the grid) */}
           {spheres.map((s) => (
@@ -300,21 +251,21 @@ export function Warp({ doc, geo }: PrintPageProps) {
           </div>
         ))}
 
-        {/* centre mark — the white ChatGPT knot + title, set on the emerging blue dome */}
+        {/* centre mark — the white ChatGPT knot + title, floating in the black hole */}
         {props.showCenterMark !== false &&
           (() => {
-            const logoH = props.centerLogoHeightMm ?? coreR * 0.38
+            const logoH = props.centerLogoHeightMm ?? field.hole.ry * 0.62
             const logoW = (logoH * 512) / 509.639
-            const capMm = props.centerTitleCapMm ?? coreR * 0.105
+            const capMm = props.centerTitleCapMm ?? field.hole.ry * 0.15
             const titleFont = capMm / 0.72 // hairline display cap ≈ 0.72·em
             const title = props.centerTitle ?? 'Mercado alrededor de ChatGPT'
-            const offsetY = props.centerMarkOffsetYMm ?? -coreR * 0.2
+            const offsetY = props.centerMarkOffsetYMm ?? -field.hole.ry * 0.22
             return (
               <div
                 style={{
                   position: 'absolute',
-                  left: m(coreCx),
-                  top: m(coreCy + offsetY),
+                  left: m(field.hole.cx),
+                  top: m(field.hole.cy + offsetY),
                   transform: 'translate(-50%, -50%)',
                   display: 'flex',
                   flexDirection: 'column',
@@ -327,14 +278,13 @@ export function Warp({ doc, geo }: PrintPageProps) {
                 </svg>
                 <div
                   style={{
-                    marginTop: m(logoH * 0.16),
+                    marginTop: m(logoH * 0.22),
                     fontFamily: PRINT_TEXT_FONT,
                     fontWeight: 500,
                     fontSize: m(titleFont),
-                    lineHeight: 1.06,
+                    lineHeight: 1,
                     color: '#ffffff',
-                    maxWidth: m(coreR * 1.6),
-                    whiteSpace: 'pre-line', // respect explicit "\n" breaks, wrap long lines too
+                    whiteSpace: 'nowrap',
                     letterSpacing: m(-titleFont * 0.006),
                     textAlign: 'center',
                   }}

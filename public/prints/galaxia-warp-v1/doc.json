@@ -1,8 +1,8 @@
 {
-  "id": "galaxia-warp",
-  "title": "Galaxia · warp espacio-tiempo — los tres campos unidos (23.50×2.50 m)",
+  "id": "galaxia-warp-v1",
+  "title": "Galaxia · warp espacio-tiempo — v1 (agujero negro) (23.50×2.50 m)",
   "createdAt": "2026-06-05T00:00:00.000Z",
-  "pageComponentId": "warp",
+  "pageComponentId": "warp-v1",
   "theme": "light",
   "surface": "#ffffff",
   "dimensions": {
@@ -20,16 +20,14 @@
     "pdfxVariant": "x1a"
   },
   "props": {
-    "foreshorten": 0.38,
-    "holeCenterYFrac": 0.63,
-    "horizonYFrac": 0.35,
-    "funnelFalloff": 1.12,
+    "foreshorten": 0.42,
+    "holeCenterYFrac": 0.6,
+    "horizonYFrac": 0.38,
+    "funnelFalloff": 1.18,
     "ringGrowth": 1.15,
     "shadeSpanMm": 4200,
     "shadeGamma": 1.12,
     "dispersion": 0.72,
-    "bodyGapMm": 240,
-    "perspectiveCompensate": false,
-    "centerTitle": "Laboratorios de IA\ny GPUs"
+    "bodyGapMm": 240
   }
 }
