@@ -1,7 +1,7 @@
 import { Component, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { KIT_BLUE } from '@/lib/neumorphism'
 import { PrintStage } from '../PrintRenderer'
-import { buildGeometry } from '../geometry'
+import { buildGeometry, EXPORT_DPI } from '../geometry'
 import { getPrintPage } from '../pages'
 import { PrintScaleScene } from './PrintScaleScene'
 import { EventSpaceScene } from './EventSpaceScene'
@@ -346,7 +346,8 @@ const PICKER_TYPES = {
 
 function ExportPanel({ doc, onBleed, onMarks }: { doc: PrintDoc; onBleed: (mm: number) => void; onMarks: (on: boolean) => void }) {
   const [format, setFormat] = useState<'pdf' | 'png' | 'jpg'>('pdf')
-  const [dpi, setDpi] = useState(doc.dpi)
+  // Export standard is EXPORT_DPI (150 ppp), not the doc's low preview DPI.
+  const [dpi, setDpi] = useState(EXPORT_DPI)
   const [quality, setQuality] = useState(92)
   const [ex, setEx] = useState<ExportState>({ status: 'idle', log: '', output: null })
 

@@ -15,6 +15,16 @@ export const PT_PER_INCH = 72
 /** 1 mm in PostScript points (≈ 2.83465) — used to set PDF Trim/Bleed boxes. */
 export const PT_PER_MM = PT_PER_INCH / MM_PER_INCH
 
+/**
+ * Standard EXPORT resolution (ppp/DPI) for every print deliverable. Decoupled from
+ * `doc.dpi` (which stays low — 24/36 — only to keep the live GUI/3D preview canvases
+ * light): the export pipeline and the GUI export panel default to this instead, so
+ * every PDF/PNG/JPG ships at 150 dpi regardless of the doc's preview DPI. Wall-sized
+ * media at 150 dpi is gigapixel — `export-print.mjs` render-tiles + stitches it.
+ * Override per run with `--dpi` (CLI) or the resolution slider (GUI).
+ */
+export const EXPORT_DPI = 150
+
 /** Physical millimetres → device pixels at a DPI (rounded — for integer canvas sizes). */
 export function mmToPx(mm: number, dpi: number): number {
   return Math.round((mm * dpi) / MM_PER_INCH)

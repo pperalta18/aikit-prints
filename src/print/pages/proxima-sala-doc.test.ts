@@ -18,7 +18,7 @@ import { DEFAULT_WALL_HEIGHT_M, findWallByInvId, resolveWallHeight } from '../sp
  * file covers the *authoring* of the print: `public/prints/marco-2-w-1/doc.json`
  * (the left 6.25 m print of the West / combustión face of wall 2) and its
  * registration. The checks prove the authored piece is honest and renderable — it
- * resolves from the registry, ships the CMYK / FOGRA39 / PDF/X contract on a clean
+ * resolves from the registry, ships the CMYK / FOGRA52 / PDF/X contract on a clean
  * paper ground, physically fits within the wall-2 West face, sizes its two text
  * levels legibly **yet small** (a marginal tag, not a headline), and renders the
  * real next-room content (eyebrow + room name + arrow), not a blank page.
@@ -53,9 +53,9 @@ describe('proxima-sala — registration', () => {
 })
 
 describe('proxima-sala — print contract', () => {
-  it('is a CMYK / FOGRA39 / PDF-X print on a clean paper ground', () => {
+  it('is a CMYK / FOGRA52 / PDF-X print on a clean paper ground', () => {
     expect(doc.color.mode).toBe('cmyk')
-    expect(doc.color.iccProfile).toBe('icc/CoatedFOGRA39.icc')
+    expect(doc.color.iccProfile).toBe('icc/PSOuncoated_v3_FOGRA52.icc')
     expect(['x1a', 'x4']).toContain(doc.color.pdfxVariant)
     expect(RENDER_INTENTS).toContain(doc.color.renderIntent)
     // a flat, typographic graphic → not the photo-only 'perceptual' intent.

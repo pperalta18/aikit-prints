@@ -40,10 +40,13 @@ export type PrintColor = {
   mode: PrintColorMode
   /**
    * Path to the CMYK output ICC profile under `public/`, e.g.
-   * `icc/CoatedFOGRA39.icc`. This is the single biggest lever on print
+   * `icc/PSOuncoated_v3_FOGRA52.icc`. This is the single biggest lever on print
    * vivacity — a narrow-gamut profile (the old Apple `GenericCMYK.icc`)
-   * desaturates badly. Default is a coated FOGRA39 placeholder; drop the
-   * print shop's real profile into `public/icc/` and point here for the run.
+   * desaturates badly. Default is PSO Uncoated v3 (FOGRA52), the European
+   * uncoated standard, because the prints output on **fabric** (which behaves
+   * like uncoated stock); `icc/CoatedFOGRA39.icc` stays available for coated
+   * paper jobs. Drop the print shop's real profile into `public/icc/` and point
+   * here for the run.
    */
   iccProfile: string
   /** sRGB→CMYK rendering intent. Default `relative`. */

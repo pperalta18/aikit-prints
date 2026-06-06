@@ -27,14 +27,14 @@ const BANDS: Record<WarpRegion, [number, number]> = {
 describe('warpBodies — unfold [11-W | 5N1 | 2-E] with the director swaps', () => {
   it('companies→left (11-W), nations+spanish→centre, sectors→right (2-E)', () => {
     const bodies = warpBodies()
-    expect(bodies.length).toBe(16 + 4 + 18 + 15) // sectors + countries + spanish + companies
+    expect(bodies.length).toBe(16 + 4 + 18 + 15 - 1) // sectors + countries + spanish + companies, minus Suiza (dropped from the warp)
     expect(bodies.find((b) => b.id === 'coca-cola')?.region).toBe('left') // a company → 11-W
     expect(bodies.find((b) => b.id === 'whisky')?.region).toBe('right') // a sector → 2-E
     expect(bodies.find((b) => b.id === 'inditex')?.region).toBe('center')
     expect(bodies.find((b) => b.id === 'portugal')?.region).toBe('center')
-    // swaps: brands/markets → centre; nations → the lateral the swapped body came from
+    // swaps: brands/markets → centre; nations → the laterals
     expect(bodies.find((b) => b.id === 'netflix')?.region).toBe('center')
-    expect(bodies.find((b) => b.id === 'switzerland')?.region).toBe('left') // ↔ Netflix (a company, 11-W)
+    expect(bodies.find((b) => b.id === 'switzerland')).toBeUndefined() // dropped from the warp (stays in the orbital galaxy)
     expect(bodies.find((b) => b.id === 'vino')?.region).toBe('center')
     expect(bodies.find((b) => b.id === 'norway')?.region).toBe('right') // ↔ Vino (a sector, 2-E)
     expect(bodies.find((b) => b.id === 'smartphones')?.region).toBe('center')

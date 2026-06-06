@@ -57,6 +57,14 @@ type Props = Partial<Omit<WarpOpts, 'widthMm' | 'heightMm'>> & {
   originXMm?: number
   /** A chart kept on top at a wall-local position (mm), e.g. the 2-E frontier-intelligence chart. */
   chartOverlay?: { chart: string; xMm: number; yMm: number; wMm: number; hMm: number }
+  /**
+   * Fade the GRID out toward the right (a white field that reveals the grid as you move left).
+   * Canvas mm: full grid left of `gridFadeStartXMm`, ramping to pure white field by
+   * `gridFadeEndXMm`, then white beyond (e.g. behind/around a chart). The spheres, their
+   * shadows and labels are NOT faded — they keep floating over the white.
+   */
+  gridFadeStartXMm?: number
+  gridFadeEndXMm?: number
 }
 
 /** Editorial palette for the kept frontier chart (dark ink on its white plate). */
@@ -175,6 +183,14 @@ export function Warp({ doc, geo }: PrintPageProps) {
   // Draw far (light) first, near (dark) last → a crisp dark basin around the hole.
   const ordered = [...field.cells].sort((a, b) => b.rMid - a.rMid)
 
+  // Optional right-side grid fade: a white field (the ground) painted over the grid that
+  // reveals the cells as you move left. Drawn over the cells but UNDER the spheres, so the
+  // balls keep floating over the white (see the rect below the cells).
+  const ground = doc.surface ?? pal.field
+  const hasGridFade = props.gridFadeStartXMm != null && props.gridFadeEndXMm != null
+  const fadeStart = props.gridFadeStartXMm ?? 0
+  const fadeEnd = props.gridFadeEndXMm ?? fullW
+
   // The core sphere's silhouette = a circle of the throat radius. Market spheres keep clear
   // of the WHOLE circle (not the foreshortened ellipse) so none is covered by the emerging dome.
   const coreCx = field.hole.cx
@@ -257,6 +273,13 @@ export function Warp({ doc, geo }: PrintPageProps) {
               <stop offset="54%" stopColor="#0070f9" />
               <stop offset="100%" stopColor="#073a82" />
             </radialGradient>
+            {/* right-side grid fade: transparent (grid shows) on the left → solid ground (white) on the right */}
+            {hasGridFade && (
+              <linearGradient id="warpGridFade" gradientUnits="userSpaceOnUse" x1={m(fadeStart)} y1="0" x2={m(fadeEnd)} y2="0">
+                <stop offset="0" stopColor={ground} stopOpacity="0" />
+                <stop offset="1" stopColor={ground} stopOpacity="1" />
+              </linearGradient>
+            )}
           </defs>
 
           <g transform={`translate(${tx} ${ty})`}>
@@ -270,6 +293,11 @@ export function Warp({ doc, geo }: PrintPageProps) {
               strokeLinejoin="round"
             />
           ))}
+          {/* right-side white field: fades the grid out toward the chart, drawn UNDER the
+              spheres so the balls keep floating over the white (the fade doesn't cover them) */}
+          {hasGridFade && (
+            <rect x={m(-5000)} y={m(-5000)} width={m(fullW + 10000)} height={m(geo.dims.trimHeightMm + 10000)} fill="url(#warpGridFade)" />
+          )}
           {/* the AI mass — a brand-blue sphere half-submerged in the warp it creates.
               The throat (hole) is hidden: only the dome above the waterline shows. */}
           {props.showCoreSphere === false ? (

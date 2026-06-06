@@ -703,6 +703,12 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
   return (
     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,#1b1e25 0%,#101218 100%)' }}>
       <Canvas
+        // On-demand rendering: only redraw when something actually changes (orbit,
+        // selection, a texture landing) instead of every frame forever. With many
+        // textured prints a continuous loop burns GPU/CPU even while idle; demand mode
+        // drops idle cost to ~0. OrbitControls + R3F's reconciler invalidate
+        // automatically; WASD fly and async texture loads invalidate explicitly.
+        frameloop="demand"
         shadows
         dpr={[1, 2]}
         camera={{ position: [0, 30, 32], fov: 45, near: 0.05, far: 600 }}
@@ -789,7 +795,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
           })}
         </Suspense>
 
-        <ContactShadows position={[0, 0.01, 0]} opacity={0.32} scale={Math.max(SPACE_WIDTH, SPACE_DEPTH) * 1.2} blur={2.6} far={3} resolution={1024} />
+        <ContactShadows position={[0, 0.01, 0]} opacity={0.32} scale={Math.max(SPACE_WIDTH, SPACE_DEPTH) * 1.2} blur={2.6} far={3} resolution={512} />
         <OrbitControls makeDefault enablePan enableZoom minDistance={1} maxDistance={120} maxPolarAngle={Math.PI / 2 - 0.03} target={[0, 1, 0]} />
         <CameraRig apiRef={cameraApi} />
       </Canvas>
@@ -1270,6 +1276,7 @@ const HEAD_CY = BODY_R + BODY_LEN + 0.04
 function Crowd() {
   const bodyRef = useRef<InstancedMesh>(null)
   const headRef = useRef<InstancedMesh>(null)
+  const invalidate = useThree((s) => s.invalidate)
 
   useEffect(() => {
     const dummy = new Object3D()
@@ -1284,7 +1291,8 @@ function Crowd() {
     })
     if (bodyRef.current) bodyRef.current.instanceMatrix.needsUpdate = true
     if (headRef.current) headRef.current.instanceMatrix.needsUpdate = true
-  }, [])
+    invalidate() // demand mode: the matrices are set after the mount render — redraw once
+  }, [invalidate])
 
   return (
     <group>
@@ -1669,7 +1677,11 @@ function WallPrint({
 /* ── camera: orbit + WASD fly, with imperative view presets ──────────────────── */
 
 function CameraRig({ apiRef }: { apiRef: React.MutableRefObject<{ setView: (pos: Vec3, target: Vec3) => void } | null> }) {
-  const { camera, controls } = useThree() as unknown as { camera: any; controls: any }
+  const { camera, controls, invalidate } = useThree() as unknown as {
+    camera: any
+    controls: any
+    invalidate: () => void
+  }
   const keys = useRef<Record<string, boolean>>({})
   const tmp = useRef({ a: new Vector3(), b: new Vector3(), c: new Vector3() })
 
@@ -1694,6 +1706,7 @@ function CameraRig({ apiRef }: { apiRef: React.MutableRefObject<{ setView: (pos:
     const dn = (e: KeyboardEvent) => {
       if (isText(e.target)) return
       keys.current[e.key.toLowerCase()] = true
+      invalidate() // demand mode: kick off the fly loop (useFrame only runs on rendered frames)
     }
     const up = (e: KeyboardEvent) => {
       keys.current[e.key.toLowerCase()] = false
@@ -1704,7 +1717,7 @@ function CameraRig({ apiRef }: { apiRef: React.MutableRefObject<{ setView: (pos:
       window.removeEventListener('keydown', dn)
       window.removeEventListener('keyup', up)
     }
-  }, [])
+  }, [invalidate])
 
   useFrame((_, dt) => {
     const c = controls
@@ -1728,6 +1741,9 @@ function CameraRig({ apiRef }: { apiRef: React.MutableRefObject<{ setView: (pos:
       c.target.add(move)
       c.update()
     }
+    // demand mode: while any fly key is held, request the next frame so the loop
+    // sustains itself (and stops the instant all keys are released).
+    if (k['w'] || k['s'] || k['a'] || k['d'] || k['r'] || k['f']) invalidate()
   })
 
   return null

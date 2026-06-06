@@ -14,7 +14,7 @@
   "dpi": 36,
   "color": {
     "mode": "cmyk",
-    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
     "renderIntent": "perceptual",
     "pdfxVariant": "x1a"
   },
@@ -29,10 +29,9 @@
     "framed": false,
     "title": "La ascensión en el umbral",
     "paragraphs": [
-      "La misma pendiente que un día enderezó la espalda del hombre no se detiene en el dintel: hoy la empuja un cálculo que no se cansa.",
-      "Prolóngala unos pasos más allá del marco y asoma un país que aún no sabemos nombrar."
+      "Toda la historia del hombre cabe en una pendiente: la misma que un día le enderezó la espalda no se detiene en el umbral. Hoy ya no la empuja el músculo, sino un cálculo que no conoce el cansancio.",
+      "Asómate un paso más allá del marco y despunta un país todavía sin nombre. Lo decisivo nunca cabe dentro del cuadro."
     ],
-    "meta": "Bajorrelieve monocromo · Piedra caliza · Colección AiKit Live · 2026",
     "alt": "Bajorrelieve vertical. Una procesión humana asciende en diagonal desde el ángulo inferior izquierdo, en penumbra: figuras encorvadas que arrastran una rueda dentada rota y empujan junto a un buey fatigado, todavía atadas al esfuerzo primitivo. La diagonal cruza un dintel de piedra tallado en el propio relieve —el umbral— y desemboca, arriba a la derecha, en una figura serena con túnica, ya erguida, que apoya la mano en un cuadro de mandos de palancas y dinamos. Sobre ese vértice, una única bombilla incandescente encendida es la sola fuente de luz: su resplandor rasante alarga las sombras hacia atrás, deja el origen del trabajo casi a oscuras y baña la cima. Engranajes concéntricos, cada vez mayores, escalonan la subida y sugieren una curva que no se detiene en el borde del marco."
   }
 }

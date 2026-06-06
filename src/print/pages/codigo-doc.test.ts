@@ -18,7 +18,7 @@ import { DEFAULT_WALL_HEIGHT_M, findWallByInvId, resolveWallHeight } from '../sp
  * *authoring* of the print: `public/prints/codigo/doc.json` and its registration.
  * The unbiased point is to prove the authored **dimensions are honest and
  * renderable** — the page resolves from the registry, exports through the existing
- * CMYK / FOGRA39 / PDF/X contract, physically fits wall 16 (the 3.5 m S3 "Divisoria
+ * CMYK / FOGRA52 / PDF/X contract, physically fits wall 16 (the 3.5 m S3 "Divisoria
  * 2 TEXT+CODE"), and lays the *two real, sourced* wall-16 datasets out at the
  * authored canvas — not just that JSON exists.
  */
@@ -42,9 +42,9 @@ describe('codigo — registration', () => {
 })
 
 describe('codigo — print contract', () => {
-  it('is a CMYK / FOGRA39 / PDF-X print like the rest of the data-viz family', () => {
+  it('is a CMYK / FOGRA52 / PDF-X print like the rest of the data-viz family', () => {
     expect(doc.color.mode).toBe('cmyk')
-    expect(doc.color.iccProfile).toBe('icc/CoatedFOGRA39.icc')
+    expect(doc.color.iccProfile).toBe('icc/PSOuncoated_v3_FOGRA52.icc')
     expect(['x1a', 'x4']).toContain(doc.color.pdfxVariant)
     expect(RENDER_INTENTS).toContain(doc.color.renderIntent)
     // vivid brand data-viz on dark → not the photo-only 'perceptual' intent.

@@ -15,7 +15,7 @@
   "dpi": 24,
   "color": {
     "mode": "cmyk",
-    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
     "renderIntent": "relative",
     "pdfxVariant": "x1a"
   },
@@ -36,6 +36,18 @@
     "signageBandMm": 1500,
     "gridGapMm": 2000,
     "rows": 4,
-    "gutterMm": 14
+    "gutterMm": 14,
+    "images": {
+      "runner": {
+        "src": "prints/marco-11-e-2/assets/runner.png",
+        "alt": "La Naranja Mecánica — corredora bebiendo zumo de naranja"
+      }
+    },
+    "bays": [
+      { "cols": 2, "slots": [{ "kind": "image", "image": "runner", "rows": 4 }] },
+      { "cols": 4, "slots": [{ "kind": "image", "image": "vending", "rows": 2 }, { "kind": "image", "image": "bottles", "rows": 2 }] },
+      { "cols": 3, "slots": [{ "kind": "image", "image": "taxi", "rows": 2 }, { "kind": "image", "image": "landscape", "rows": 2 }] },
+      { "cols": 3, "slots": [{ "kind": "image", "image": "poster", "rows": 2 }, { "kind": "solid", "rows": 2, "fill": "tone:0" }] }
+    ]
   }
 }

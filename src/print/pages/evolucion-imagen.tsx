@@ -82,11 +82,11 @@ const DEFAULT_ERAS: Era[] = [
     // The hero slot is a 2×2 grid (imgs 0-3): many dreamy early-diffusion attempts,
     // quartered by the wall seams. img 4 is the separate small plate below-left.
     images: [
-      { subject: 'gesto con manos deformes, dedos de más y fundidos (SD 1.5)', src: `${A}/2022-g1.png` },
-      { subject: 'multitud en una fiesta, caras y manos derretidas (SD 1.5)', src: `${A}/2022-g2.png` },
-      { subject: 'bodegón con frutas deformes y colores imposibles, derretido (SD 1.5)', src: `${A}/2022-g3.png` },
-      { subject: 'escaparate de librería: rótulos y lomos con texto ilegible (SD 1.5)', src: `${A}/2022-g4.png` },
-      { subject: 'intento de gran composición renacentista, figuras sin rostro (SD 1.5)', src: `${A}/2022-b.png` },
+      { subject: 'las gradas abarrotadas de un estadio, intentadas con SD 1.5: el público se funde en figuras deformes (SD 1.5)', src: `${A}/2022-g1.png` },
+      { subject: 'una mano sujetando un reloj, intentada con SD 1.5: dedos deformes y esfera ilegible (SD 1.5)', src: `${A}/2022-g2.png` },
+      { subject: 'una bicicleta, intentada con SD 1.5: rueda y radios derretidos, geometría imposible (SD 1.5)', src: `${A}/2022-g3.png` },
+      { subject: 'una cena de amigos a la luz de las velas, intentada con SD 1.5: caras y manos fundidas, mesa derretida (SD 1.5)', src: `${A}/2022-g4.png` },
+      { subject: 'el salto del tenista de 2026, intentado con SD 1.5: anatomía rota, raqueta derretida y pelota duplicada (SD 1.5)', src: `${A}/2022-b.png` },
     ],
   },
   {
@@ -95,9 +95,9 @@ const DEFAULT_ERAS: Era[] = [
     title: 'Gana nitidez y comprensión del mundo',
     model: 'SDXL · Midjourney v5',
     images: [
-      { subject: 'retrato fotográfico coherente (SDXL)', src: `${A}/2023-hero.png` },
+      { subject: 'el mismo salto del tenista, intentado con SDXL: más nítido que 2022 pero incoherente, con una raqueta fantasma flotando (SDXL)', src: `${A}/2023-hero.png` },
       { subject: 'paisaje cinematográfico (SDXL)', src: `${A}/2023-b.png` },
-      { subject: 'bodegón de producto (SDXL)', src: `${A}/2023-c.png` },
+      { subject: 'la misma cena coral, intentada con SDXL: más nítida pero aún incoherente, con manos deformes (SDXL)', src: `${A}/2023-c.png` },
     ],
   },
   {
@@ -106,7 +106,7 @@ const DEFAULT_ERAS: Era[] = [
     title: 'Aprende a escribir',
     model: 'Recraft v3 · nanobanana 2',
     images: [
-      { subject: 'cartel de cine con título legible (Recraft v3)', src: `${A}/2024-hero.png` },
+      { subject: 'el mismo salto del tenista, intentado con Recraft v3: coherente y nítido pero plano, aún no fotográfico (Recraft v3)', src: `${A}/2024-hero.png` },
       { subject: 'packaging con marca legible (nanobanana 2)', src: `${A}/2024-b.png` },
       { subject: 'infografía con rótulos correctos (Recraft v3)', src: `${A}/2024-c.png` },
     ],
@@ -118,7 +118,7 @@ const DEFAULT_ERAS: Era[] = [
     model: 'GPT Image 2',
     now: true,
     images: [
-      { subject: 'composición onírica: planos, bocetos y maquetas flotando en espiral (GPT Image 2)', src: `${A}/2026-hero.png` },
+      { subject: 'el salto del tenista en hierba de Wimbledon, fotorrealista e indistinguible de una cámara (GPT Image 2)', src: `${A}/2026-hero.png` },
       { subject: 'escena callejera compleja (GPT Image 2)', src: `${A}/2026-b.png` },
       { subject: 'retrato editorial hiperrealista, primer plano con textura de piel real (GPT Image 2)', src: `${A}/2026-c.png` },
     ],

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import { invalidate } from '@react-three/fiber'
 import { getFontEmbedCSS, toCanvas } from 'html-to-image'
-import { CanvasTexture, LinearFilter, SRGBColorSpace, Texture } from 'three'
+import { CanvasTexture, LinearFilter, LinearMipmapLinearFilter, SRGBColorSpace, Texture } from 'three'
 import { buildGeometry } from '../geometry'
 import { getPrintPage } from '../pages'
 import { PrintStage } from '../PrintRenderer'
@@ -31,6 +32,31 @@ const FACE_LONG_PX = 2048
 /** Font embedding is the slow part and identical across faces — compute it once. */
 let fontEmbedCss: Promise<string> | null = null
 
+/**
+ * Cap how many faces rasterise at once. Each raster mounts a React root and runs an
+ * `html-to-image` SVG serialisation of a 2048px page (very heavy for image-track
+ * prints). Placing many image prints would otherwise fire N conversions in parallel
+ * and freeze the main thread — the "va petadísimo" symptom. A small semaphore runs
+ * them a couple at a time, so the UI stays responsive and faces pop in progressively.
+ */
+const MAX_CONCURRENT_RASTERS = 2
+let activeRasters = 0
+const rasterWaiters: Array<() => void> = []
+
+async function acquireRasterSlot(): Promise<void> {
+  if (activeRasters < MAX_CONCURRENT_RASTERS) {
+    activeRasters++
+    return
+  }
+  await new Promise<void>((resolve) => rasterWaiters.push(resolve))
+  activeRasters++
+}
+
+function releaseRasterSlot(): void {
+  activeRasters = Math.max(0, activeRasters - 1)
+  rasterWaiters.shift()?.()
+}
+
 /** Wait two frames so React has committed and the browser has laid the host out. */
 const twoFrames = () =>
   new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
@@ -57,60 +83,69 @@ export async function renderLivePrintTexture(doc: PrintDoc): Promise<Texture> {
   const outW = aspect >= 1 ? longPx : Math.round(longPx * aspect)
   const outH = aspect >= 1 ? Math.round(longPx / aspect) : longPx
 
-  // An off-screen *wrapper* holds the captured host out of view; the host itself
-  // must stay in normal flow (position:relative). html-to-image inlines the captured
-  // node's own computed style onto the foreignObject root — a `position:fixed;
-  // left:-100000px` host would render blank (pushed off the SVG viewport).
-  const wrapper = document.createElement('div')
-  wrapper.setAttribute('aria-hidden', 'true')
-  wrapper.style.cssText = 'position:fixed;left:-100000px;top:0;pointer-events:none;'
-  // host = a trim-sized clip box; the media (PrintStage) is offset by -bleed so only
-  // the trim is captured — exactly the live-preview framing.
-  const host = document.createElement('div')
-  host.style.cssText = [
-    'position:relative',
-    `width:${geo.trimWidthPx}px`,
-    `height:${geo.trimHeightPx}px`,
-    'overflow:hidden',
-    'background:#ffffff',
-  ].join(';')
-  wrapper.appendChild(host)
-  document.body.appendChild(wrapper)
-
-  const root = createRoot(host)
+  // Gate the heavy work behind the semaphore so a burst of placements doesn't run all
+  // their html-to-image conversions at once and stall the main thread.
+  await acquireRasterSlot()
   try {
-    root.render(
-      <div style={{ position: 'absolute', left: -geo.bleedPx, top: -geo.bleedPx }}>
-        <PrintStage doc={doc}>{page({ doc, geo })}</PrintStage>
-      </div>,
-    )
-    await twoFrames()
-    await document.fonts?.ready
-    await imagesReady(host)
+    // An off-screen *wrapper* holds the captured host out of view; the host itself
+    // must stay in normal flow (position:relative). html-to-image inlines the captured
+    // node's own computed style onto the foreignObject root — a `position:fixed;
+    // left:-100000px` host would render blank (pushed off the SVG viewport).
+    const wrapper = document.createElement('div')
+    wrapper.setAttribute('aria-hidden', 'true')
+    wrapper.style.cssText = 'position:fixed;left:-100000px;top:0;pointer-events:none;'
+    // host = a trim-sized clip box; the media (PrintStage) is offset by -bleed so only
+    // the trim is captured — exactly the live-preview framing.
+    const host = document.createElement('div')
+    host.style.cssText = [
+      'position:relative',
+      `width:${geo.trimWidthPx}px`,
+      `height:${geo.trimHeightPx}px`,
+      'overflow:hidden',
+      'background:#ffffff',
+    ].join(';')
+    wrapper.appendChild(host)
+    document.body.appendChild(wrapper)
 
-    if (!fontEmbedCss) fontEmbedCss = getFontEmbedCSS(host).catch(() => '')
-    const embedded = await fontEmbedCss
+    const root = createRoot(host)
+    try {
+      root.render(
+        <div style={{ position: 'absolute', left: -geo.bleedPx, top: -geo.bleedPx }}>
+          <PrintStage doc={doc}>{page({ doc, geo })}</PrintStage>
+        </div>,
+      )
+      await twoFrames()
+      await document.fonts?.ready
+      await imagesReady(host)
 
-    const canvas = await toCanvas(host, {
-      canvasWidth: outW,
-      canvasHeight: outH,
-      pixelRatio: 1,
-      backgroundColor: '#ffffff',
-      fontEmbedCSS: embedded || undefined,
-      cacheBust: true,
-    })
+      if (!fontEmbedCss) fontEmbedCss = getFontEmbedCSS(host).catch(() => '')
+      const embedded = await fontEmbedCss
 
-    const tex = new CanvasTexture(canvas)
-    tex.colorSpace = SRGBColorSpace
-    tex.anisotropy = 8
-    tex.magFilter = LinearFilter
-    tex.minFilter = LinearFilter
-    tex.generateMipmaps = false
-    tex.needsUpdate = true
-    return tex
+      const canvas = await toCanvas(host, {
+        canvasWidth: outW,
+        canvasHeight: outH,
+        pixelRatio: 1,
+        backgroundColor: '#ffffff',
+        fontEmbedCSS: embedded || undefined,
+        cacheBust: true,
+      })
+
+      const tex = new CanvasTexture(canvas)
+      tex.colorSpace = SRGBColorSpace
+      tex.anisotropy = 8
+      tex.magFilter = LinearFilter
+      // Mipmaps: a 2048px face drawn small/angled on a wall would otherwise thrash the
+      // GPU texture cache (and shimmer) when orbiting. Trilinear sampling fixes both.
+      tex.minFilter = LinearMipmapLinearFilter
+      tex.generateMipmaps = true
+      tex.needsUpdate = true
+      return tex
+    } finally {
+      root.unmount()
+      wrapper.remove()
+    }
   } finally {
-    root.unmount()
-    wrapper.remove()
+    releaseRasterSlot()
   }
 }
 
@@ -142,6 +177,7 @@ export function useLivePrintFaceTexture(doc: PrintDoc, enabled: boolean): Textur
         current.current = t
         setTex(t)
         prev?.dispose()
+        invalidate() // demand mode: redraw now that the face texture is ready
       })
       .catch((e) => {
         // Fall back to the plain plate; surface the cause for debugging.

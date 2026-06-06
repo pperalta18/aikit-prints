@@ -69,10 +69,14 @@ preserves the neumorphic relief exactly, then color is converted for press:
    (max compatibility, PDF 1.3); PDF/X-4 is an opt-in for shops that allow it.
    **The output profile is the single biggest lever on vivacity**: the gamut and
    gamut-mapping tables of `<CMYK>.icc` decide how much saturation survives. The
-   default is a coated **FOGRA39** profile (the European coated standard, ≈ ISO
-   Coated v2); the old Apple `GenericCMYK.icc` placeholder is narrow-gamut and
-   desaturated badly (e.g. mean artwork saturation 56% vs 71% on FOGRA39, and
-   KIT_BLUE 49%→61%). **`-dRenderIntent`** (`color.renderIntent`: perceptual 0 /
+   default is **PSO Uncoated v3 (FOGRA52)**, the European uncoated standard
+   (ISO 12647-2:2013), because the prints output on **fabric**, which behaves
+   like uncoated stock (high dot gain) — a coated profile would over-promise
+   saturation the cloth cannot hold. Uncoated has a smaller gamut than coated, so
+   vivid colour desaturates a little more than under FOGRA39, but it is the honest
+   soft-proof for textile and still far ahead of the old Apple `GenericCMYK.icc`
+   placeholder (mean artwork saturation 56% there). `icc/CoatedFOGRA39.icc` stays
+   available for coated-paper jobs. **`-dRenderIntent`** (`color.renderIntent`: perceptual 0 /
    relative 1 / saturation 2 / absolute 3) maps colour into that gamut: `relative`
    (default) keeps in-gamut colour at full strength and clips only what's outside;
    `saturation` is marginally punchier for flat graphics; `perceptual` compresses
@@ -93,15 +97,17 @@ preserves the neumorphic relief exactly, then color is converted for press:
 - **CMYK gamut shift is expected** — e.g. `KIT_BLUE #0070f9` cannot be reproduced
   exactly in CMYK *by any profile* (it's outside the printable gamut); soft-proof
   before a press run. The profile choice still matters a lot for how close you get
-  — FOGRA39 lands far closer than the old generic placeholder.
+  — a FOGRA-class profile lands far closer than the old generic placeholder.
+  On fabric, only a spot/Pantone ink can hit the brand blue exactly.
 - **Rich black**: because text is flattened into the raster, dark text converts to
   CMYK via the ICC profile (usually a 4-colour rich black). For crisp pure-K (100K)
   small text and to avoid registration halos, use the hybrid vector-text overlay
   (a future option) — not v1.
-- The default `public/icc/CoatedFOGRA39.icc` is a **good placeholder** (the
-  European coated standard, ≈ ISO Coated v2), not the legacy narrow-gamut Apple
-  `GenericCMYK.icc`. For a production run, drop the print shop's exact profile
-  (e.g. their PSO Coated v3 / FOGRA51) into `public/icc/` and point each
+- The default `public/icc/PSOuncoated_v3_FOGRA52.icc` (European uncoated standard,
+  for the fabric substrate) is the production profile, not the legacy narrow-gamut
+  Apple `GenericCMYK.icc`; `icc/CoatedFOGRA39.icc` remains for coated-paper jobs.
+  For a production run, drop the print shop's **exact** profile (their fabric/textile
+  ICC, or e.g. PSO Coated v3 / FOGRA51 for coated) into `public/icc/` and point each
   `doc.json`'s `color.iccProfile` at it — a **one-line swap, no code change**.
   See `public/icc/README.md` for profile provenance.
 - **Rive** module icons can't be deterministically stilled — a print using them

@@ -88,9 +88,30 @@ import { WarpV1 } from './warp-v1.tsx'
 // imagery — photos sized by format + solid orange cells + placeholders, filling the
 // whole wall. `mosaico.ts` (pure bay-packing) shares the basename → explicit `.tsx`.
 import { Mosaico } from './mosaico.tsx'
+// Campaign grid wall (4-W-2 «La Naranja Mecánica»): the left quarter stays white and
+// the right three quarters is a full-height grid of the campaign creatives, butted
+// edge to edge, with the odd brand-orange cell + sun-mark lockup. Reuses `mosaico.ts`.
+import { NaranjaGrid } from './naranja-grid'
 // Code-track #2 (wall 2-E-TEXT+CODE): «Hitos de la IA» — editorial card catalogue
 // of AI accomplishments in science/maths/culture, each card a bespoke trophy image.
 import { Hitos } from './hitos'
+// Free-standing «camino» (no wall): the neo-work pathfinding grid generator rebuilt
+// as a print — a route of raised arrow-plates winding to a blue goal. `pathfinding.ts`
+// (pure route geometry) shares the basename → explicit `.tsx`.
+import { Pathfinding } from './pathfinding.tsx'
+// Corner-stamped mark + optional centred hero (21-N-1): the supplied sun/leaf mark
+// blown up past the wall, pinned by its centre to a corner so a quarter bleeds in.
+import { LogoCorner } from './logo-corner'
+// Automation cards wall (4-W-2 «La Naranja Mecánica»): left quarter white + right
+// ¾ a clean 4×2 grid of cards — each a real, operating automation (press photo +
+// «tecnología + impacto» headline + paragraph + dateline). Eight links of a supply
+// chain that makes a product nearly free to make and move.
+import { Prensa } from './prensa'
+// «Dos columnas» wall (19-S-1): two centred slender bands, each a full-height
+// mosaic of square brand-blue cells with a deterministic (seeded) per-cell
+// opacity — most empty, the rest random. `columnas.ts` (pure layout + cell/scatter
+// maths) shares the basename → explicit `.tsx`.
+import { Columnas } from './columnas.tsx'
 
 /**
  * Page registry — maps a `doc.pageComponentId` to its React component. Add a new
@@ -170,8 +191,18 @@ export const PRINT_PAGES: Record<string, PrintPageComponent> = {
   'warp-v1': WarpV1,
   // ── Brand mosaic (11-E-2 «La Naranja Mecánica»): full-height grid de marca (foto · sólido · placeholder) ──
   mosaico: Mosaico,
+  // ── Campaign grid (4-W-2 «La Naranja Mecánica»): 1/4 izq. blanco + grid de creatividades a sangre (foto · naranja · lockup) ──
+  'naranja-grid': NaranjaGrid,
   // ── Code-track #2 (2-E-TEXT+CODE): «Hitos de la IA» — catálogo editorial de logros, cada tarjeta un trofeo ──
   hitos: Hitos,
+  // ── «El camino» (print libre, sin pared): generador de pathfinding de neo-work — ruta de placas-flecha hasta la meta azul ──
+  pathfinding: Pathfinding,
+  // ── Marca de esquina + héroe central (21-N-1): el sol/hoja agrandado, anclado por su centro a una esquina (un cuarto visible) + globo central ──
+  'logo-corner': LogoCorner,
+  // ── Muro de noticias (4-W-2 «La Naranja Mecánica»): ¼ izq. blanco + portada de periódico de automatización real (8 noticias: antetítulo · titular · párrafo · foto) ──
+  prensa: Prensa,
+  // ── «Dos columnas» (19-S-1): dos bandas esbeltas centradas — grid azul de marca a toda altura + degradado azul desde el suelo; la tinta del grid se invierte (blanco↔azul) en la disolución ──
+  columnas: Columnas,
 }
 
 export function getPrintPage(id: string): PrintPageComponent | undefined {

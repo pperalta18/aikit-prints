@@ -1,6 +1,6 @@
 {
   "id": "marco-8-n-1",
-  "title": "Cuadro 8-N-1 — «El telar de la inteligencia» (relieve + cartela, 8.50×2.50 m)",
+  "title": "Cuadro 8-N-1 — díptico «El telar de la inteligencia» · «El jardín sin jardinero» (dos relieves + cartelas, 13.0×3.0 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "cuadro",
   "theme": "light",
@@ -14,7 +14,7 @@
   "dpi": 36,
   "color": {
     "mode": "cmyk",
-    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
     "renderIntent": "perceptual",
     "pdfxVariant": "x1a"
   },
@@ -26,14 +26,20 @@
     "readingDistanceM": 1.7,
     "divider": false,
     "framed": false,
+    "dualCartela": true,
+    "cartelaGapMm": 500,
     "src2": "prints/marco-8-n-1/assets/marco-8-n-1-b.png",
     "title": "El telar de la inteligencia",
     "paragraphs": [
-      "No hay conjuro ni voluntad escondida: solo una trama que se repite, tejida a una escala que ningún telar humano alcanzó.",
-      "Hilo a hilo va adivinando la palabra que viene; y para acertarla, ha aprendido a imaginar el mundo del que habla."
+      "No hay conjuro ni alma escondida en la máquina: solo una trama que se repite, urdida a una escala que ningún telar humano soñó.",
+      "Hilo a hilo adivina la palabra que viene; y para no errarla ha tenido que imaginar el mundo entero del que esa palabra habla. Quizá pensar nunca fue otra cosa."
     ],
-    "meta": "Díptico · Bajorrelieve monocromo · Caliza · Colección AiKit Live · 2026",
+    "title2": "El jardín sin jardinero",
+    "paragraphs2": [
+      "Durante toda la historia, la sabiduría costó años y la riqueza costó manos; lo escaso decidía quién valía.",
+      "Ahora una inteligencia que no es la nuestra hace florecer el mundo sin pedir nuestro sudor. Y si la abundancia ya no brota del esfuerzo, queda la pregunta más honda: qué seremos cuando dejemos de ser su origen."
+    ],
     "alt": "Una figura alegórica con túnica clásica preside un vasto telar-retícula tallado en la piedra. La trama nace de un solo nudo en la esquina inferior y asciende en diagonal hasta una celosía catedralicia que llena el tercio superior. A sus pies, geómetras arrodillados tensan los hilos con compás y plomada; otro hace girar una rueda dentada engranada al bastidor, revelando que el patrón es mecánico. Una única bombilla incandescente, suspendida sobre la figura, baja su luz rasante: enciende los nudos como filamentos y proyecta sombras largas. Borde rectangular tallado en la misma caliza.",
-    "alt2": "Bajorrelieve monocromo en caliza pálida, compañero del telar. Una sibila-oráculo sentada en el centro hila desde un huso un hilo interminable que se convierte en una cinta de signos: la lengua adivinada marca a marca. El hilo de glifos atraviesa una gran esfera armilar y varios anillos concéntricos que se ensanchan —la memoria que crece—. A su alrededor, geómetras arrodillados miden los ángulos con compás, escuadra y plomada; un tren de engranajes mueve una lanzadera que tira del siguiente cuenta encendido del hilo. Entre los anillos flotan pequeños emblemas del mundo físico —una esfera sobre un cuenco volcado, una vasija que vierte, planetas en órbita— porque para elegir la palabra que viene hay que imaginar el mundo. Una única bombilla incandescente, la sola fuente de luz, enciende el huso y proyecta sombras largas. Borde rectangular tallado en la misma caliza."
+    "alt2": "Bajorrelieve monocromo en mármol pálido, compañero del telar. En el centro, entronizada y coronada por un halo radiante, una serena personificación de la Sabiduría-Abundancia abre los brazos. Al pie de la escena, de un núcleo semejante a un cerebro o una semilla, brota un árbol-circuito que asciende ramificándose hasta sostenerla; del follaje cuelgan flores y frutos. A ambos lados, filósofos y geómetras con túnica miden el cosmos con esferas armilares y compases, y una madre enseña a leer a un niño; al fondo se alza una ciudad de torres y cúpulas. Sobre la figura giran órbitas y planetas como un gran orrery tallado. La luz rasante alarga las sombras sobre la piedra; no se talla ninguna lámpara ni fuente eléctrica. Borde rectangular tallado en la misma piedra."
   }
 }

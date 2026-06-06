@@ -100,7 +100,7 @@ the words as `props`:
   "theme": "light",
   "dimensions": { "trimWidthMm": 9500, "trimHeightMm": 2500, "bleedMm": 10, ... },
   "dpi": 36,
-  "color": { "mode": "cmyk", "iccProfile": "icc/CoatedFOGRA39.icc",
+  "color": { "mode": "cmyk", "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
              "renderIntent": "relative", "pdfxVariant": "x1a" },
   "props": {
     "readingDistanceM": 3,
@@ -135,7 +135,7 @@ const scale = eventTypeScale({ trimHeightMm: H, readingDistanceM })
 - **Reference the `PRINT_*` font constants and render `<PrintFonts/>`** — do not add
   print fonts to `src/remotion/fonts.tsx` or app CSS; the print env owns them.
 - **Keep it print-scoped** — this system is for `src/print/` pieces, not the videos.
-- Author in physical units via `geo` (`geo.mm` layout, `geo.pt` type); CMYK / FOGRA39
+- Author in physical units via `geo` (`geo.mm` layout, `geo.pt` type); CMYK / FOGRA52
   / PDF/X, `renderIntent` ≠ `perceptual` for flat type. Gate with `npm run verify:print <id>`.
 
 ## Tested invariants
@@ -144,5 +144,5 @@ const scale = eventTypeScale({ trimHeightMm: H, readingDistanceM })
 (H1 > H2 > H3 > H4 ≥ body), body sized to comfort and clamped into the hierarchy,
 **no level below the legibility floor**, pt⇄cap round-trips, determinism, input
 validation. `tipografia-doc.test.ts` proves `5-S-1`'s authored doc: registration,
-the CMYK/FOGRA39/PDF-X contract, physical fit to wall 5 (full-wall vinyl), legibility
+the CMYK/FOGRA52/PDF-X contract, physical fit to wall 5 (full-wall vinyl), legibility
 at the reading distance, and that the real four headings + body render (not a blank).

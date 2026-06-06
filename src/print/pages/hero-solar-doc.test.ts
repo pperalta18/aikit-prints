@@ -19,7 +19,7 @@ import { DEFAULT_WALL_HEIGHT_M, findWallByInvId, resolveWallHeight } from '../sp
  * **dimensions are honest and renderable** — that the chosen real-wall canvas
  * actually lays the *real, sourced* wall-2 data out (no starve/overlap), fits the
  * physical wall it hangs on, and exports through the existing print contract
- * (CMYK / FOGRA39 / PDF/X) — not just that some JSON exists.
+ * (CMYK / FOGRA52 / PDF/X) — not just that some JSON exists.
  */
 
 // public/ lives outside the src bundle root → read the committed file directly.
@@ -41,9 +41,9 @@ describe('hero-solar — registration', () => {
 })
 
 describe('hero-solar — print contract', () => {
-  it('is a CMYK / FOGRA39 / PDF-X print like the rest of the family', () => {
+  it('is a CMYK / FOGRA52 / PDF-X print like the rest of the family', () => {
     expect(doc.color.mode).toBe('cmyk')
-    expect(doc.color.iccProfile).toBe('icc/CoatedFOGRA39.icc')
+    expect(doc.color.iccProfile).toBe('icc/PSOuncoated_v3_FOGRA52.icc')
     expect(['x1a', 'x4']).toContain(doc.color.pdfxVariant)
     expect(RENDER_INTENTS).toContain(doc.color.renderIntent)
     // vivid brand data-viz on dark → not the photo-only 'perceptual' intent.

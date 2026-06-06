@@ -55,9 +55,9 @@ describe.each(WALLS)('cuadro doc — $slug', ({ slug, invId }) => {
     expect(PRINT_PAGES[doc.pageComponentId]).toBe(Cuadro)
   })
 
-  it('exports through the CMYK / FOGRA39 / PDF-X print contract', () => {
+  it('exports through the CMYK / FOGRA52 / PDF-X print contract', () => {
     expect(doc.color.mode).toBe('cmyk')
-    expect(doc.color.iccProfile).toBe('icc/CoatedFOGRA39.icc')
+    expect(doc.color.iccProfile).toBe('icc/PSOuncoated_v3_FOGRA52.icc')
     expect(['x1a', 'x4']).toContain(doc.color.pdfxVariant)
     expect(RENDER_INTENTS).toContain(doc.color.renderIntent)
     // The relief is photographic-grey content → perceptual (smooth gamut), like the raster track.
@@ -76,21 +76,32 @@ describe.each(WALLS)('cuadro doc — $slug', ({ slug, invId }) => {
     expect(geo.mediaHeightPx).toBeLessThan(20000)
   })
 
-  it('carries real, clean cartela copy (title, ≥1 paragraph, meta — no eyebrow/subtitle/divider)', () => {
-    expect(typeof p.title).toBe('string')
-    expect((p.title as string).length).toBeGreaterThan(3)
+  it('carries real, clean cartela copy (title + ≥1 paragraph per label; no eyebrow/subtitle/divider)', () => {
+    // Any cartela a doc declares must carry a real title and at least one non-empty paragraph.
+    const expectCartelaCopy = (t: unknown, ps: unknown) => {
+      expect(typeof t).toBe('string')
+      expect((t as string).length).toBeGreaterThan(3)
+      expect(Array.isArray(ps)).toBe(true)
+      expect((ps as unknown[]).length).toBeGreaterThanOrEqual(1)
+      for (const para of ps as unknown[]) {
+        expect(typeof para).toBe('string')
+        expect((para as string).length).toBeGreaterThan(0)
+      }
+    }
     // The cleaned-up cartela drops the eyebrow, subtitle and the title↔body rule.
     expect(p.eyebrow).toBeUndefined()
     expect(p.subtitle).toBeUndefined()
     expect(p.divider).toBe(false)
-    expect(Array.isArray(p.paragraphs)).toBe(true)
-    expect((p.paragraphs as unknown[]).length).toBeGreaterThanOrEqual(1)
-    for (const para of p.paragraphs as unknown[]) {
-      expect(typeof para).toBe('string')
-      expect((para as string).length).toBeGreaterThan(0)
+    expectCartelaCopy(p.title, p.paragraphs)
+    // A dual-cartela diptych (8-N-1) labels each relief — its second cartela needs its own copy.
+    if (p.dualCartela === true) {
+      expectCartelaCopy(p.title2, p.paragraphs2)
     }
-    expect(typeof p.meta).toBe('string')
-    expect(p.meta as string).toContain('AiKit Live')
+    // The ficha técnica is now opt-in (the clean label reads as a meditation, not a catalogue
+    // entry); when a doc still keeps it, it must read as a real ficha.
+    if (typeof p.meta === 'string') {
+      expect(p.meta).toContain('AiKit Live')
+    }
   })
 
   it('points at committed painting asset(s) (non-trivial PNG; both reliefs for a diptych)', () => {
@@ -134,24 +145,35 @@ describe.each(WALLS)('cuadro doc — $slug', ({ slug, invId }) => {
       Math.min(W * 0.45, 560),
     )
     const secondPainting = typeof p.src2 === 'string'
+    // Mirror the page: a dual-cartela diptych hangs each label an exact ½ m from its relief.
+    const dualCartela = p.dualCartela === true && secondPainting
+    const gapMm = dualCartela ? num(p.cartelaGapMm, 500) : W * 0.022
     const layout = layoutCuadro({
       wallWidthMm: W,
       wallHeightMm: H,
       paintingAspect: DEFAULTS.paintingAspect,
       paintingHeightFraction: DEFAULTS.paintingHeightFraction,
       cartelaWidthMm,
-      gapMm: W * 0.022,
+      gapMm,
       placement: 'left',
       secondPainting,
+      dualCartela,
     })
     const eps = 1e-6
     // diptych walls resolve a second relief; single walls do not
     expect(Boolean(layout.painting2)).toBe(secondPainting)
+    // a dual-cartela diptych resolves a second label too; others keep a single cartela
+    expect(Boolean(layout.cartela2)).toBe(dualCartela)
     // painting fits within the wall height with margin (it's a hung work, not full-bleed)
     expect(layout.painting.height).toBeLessThan(H)
     expect(layout.painting.width / layout.painting.height).toBeCloseTo(DEFAULTS.paintingAspect, 6)
     // every box inside the wall
-    const boxes = [layout.painting, layout.cartela, ...(layout.painting2 ? [layout.painting2] : [])]
+    const boxes = [
+      layout.painting,
+      layout.cartela,
+      ...(layout.painting2 ? [layout.painting2] : []),
+      ...(layout.cartela2 ? [layout.cartela2] : []),
+    ]
     for (const box of boxes) {
       expect(box.x).toBeGreaterThanOrEqual(-eps)
       expect(box.x + box.width).toBeLessThanOrEqual(W + eps)

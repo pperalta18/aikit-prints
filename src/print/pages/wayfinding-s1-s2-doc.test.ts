@@ -18,7 +18,7 @@ import { DEFAULT_WALL_HEIGHT_M, findWallByInvId, resolveWallHeight } from '../sp
  * there. This file covers the *authoring* of the print: `public/prints/marco-10-s-1/doc.json`
  * (the South face of wall 10) and its registration. The unbiased checks here prove the
  * authored **dimensions are honest and renderable** — the page resolves from the registry,
- * exports through the existing CMYK / FOGRA39 / PDF/X contract, physically fits wall 10
+ * exports through the existing CMYK / FOGRA52 / PDF/X contract, physically fits wall 10
  * (the 6.5 m S1→S2 threshold) on its eye band, sizes every text level legibly for the
  * wall's reading distance, and renders the real directional content (room name + arrow),
  * not a blank page. (Wall 10 is the 6.5 m S1→S2 threshold in the current layout.)
@@ -52,9 +52,9 @@ describe('wayfinding-s1-s2 — registration', () => {
 })
 
 describe('wayfinding-s1-s2 — print contract', () => {
-  it('is a CMYK / FOGRA39 / PDF-X print like the rest of the wall-graphics family', () => {
+  it('is a CMYK / FOGRA52 / PDF-X print like the rest of the wall-graphics family', () => {
     expect(doc.color.mode).toBe('cmyk')
-    expect(doc.color.iccProfile).toBe('icc/CoatedFOGRA39.icc')
+    expect(doc.color.iccProfile).toBe('icc/PSOuncoated_v3_FOGRA52.icc')
     expect(['x1a', 'x4']).toContain(doc.color.pdfxVariant)
     expect(RENDER_INTENTS).toContain(doc.color.renderIntent)
     // a flat, vivid typographic graphic → not the photo-only 'perceptual' intent.

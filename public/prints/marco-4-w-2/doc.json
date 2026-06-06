@@ -1,8 +1,8 @@
 {
   "id": "marco-4-w-2",
-  "title": "Marco vacío 4-W-2 — Cuellos — Naranja Mecánica (11.50×2.50 m)",
+  "title": "4-W-2 — Cuellos — Naranja Mecánica · cards de automatización (11.50×3.00 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
-  "pageComponentId": "blank",
+  "pageComponentId": "prensa",
   "theme": "light",
   "dimensions": {
     "trimWidthMm": 11500,
@@ -11,17 +11,19 @@
     "safeMarginMm": 0,
     "cropMarks": false
   },
-  "dpi": 24,
+  "dpi": 30,
   "color": {
     "mode": "cmyk",
-    "iccProfile": "icc/CoatedFOGRA39.icc",
-    "renderIntent": "perceptual",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "relative",
     "pdfxVariant": "x1a"
   },
   "props": {
     "frameWallInvId": 4,
     "wallId": "wall-3",
     "frameId": "4-W-2",
-    "side": -1
+    "side": -1,
+    "marginMm": 450,
+    "photoFraction": 0.3
   }
 }

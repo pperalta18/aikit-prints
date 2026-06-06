@@ -18,7 +18,7 @@ import { DEFAULT_WALL_HEIGHT_M, findWallByInvId, resolveWallHeight } from '../sp
  * there. This file covers the *authoring* of the print: `public/prints/aceleracion/
  * doc.json` and its registration. The unbiased point is to prove the authored
  * **dimensions are honest and renderable** — the page resolves from the registry,
- * exports through the existing CMYK / FOGRA39 / PDF/X contract, physically fits
+ * exports through the existing CMYK / FOGRA52 / PDF/X contract, physically fits
  * wall 11 (the 23 m S3 "Nave E" light-box) on its eye band, and lays the *two real,
  * sourced* wall-11 charts out at the authored canvas — not just that JSON exists.
  */
@@ -42,9 +42,9 @@ describe('aceleracion — registration', () => {
 })
 
 describe('aceleracion — print contract', () => {
-  it('is a CMYK / FOGRA39 / PDF-X print like the rest of the data-viz family', () => {
+  it('is a CMYK / FOGRA52 / PDF-X print like the rest of the data-viz family', () => {
     expect(doc.color.mode).toBe('cmyk')
-    expect(doc.color.iccProfile).toBe('icc/CoatedFOGRA39.icc')
+    expect(doc.color.iccProfile).toBe('icc/PSOuncoated_v3_FOGRA52.icc')
     expect(['x1a', 'x4']).toContain(doc.color.pdfxVariant)
     expect(RENDER_INTENTS).toContain(doc.color.renderIntent)
     // vivid brand data-viz on dark → not the photo-only 'perceptual' intent.

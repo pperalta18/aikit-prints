@@ -38,12 +38,21 @@ export type CuadroLayoutOpts = {
   /** Which side the painting hangs on. Default 'left' (reads painting → label). */
   placement?: CuadroPlacement
   /**
-   * Hang **two** reliefs on the wall instead of one. When set, `placement`/`gapMm`
-   * are ignored and the wall is laid out as a symmetric diptych: the two paintings
-   * are centred on the wall's quarter-points and the cartela floats dead-centre
-   * between them (see {@link layoutCuadro}). Used by the wide 8-N-1 feature wall.
+   * Hang **two** reliefs on the wall instead of one. When set, `placement` is
+   * ignored and the wall is laid out as a symmetric diptych: the two paintings are
+   * centred on the wall's quarter-points. By default the cartela floats dead-centre
+   * between them; with {@link dualCartela} each relief gets its own label instead
+   * (see {@link layoutCuadro}). Used by the wide 8-N-1 feature wall.
    */
   secondPainting?: boolean
+  /**
+   * Give **each** relief of a diptych its own cartela (only meaningful with
+   * `secondPainting`). The two paintings stay on the wall's quarter-points and each
+   * label hangs `gapMm` to its *inner* side — so the wall reads as two independent
+   * museum cuadros (relief · ½ m · label) facing the centre, instead of one shared
+   * central label. Default `false` (the original single centred cartela).
+   */
+  dualCartela?: boolean
 }
 
 export type CuadroLayout = {
@@ -53,6 +62,8 @@ export type CuadroLayout = {
   painting2?: CuadroBox
   /** The cartela (label) column box — full painting height; text centres inside. */
   cartela: CuadroBox
+  /** The second cartela box — only present for a `dualCartela` diptych (labels painting 2). */
+  cartela2?: CuadroBox
   /** The whole hung group, horizontally centred on the wall. */
   group: { x: number; width: number }
 }
@@ -73,10 +84,11 @@ function pos(name: string, v: number): number {
  *
  * With `secondPainting`, the wall becomes a symmetric **diptych**: two reliefs of
  * the same size centred on the wall's quarter-points (so they spread evenly across
- * the run) with the cartela floating dead-centre between them; `placement`/`gapMm`
- * are then ignored. Deterministic; throws on non-positive inputs, a fraction
- * outside (0, 1], an unknown placement, a group too wide to fit the wall, or a
- * diptych whose paintings overflow / collide with the centred cartela.
+ * the run). By default the cartela floats dead-centre between them (`placement`/`gapMm`
+ * ignored); with `dualCartela` each relief instead gets its own label hung `gapMm` to
+ * its inner side, so the wall reads as two independent cuadros. Deterministic; throws
+ * on non-positive inputs, a fraction outside (0, 1], an unknown placement, a group too
+ * wide to fit the wall, or a diptych whose paintings overflow / collide with the cartela(s).
  */
 export function layoutCuadro(opts: CuadroLayoutOpts): CuadroLayout {
   const wallWidthMm = pos('wallWidthMm', opts.wallWidthMm)
@@ -102,21 +114,45 @@ export function layoutCuadro(opts: CuadroLayoutOpts): CuadroLayout {
   // is centred on a wall quarter-point (¼ and ¾ of the run) so they read as evenly
   // spread across the run, and the museum label floats dead-centre between them.
   if (opts.secondPainting) {
-    const cartelaX = (wallWidthMm - cartelaWidthMm) / 2
     const p1x = wallWidthMm * 0.25 - paintingW / 2
     const p2x = wallWidthMm * 0.75 - paintingW / 2
     if (p1x < 0 || p2x + paintingW > wallWidthMm) {
       throw new Error(`layoutCuadro: diptych paintings (${paintingW.toFixed(1)} mm) overflow the wall (${wallWidthMm} mm)`)
     }
-    // The centred cartela must not collide with either relief.
+    const painting = { x: p1x, y, width: paintingW, height: paintingH }
+    const painting2 = { x: p2x, y, width: paintingW, height: paintingH }
+    const group = { x: p1x, width: p2x + paintingW - p1x }
+
+    // ── dual cartela: two independent cuadros, each label hung gapMm to its inner side ──
+    // (relief · gap · label) on the left, mirrored (label · gap · relief) on the right, so
+    // each cartela sits beside its own work and the wall reads as a matched pair.
+    if (opts.dualCartela) {
+      const cartela1X = p1x + paintingW + gapMm // inner (right) side of relief 1
+      const cartela2X = p2x - gapMm - cartelaWidthMm // inner (left) side of relief 2
+      if (cartela1X + cartelaWidthMm > cartela2X) {
+        throw new Error(
+          `layoutCuadro: dual cartelas (${cartelaWidthMm.toFixed(1)} mm) collide in the centre — narrow the cartela or the gap`,
+        )
+      }
+      return {
+        painting,
+        painting2,
+        cartela: { x: cartela1X, y, width: cartelaWidthMm, height: paintingH },
+        cartela2: { x: cartela2X, y, width: cartelaWidthMm, height: paintingH },
+        group,
+      }
+    }
+
+    // ── single centred cartela floating dead-centre between the two reliefs ──
+    const cartelaX = (wallWidthMm - cartelaWidthMm) / 2
     if (p1x + paintingW > cartelaX || cartelaX + cartelaWidthMm > p2x) {
       throw new Error(`layoutCuadro: diptych cartela overlaps a painting — widen the wall or narrow the cartela`)
     }
     return {
-      painting: { x: p1x, y, width: paintingW, height: paintingH },
-      painting2: { x: p2x, y, width: paintingW, height: paintingH },
+      painting,
+      painting2,
       cartela: { x: cartelaX, y, width: cartelaWidthMm, height: paintingH },
-      group: { x: p1x, width: p2x + paintingW - p1x },
+      group,
     }
   }
 

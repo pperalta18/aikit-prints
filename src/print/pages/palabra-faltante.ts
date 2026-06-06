@@ -59,368 +59,191 @@ export function shuffle<T>(items: ReadonlyArray<T>, rng: () => number): T[] {
   return out
 }
 
-/* ── the corpus: hand-crafted gems ────────────────────────────────────────────── */
+/* ── the corpus: reasoning-only, un-memorizable phrases ───────────────────────── */
 
 /**
- * The gems — sentences engineered so the missing last word can only be supplied by
- * *reasoning*, not by statistics: logic, theory of mind, intuitive & counter-
- * intuitive physics, arithmetic traps, common sense, causality, intention, self-
- * reference, riddles. Most are weight 2 (foreground); a few 1. The answer (`a`) is
- * the secret — it never prints, it only sizes the blank.
+ * The corpus. Every phrase is a fill-in-the-blank whose missing LAST word can only be
+ * supplied by *reasoning about that specific, novel situation* — model another mind,
+ * simulate the physics, run the mechanism, deduce, compute, rotate the scene, infer the
+ * unsaid. None is a known riddle, quote, fact or cliché: each is an arbitrary instance
+ * that exists written nowhere, so it cannot be completed from memory. That is the whole
+ * thesis — predicting this word *is* intelligence, not recall.
+ *
+ * Authored by generation + adversarial filtering: a solver kept only the determinate,
+ * novel, non-obvious phrases, and a memory-only attacker discarded anything completable
+ * without reasoning. Weights drive the sea's depth: the evocative world-model phrases sit
+ * in the foreground (w 2); the (equally un-memorizable but visually repetitive) numeric
+ * puzzles recede into the haze (w 0).
  */
 export const GEMS: Phrase[] = [
-  // ── lógica / silogismos ──
-  { t: 'Si todos los Bloops son Razzies y todos los Razzies son Lazzies, entonces todos los Bloops son', a: 'Lazzies' },
-  { t: 'O llueve o hace sol. No hace sol. Por tanto,', a: 'llueve' },
-  { t: 'Si p implica q, y q es falso, entonces p también es', a: 'falso' },
-  { t: 'Ningún sabio teme a la muerte; Sócrates es sabio; luego Sócrates no la', a: 'teme' },
-  { t: 'Si A es más alto que B y B más alto que C, el más bajo de los tres es', a: 'C' },
-  { t: 'Todos los cuervos que he visto son negros, así que apuesto a que el próximo también lo', a: 'será' },
-  { t: 'Si esta caja contiene una sola verdad, la frase «esta caja miente» tiene que ser', a: 'falsa' },
-  { t: 'Solo uno dice la verdad, y los tres se acusan entre sí; el inocente es el que acusó al', a: 'culpable' },
-  { t: 'Para que el argumento sea válido no basta con que las premisas convenzan: tienen que ser', a: 'verdaderas' },
-
-  // ── teoría de la mente ──
-  { t: 'Ana guarda su canica en la cesta y se va; Luis la cambia a la caja; al volver, Ana la busca en la', a: 'cesta' },
-  { t: 'Él cree que ella no sabe que él lo sabe, así que delante de ella seguirá', a: 'fingiendo' },
-  { t: 'Ana sabe que Luis va a mentirle, y Luis sabe que ella lo sabe; por eso, esta vez, Luis le dirá la', a: 'verdad' },
-  { t: 'Le regalé justo lo que a mí me habría gustado, sin pararme a pensar en lo que quería', a: 'él' },
-  { t: 'Sé que sabes que lo sé, pero finjo no saberlo para que tú sigas', a: 'tranquilo' },
-  { t: 'No me lo dijo con palabras: me lo dijo evitando mirarme a los', a: 'ojos' },
-  { t: 'Sonreía en la foto, pero al que de verdad miraba no era a la cámara: era a', a: 'ella' },
-  { t: 'Calló no porque no supiera la respuesta, sino para no dejar en evidencia a su', a: 'amigo' },
-
-  // ── física intuitiva ──
-  { t: 'Suelto un martillo y una pluma a la vez en la Luna: los dos tocan el suelo a la', a: 'vez' },
-  { t: 'Metí el helado en el coche, conduje dos horas bajo el sol y al llegar estaba', a: 'derretido' },
-  { t: 'Empujo el vaso un poco más hacia el borde de la mesa y al final acaba en el', a: 'suelo' },
-  { t: 'Lleno el globo de helio, abro la mano y sube hasta tocar el', a: 'techo' },
-  { t: 'Si bajo de golpe mi lado del balancín, el lado de mi hermano', a: 'sube' },
-  { t: 'El hielo flota porque, al congelarse, el agua se vuelve menos', a: 'densa' },
-  { t: 'Inclino la taza llena un poco más de la cuenta y el café se', a: 'derrama' },
-  { t: 'Tiro la piedra al centro del estanque y, un instante después, a la orilla llegan las', a: 'ondas' },
-  { t: 'Corro con el vaso lleno hasta arriba y, si no freno con cuidado, el agua se me', a: 'cae' },
-  { t: 'Dejo la cuchara en la sopa caliente y al rato el mango también está', a: 'caliente' },
-  { t: 'Suelto la pelota en lo alto de la rampa y, sola, empieza a', a: 'rodar' },
-  { t: 'Si quito el vaso de debajo, la torre de monedas se viene', a: 'abajo' },
-
-  // ── física contraintuitiva ──
-  { t: 'Si la Tierra dejara de girar de repente, todo lo suelto saldría disparado hacia el', a: 'este' },
-  { t: 'En caída libre dentro del ascensor, la báscula bajo mis pies marcaría', a: 'cero' },
-  { t: 'Un kilo de hierro y un kilo de plumas, en el vacío, pesan exactamente lo', a: 'mismo' },
-  { t: 'El espejo no invierte arriba y abajo; lo que parece invertir es izquierda y', a: 'derecha' },
-  { t: 'Cuanto más rápido gira la patinadora, más recoge los brazos para no', a: 'frenar' },
-
-  // ── matemática trampa ──
-  { t: 'Un bate y una pelota cuestan 1,10 €; el bate cuesta un euro más que la pelota; la pelota cuesta', a: '5 céntimos' },
-  { t: 'Si 5 máquinas tardan 5 minutos en hacer 5 piezas, 100 máquinas harán 100 piezas en', a: '5 minutos' },
-  { t: 'El nenúfar dobla su superficie cada día y cubre el lago entero el día 48; medio lago lo cubrió el día', a: '47' },
-  { t: 'Tengo tantos hermanos como hermanas, pero cada hermana tiene la mitad de hermanas que de', a: 'hermanos' },
-  { t: 'Pagué con un billete de 20, la cuenta era de 13,40 y me devolvieron', a: '6,60 €' },
-  { t: 'Si giro la hoja 180 grados dos veces seguidas, vuelvo a leerla del', a: 'derecho' },
-  { t: 'La media de 2, 4 y 9 no es 5: es', a: '5' },
-  { t: 'Doblo un folio por la mitad siete veces y el grosor pasa a ser de 128', a: 'capas' },
-  { t: 'Si un ladrillo pesa un kilo más medio ladrillo, el ladrillo entero pesa', a: '2 kilos' },
-
-  // ── secuencias ──
-  { t: '2, 4, 8, 16,', a: '32' },
-  { t: '1, 1, 2, 3, 5, 8,', a: '13' },
-  { t: '1, 4, 9, 16, 25,', a: '36' },
-  { t: '2, 3, 5, 7, 11,', a: '13' },
-  { t: '1, 3, 6, 10, 15,', a: '21' },
-  { t: 'O, T, T, F, F, S, S,', a: 'E' },
-  { t: 'Lunes, martes, miércoles, jueves,', a: 'viernes' },
-  { t: 'Do, re, mi, fa, sol, la,', a: 'si' },
-  { t: 'Norte, sur, este,', a: 'oeste' },
-
-  // ── sentido común / mundo ──
-  { t: 'Se dejó la leche tres días fuera de la nevera y al olerla supo que estaba', a: 'agria' },
-  { t: 'Olvidó regar la planta un mes entero y la encontró completamente', a: 'seca' },
-  { t: 'Dejó el pan demasiado tiempo en la tostadora y salió todo', a: 'quemado' },
-  { t: 'Salió a la calle con aguanieve sin abrigo y volvió a casa', a: 'helado' },
-  { t: 'Encendió la cerilla, la acercó a la mecha y la vela por fin se', a: 'encendió' },
-  { t: 'El semáforo se puso en rojo y, uno tras otro, los coches se', a: 'pararon' },
-  { t: 'Plantó la semilla en marzo y, ya en pleno verano, recogió el', a: 'fruto' },
-  { t: 'Tiró la copa sin querer y, contra el suelo de mármol, se hizo', a: 'añicos' },
-  { t: 'Dejó las llaves dentro y cerró de un portazo: se había quedado', a: 'fuera' },
-  { t: 'Metió el móvil en el bolsillo del pantalón y lo lavó: ahora no', a: 'enciende' },
-  { t: 'Pulsa el interruptor al entrar y, de golpe, la habitación se llena de', a: 'luz' },
-
-  // ── causalidad / temporal ──
-  { t: 'Primero se ata bien los cordones y solo después echa a', a: 'correr' },
-  { t: 'Vio el relámpago, contó despacio hasta tres y entonces llegó el', a: 'trueno' },
-  { t: 'Rompió el espejo y, supersticioso, temió siete años de mala', a: 'suerte' },
-  { t: 'Sopló las velas de un soplido y todos se pusieron a', a: 'aplaudir' },
-  { t: 'Apretó el freno a fondo y, chirriando, el coche por fin se', a: 'detuvo' },
-  { t: 'Quitó la última pieza del Jenga y la torre entera se vino', a: 'abajo' },
-  { t: 'Llovió toda la noche y por la mañana el río bajaba', a: 'crecido' },
-
-  // ── intención / emoción ──
-  { t: 'Llevaba un ramo de flores y no paraba de mirar el reloj: estaba', a: 'esperando' },
-  { t: 'Le temblaba la voz y bajaba la mirada cada vez que hablaba: estaba', a: 'mintiendo' },
-  { t: 'Leyó la última línea de la carta, sonrió y se le saltaron las', a: 'lágrimas' },
-  { t: 'Le devolvió el anillo en silencio, sin decir una sola', a: 'palabra' },
-  { t: 'Apagó el móvil, respiró hondo, llamó a la puerta y entró a la', a: 'entrevista' },
-  { t: 'Guardó aquel secreto tantos años que ya no recordaba cómo', a: 'contarlo' },
-  { t: 'Dejó la nota en la nevera y se marchó antes de que ella se', a: 'despertara' },
-  { t: 'Aplaudían todos menos él, que apretaba los dientes de pura', a: 'envidia' },
-
-  // ── autorreferencia / lenguaje ──
-  { t: 'Lee esta frase al derecho y luego al revés: entenderás justo lo', a: 'contrario' },
-  { t: 'La palabra «corto» se escribe, curiosamente, más larga que la palabra', a: 'larga' },
-  { t: 'En la oración «el gato persiguió al ratón», quien acabó persiguiendo fue el', a: 'gato' },
-  { t: 'Si a la palabra «rata» le quito la primera letra, me queda', a: 'ata' },
-  { t: 'Leída de derecha a izquierda, la palabra ROMA se convierte en', a: 'AMOR' },
-  { t: 'Escribir «ortografía» con falta sería, irónicamente, una falta de', a: 'ortografía' },
-  { t: 'Esta frase tiene exactamente seis', a: 'palabras' },
-  { t: 'Para entender qué significa «recursivo», primero hay que entender qué significa', a: 'recursivo' },
-
-  // ── acertijos ──
-  { t: 'El padre de Ana tiene cinco hijas: Lala, Lela, Lila, Lola y', a: 'Ana' },
-  { t: 'Anda sobre cuatro patas al amanecer, sobre dos al mediodía y sobre tres al', a: 'atardecer' },
-  { t: 'Cuanto más le quitas, más grande se vuelve: el', a: 'agujero' },
-  { t: 'Tiene ciudades pero no casas, ríos pero no agua, bosques pero no árboles: el', a: 'mapa' },
-  { t: 'Cuanto más se seca, más mojada acaba: la', a: 'toalla' },
-  { t: 'El cirujano mira al niño herido y dice «no puedo operarlo, es mi hijo», y sin embargo no es su padre: es su', a: 'madre' },
-  { t: 'Vuela sin alas y llora sin ojos; allá donde va, oscurece el cielo: la', a: 'nube' },
-  { t: 'Cuántas veces puedes restarle 3 a 27: una sola', a: 'vez' },
-  { t: 'Dos padres y dos hijos van a pescar y solo pescan tres peces, uno para cada uno; y sin embargo son solo', a: 'tres' },
-
-  // ── modelo del mundo / abstracto ──
-  { t: 'El mapa, por detallado que sea, nunca llega a ser el', a: 'territorio' },
-  { t: 'Le di mi palabra, y una palabra dada deja al instante de ser', a: 'mía' },
-  { t: 'Si todos pensáramos exactamente igual, nadie tendría ya nada nuevo que', a: 'decir' },
-  { t: 'Una mentira repetida mil veces no se convierte por ello en', a: 'verdad' },
-  { t: 'Predecir bien la siguiente palabra exige, en el fondo, comprender el', a: 'mundo' },
+  // ── la tesis (hero) + meta: frases sobre la propia pared, no memorizables ──
   { t: 'Para acertar esta última palabra hace falta algo más que memoria: hace falta', a: 'inteligencia', w: 2 },
-  { t: 'No completas el hueco buscando en la memoria: lo completas', a: 'razonando' },
-  { t: 'Lo que parece un simple autocompletado esconde, en realidad, un modelo del', a: 'mundo' },
-
-  // ── ciencia / cultura general que exige razonar ──
-  { t: 'La cura definitiva del cáncer todavía no la conoce', a: 'nadie' },
-  { t: 'Si el hielo de los polos se derrite del todo, el nivel del mar no baja: sube hasta cubrir la', a: 'costa' },
-  { t: 'Cuando la Luna se mete justo entre el Sol y la Tierra, lo que vemos es un', a: 'eclipse' },
-  { t: 'Las plantas, a plena luz, respiran al revés que nosotros: toman CO₂ y sueltan', a: 'oxígeno' },
-  { t: 'Un año en Marte dura más que en la Tierra porque su órbita es mucho más', a: 'larga' },
-  { t: 'El relámpago se ve antes que el trueno porque la luz viaja más rápido que el', a: 'sonido' },
-  { t: 'Si dividieras cualquier número entre cero, el resultado sencillamente no está', a: 'definido' },
+  { t: 'Si pudieras contestar esto de memoria, no demostraría nada; por eso hay que', a: 'razonarlo', w: 2 },
+  { t: 'Ningún texto del mundo traía ya escrita esta palabra: hay que', a: 'deducirla', w: 2 },
+  { t: 'Esta palabra no se recuerda, se', a: 'piensa', w: 2 },
+  { t: 'De nada sirve aquí haber leído mucho si no has', a: 'entendido', w: 2 },
+  // ── teoría de la mente — modelar otra mente ──
+  { t: 'Le digo a Nuria que el regalo está bajo la cama, pero lo cambio al armario; Nuria mirará bajo la', a: 'cama', w: 2 },
+  { t: 'Le juro a Hugo que el dinero está en el sobre, pero lo escondo en el libro; Hugo abrirá el', a: 'sobre', w: 2 },
+  { t: 'Aitor cree que su tren sale del andén 3; lo mueven al 7 sin avisarle; Aitor irá al andén', a: '3', w: 2 },
+  { t: 'Elsa cree que la reunión es a las cuatro; la adelantaron a las dos y nadie le avisó; Elsa llegará a las', a: 'cuatro', w: 2 },
+  { t: 'Dani guarda su carta en el zapato; sin verlo la paso a la mochila; la buscará primero en su', a: 'zapato', w: 2 },
+  { t: 'Cambio el bombón de la caja roja a la dorada mientras Noa no mira; Noa, al elegir, abrirá la', a: 'roja', w: 2 },
+  { t: 'Iván cree que el partido es el sábado; lo cambiaron al domingo sin decírselo; Iván irá el', a: 'sábado', w: 2 },
+  { t: 'Le digo a Saúl que las pinturas están en el estante de arriba, pero las bajé al de abajo; Saúl mirará', a: 'arriba', w: 1 },
+  { t: 'Le prometo a Celia que el cargador está en el cajón, pero lo dejé en el coche; Celia abrirá el', a: 'cajón', w: 1 },
+  { t: 'Gael guarda su diario bajo el colchón; sin que lo note lo paso a la estantería; Gael alzará el', a: 'colchón', w: 1 },
+  { t: 'Ruth cree que la peluquería abre a las nueve; cambió a las once y nadie se lo dijo; Ruth llegará a las', a: 'nueve', w: 1 },
+  { t: 'Le digo a Inés que su sombrero está en la entrada, mas lo colgué en su cuarto; Inés irá a la', a: 'entrada', w: 1 },
+  { t: 'Bea cree que su perro duerme en la cesta; lo subieron al sofá sin avisarle; Bea lo buscará en la', a: 'cesta', w: 1 },
+  { t: 'Oscar esconde el mapa en su bota; yo lo escondo en su gorro mientras come; Oscar revisará primero la', a: 'bota', w: 1 },
+  { t: 'Crees que mi calma significa que no sé nada, cuando es justo lo que más debería', a: 'preocuparte', w: 1 },
+  // ── pragmática — inferir lo que NO se dice ──
+  { t: 'Mi cuñado prueba el vino que traje y dice «para cocinar va de lujo»; quiere decir que es', a: 'malo', w: 2 },
+  { t: 'Pregunto si llegaré a tiempo; el taxista mira el reloj y suspira «yo iría rezando»: llegaré', a: 'tarde', w: 2 },
+  { t: 'El mecánico chasquea la lengua, mira el capó y dice «con esto te compras otro coche»; la avería es', a: 'cara', w: 1 },
+  { t: 'Le pido al técnico que arregle el portátil hoy y resopla «hoy, dice usted… qué optimista»; me deja claro que hoy', a: 'no', w: 1 },
+  { t: 'Pregunté si el hotel estaba cerca y el folleto dijo «a un agradable paseo matutino»: está', a: 'lejos', w: 1 },
+  // ── mundo contrafactual — razonar con otras reglas ──
+  { t: 'Si la lluvia cayera de abajo hacia arriba, para no mojarte llevarías el paraguas en los', a: 'pies', w: 2 },
+  { t: 'Si el agua hirviera al enfriarse, para hacer una sopa caliente meterías la olla en el', a: 'congelador', w: 1 },
+  { t: 'Si el invierno fuera la estación más calurosa, para esquiar viajarías en pleno', a: 'verano', w: 2 },
+  { t: 'Si el azúcar supiera amargo y la sal dulce, el postre lo endulzarías con un poco de', a: 'sal', w: 2 },
+  { t: 'Si las escaleras subieran cuando bajas, para llegar al ático tendrías que ir hacia', a: 'abajo', w: 2 },
+  { t: 'Si los gatos ladraran y los perros maullaran, para imitar a un perro tendrías que', a: 'maullar', w: 2 },
+  { t: 'Si el agua cayera hacia el techo, el desagüe de la bañera tendría que estar', a: 'arriba', w: 1 },
+  { t: 'Si las velas crecieran al arder, la vela más vieja sería siempre la más', a: 'alta', w: 1 },
+  { t: 'Si lo pesado flotara y lo ligero se hundiera, para que un globo subiera habría que', a: 'lastrarlo', w: 2 },
+  { t: 'Si la nieve fuera negra y el carbón blanco, de noche solo verías a lo lejos el', a: 'carbón', w: 1 },
+  { t: 'Si comer diera hambre y ayunar saciara, el banquete más copioso te dejaría', a: 'hambriento', w: 2 },
+  { t: 'Si los caminos se alargaran cuanto más andas, para llegar antes valdría más quedarse', a: 'quieto', w: 2 },
+  { t: 'Si los recuerdos se formaran del futuro, recordarías a quién conocerás pero no a quién', a: 'conociste', w: 2 },
+  // ── física — simular, no recordar ──
+  { t: 'Apoyo una escalera casi vertical y subo: el peso me empuja el pie de la escalera hacia', a: 'afuera', w: 1 },
+  { t: 'Hundo el centro del tablero de un puente colgante de juguete; las cimas de las torres se inclinan hacia', a: 'dentro', w: 1 },
+  { t: 'Pego un chicle a la llanta de una bici que avanza; va más rápido cuando el chicle está', a: 'arriba', w: 2 },
+  // ── mecanismos — simular el dispositivo ──
+  { t: 'Engranaje de 30 dientes mueve a otro de 10; cuando el grande da una vuelta, el chico da', a: 'tres', w: 2 },
+  { t: 'Engranaje de 12 dientes arrastra a uno de 36; por cada vuelta del chico, el grande gira un', a: 'tercio', w: 2 },
+  { t: 'Tres engranajes forman triángulo y se tocan entre sí; intento girar uno y el conjunto queda', a: 'trabado', w: 2 },
+  { t: 'Echo una piedra al cubo lleno de agua hasta el borde; el agua que se derrama vuelve el cubo más', a: 'pesado', w: 2 },
+  { t: 'Pongo dos pesas de 3 kg en un platillo y una de 5 kg en el otro; baja el platillo de las', a: 'pesas de 3 kg', w: 2 },
+  { t: 'Tubo en U con mercurio: soplo fuerte por la rama izquierda y el mercurio de esa rama', a: 'baja', w: 1 },
+  { t: 'Cuelgo un cubo de un muelle largo; al quitarle agua el muelle se estira', a: 'menos', w: 2 },
+  { t: 'El niño gordo se sienta cerca del eje del balancín para equilibrar al flaco, que está mucho más', a: 'lejos', w: 1 },
+  { t: 'Sujeto el cascanueces muy cerca de la bisagra para apretar la nuez, así que me cuesta', a: 'más', w: 1 },
+  // ── semántica de palabras inventadas — componer reglas nuevas ──
+  { t: 'Si «mor» es duplicar y «kan» es restar tres, aplicar «mor» y luego «kan» a cinco da', a: 'siete', w: 2 },
+  { t: 'En este idioma «pum» es el doble y «mox» resta tres; un «pum-mox» de ocho vale', a: 'trece', w: 1 },
+  { t: 'Si «zir» es ayer y «zir-zir» anteayer, el «zir» del martes fue un', a: 'lunes', w: 1 },
+  { t: 'En tron «kel» es izquierda y «ker» derecha; si giras «kel», luego «kel», luego «ker», miras a la', a: 'izquierda', w: 2 },
+  { t: 'Si «vra» significa cero de algo, un «vra-pelo» en la cabeza significa estar', a: 'calvo', w: 1 },
+  { t: 'Si «hek» es restar la mitad, aplicar «hek» dos veces a veinte deja', a: 'cinco', w: 2 },
+  { t: 'Si «kli» quiere decir frío y «kli-kli» helado, un hielo está casi siempre', a: 'kli-kli', w: 2 },
+  { t: 'Si «bek» significa hace una hora y «bek-bek» hace dos, el «bek» de las cinco fueron las', a: 'cuatro', w: 2 },
+  { t: 'En este idioma «lum» es brillante y «lum-no» apagado; una bombilla rota está', a: 'lum-no', w: 1 },
+  { t: 'Si «zum» pinta de azul y «rojín» mezcla rojo encima, un objeto «zum-rojín» se ve', a: 'morado', w: 1 },
+  { t: 'Si «kip» gira 90° a la izquierda y miras al sur, «kip-kip-kip» te deja mirando al', a: 'oeste', w: 1 },
+  { t: 'Si «vor» avanza una casilla y «rev» invierte el sentido de avance, tras «vor-rev-vor» estás en la casilla', a: 'inicial', w: 2 },
+  { t: 'Si «luz» aclara hasta blanco y «som» oscurece hasta negro, un gris tras «som-luz-som» tira a', a: 'negro', w: 1 },
+  // ── perspectiva y rotación mental ──
+  { t: 'Bárbara conduce hacia el sur y al llegar al cruce gira a su izquierda; ahora va hacia el', a: 'este', w: 2 },
+  { t: 'Si te sientas justo enfrente de mí, mi flanco izquierdo te queda a tu mano', a: 'derecha', w: 2 },
+  { t: 'Pinto en la ventana un 6 mirando a la calle; desde dentro de casa lo veo como un', a: 'nueve', w: 2 },
+  { t: 'Vamos cara a cara y doy un paso a mi derecha; para ti me he movido hacia tu', a: 'izquierda', w: 2 },
+  { t: 'El barco va al norte y a babor avisto un faro; si después doy media vuelta, el faro queda a', a: 'estribor', w: 1 },
+  { t: 'Voy en bici hacia el oeste y el sol del amanecer me da en la', a: 'espalda', w: 2 },
+  { t: 'La grúa mira al este y rota su brazo media vuelta; ahora la pluma señala al', a: 'oeste', w: 1 },
+  { t: 'Saludo con mi mano izquierda a alguien sentado frente a mí; desde su perspectiva el saludo llega por su lado', a: 'derecho', w: 2 },
+  { t: 'Giro tres cuartos de vuelta a la derecha partiendo de mirar al norte; acabo mirando al', a: 'oeste', w: 1 },
+  { t: 'El avión despega al norte, gira a estribor y sube; ahora vuela rumbo al', a: 'este', w: 1 },
+  { t: 'Estamos cara a cara dándonos la mano; mi pulgar derecho toca tu pulgar', a: 'derecho', w: 1 },
+  { t: 'El caballo del jinete que viene de frente cojea de su pata izquierda; yo la veo a mí', a: 'derecha', w: 1 },
+  { t: 'Camino de espaldas hacia el sur y giro la cabeza a mi derecha; miro hacia el', a: 'este', w: 1 },
+  // ── deducción de solución única ──
+  { t: 'Cuatro corredores: Ana llegó tras Bea, Bea tras Cid, Cid tras Dux. El primero en cruzar fue', a: 'Dux', w: 1 },
+  { t: 'En círculo de tres, Gus va a la derecha de Tin, y Tin a la de Beo; a la derecha de Gus va', a: 'Beo', w: 2 },
+  { t: 'Ren llegó antes que Sol pero después que Tao; nadie llegó entre Ren y Tao. Justo antes de Ren llegó', a: 'Tao', w: 1 },
+  { t: 'Tres corredores: gorra no llegó último y bufanda llegó primera; el último fue el de', a: 'guantes', w: 1 },
+  { t: 'Bru no usó rojo ni azul, Cor no usó azul, y alguien sí usó azul: fue', a: 'Dani', w: 1 },
+  // ── simulación espacial / estado ──
+  { t: 'Apilo platos: primero el hondo, luego el llano, encima el de postre; el que toca la mesa es el', a: 'hondo', w: 1 },
+  { t: 'Tengo cartas boca abajo D, F, H, J; doy la vuelta a la pila entera; ahora la de arriba es la', a: 'J', w: 1 },
+  { t: 'Toallas de abajo arriba: amarilla, rosa, lila, verde; quito las dos de arriba; queda la', a: 'rosa', w: 1 },
+  { t: 'Tres anillas en un palo: ancha, media, fina de abajo arriba; saco la de arriba y la pongo abajo; ahora arriba está la', a: 'media', w: 1 },
+  { t: 'Cinco fichas en torre: 2,4,6,8,10 de arriba abajo; intercambio la primera con la última; ahora la cima marca', a: '10', w: 1 },
+  { t: 'Apilo cubos de menor a mayor empezando arriba; luego volteo la torre; el cubo más grande queda ahora', a: 'arriba', w: 1 },
+  { t: 'Tres vasos boca abajo, volteo el 1 y el 3, luego el 2 y el 3; al final boca arriba quedan el 1 y el', a: '2', w: 1 },
+  { t: 'Apilo monedas de 1, 2 y 5; cambio la de arriba por la del medio; ahora arriba está la de', a: '2', w: 1 },
+  { t: 'En estantería pongo A sobre B sobre C; quito C de debajo y lo poso encima de A; el que ahora toca el estante es', a: 'B', w: 1 },
+  { t: 'Cola de tres taquillas: delante Bea, detrás Ciro, último Dani; Bea se va y Dani corre al frente; segundo queda', a: 'Ciro', w: 1 },
+  { t: 'Pila de bandejas 7,3,5,1 de abajo arriba; quito las dos de arriba; la cima la marca ahora el', a: '3', w: 1 },
+  { t: 'En mesa pongo de izquierda a derecha sal, aceite, pan; giro el conjunto 180 grados; a la izquierda queda ahora el', a: 'pan', w: 1 },
+  { t: 'Tula en lirio 1, Veni en el 2, Zoa en el 3; Tula salta al 3, Zoa al 1; en el centro sigue', a: 'Veni', w: 1 },
+  { t: 'Apilo sombreros: copa abajo, gorra, boina arriba; saco el de en medio y lo pongo encima; ahora arriba está la', a: 'gorra', w: 1 },
+  { t: 'Cola: Mara, luego Nilo, luego Olga; entra Pol y se cuela tras Mara; tercero queda ahora', a: 'Nilo', w: 1 },
+  { t: 'Apilo abajo-arriba parda, beis, crema; cambio la del medio con la de abajo; en medio queda la', a: 'parda', w: 1 },
+  // ── orden causal y temporal ──
+  { t: 'Apilé los libros: el rojo bajo el azul, y el verde sobre el azul; el de más arriba es el', a: 'verde', w: 1 },
+  { t: 'El autobús pasa cada 15 minutos; el último fue a las 8:50, así que el siguiente es a las', a: 'nueve y cinco', w: 1 },
+  { t: 'Pongo el pollo 40 minutos al horno; quiero comer a las 2, así que debo encenderlo a la', a: 'una y veinte', w: 1 },
+  { t: 'Tomo la pastilla cada 8 horas; la tomé a las 7 de la mañana, la próxima es a las', a: 'tres', w: 1 },
+  { t: 'Subí dos pisos, bajé uno y subí tres; partí del 4 y acabé en el piso', a: 'ocho', w: 1 },
+  { t: 'El huevo cuece en 7 minutos; lo eché al agua a las 9:58, estará listo a las', a: 'diez y cinco', w: 1 },
+  { t: 'El tren tarda 50 min y sale a las 6:40; si quiero llegar a las 7:30 llego con margen de', a: 'cero', w: 1 },
+  { t: 'Eché tres monedas al bote: 50 c, luego 20, luego 10; la del medio fue la de', a: 'veinte', w: 1 },
+  { t: 'La reunión dura 90 min y empieza a las 16:45; acabará a las', a: 'seis y cuarto', w: 1 },
+  { t: 'Salté del azulejo 3 al 7, retrocedí 2 y avancé 4; acabé en el azulejo', a: 'nueve', w: 1 },
+  { t: 'La vela mide 12 cm y baja 2 por hora; se encendió a las 5, se apagará a las', a: 'once', w: 1 },
+  { t: 'Giré a la derecha tres veces seguidas, así que ahora miro como si hubiera girado una vez', a: 'a la izquierda', w: 1 },
+  { t: 'Mezclé la pintura: primero azul, luego rojo, al final amarillo; el penúltimo color fue el', a: 'rojo', w: 1 },
+  // ── número por restricciones — calcular, nunca recordar ──
+  { t: 'Busco un número de dos cifras, múltiplo de 7 y cuyas cifras suman 11; es el', a: '56', w: 0 },
+  { t: 'Pienso un número entre 40 y 60, múltiplo de 9 y par; es el', a: 'cincuenta y cuatro', w: 0 },
+  { t: 'El número es primo, está entre 50 y 70 y acaba en 9; ese número es el', a: '59', w: 0 },
+  { t: 'Quiero un número de tres cifras iguales que sea múltiplo de 5; es el', a: '555', w: 0 },
+  { t: 'Hay un número par entre 70 y 80 cuyas cifras suman 13; es el', a: '76', w: 0 },
+  { t: 'Pienso un cuadrado perfecto de dos cifras que es múltiplo de 4 y mayor que 50; es el', a: '64', w: 0 },
+  { t: 'El número es impar, mayor que 20, menor que 30 y múltiplo de 5; es el', a: '25', w: 0 },
+  { t: 'Quiero un número de dos cifras donde las decenas triplican a las unidades y suman 8; es el', a: '62', w: 0 },
+  { t: 'Hay un primo entre 30 y 40 cuyas cifras suman 10; es el', a: '37', w: 0 },
+  { t: 'Busco un múltiplo de 8 entre 50 y 70 cuyas cifras suman 11; es el', a: '56', w: 0 },
+  { t: 'Pienso un número par de dos cifras, múltiplo de 11, mayor que 70; es el', a: '88', w: 0 },
+  { t: 'Es múltiplo de 3 y de 5, mayor que 40 y menor que 50: ese número es el', a: '45', w: 0 },
+  { t: 'Quiero un cubo perfecto de dos cifras menor que 50; es el', a: '27', w: 0 },
+  { t: 'Hay un número impar entre 80 y 90 cuyas cifras suman 17; es el', a: '89', w: 0 },
+  { t: 'Busco un múltiplo de 7 entre 60 y 80 cuyas cifras suman 9; es el', a: '63', w: 0 },
+  { t: 'Busco un primo entre 40 y 50 cuyas cifras suman 5; es el', a: '41', w: 0 },
+  { t: 'Pienso un número par de tres cifras, capicúa, menor que 250 y múltiplo de 11; es el', a: '242', w: 0 },
+  { t: 'Quiero un número de dos cifras donde la unidad es 4 más que la decena y suman 10; es el', a: '37', w: 0 },
+  // ── edades / álgebra — plantear y resolver ──
+  { t: 'Tengo el cuádruple de años que mi sobrina; dentro de 6 años le doblaré, así que ahora ella tiene', a: 'tres', w: 0 },
+  { t: 'La suma de las edades de Nora y su abuelo es 70 y él le saca 56 años; Nora tiene', a: '7', w: 0 },
+  { t: 'Hace 8 años Iván tenía la mitad de los que tendrá dentro de 4, luego hoy tiene', a: '20', w: 0 },
+  { t: 'Dos hermanos suman 40 años y el mayor tiene 6 más que el menor; el menor tiene', a: '17', w: 0 },
+  { t: 'Si a la edad de Lucía le restas su tercera parte quedan 18, entonces Lucía tiene', a: '27', w: 0 },
+  { t: 'Mi padre tiene 33 años más que yo y juntos sumamos 51; yo tengo', a: '9', w: 0 },
+  { t: 'Dentro de 9 años Tomás tendrá el doble de los que tenía hace 6, así que ahora tiene', a: '21', w: 0 },
+  { t: 'Una madre tiene 5 veces los años de su hija y la diferencia es 28; la hija tiene', a: '7', w: 0 },
+  { t: 'Si dentro de 4 años mi gato tendrá el triple de edad que hace 2 años, ahora tiene', a: '5', w: 0 },
+  { t: 'Hoy Elsa tiene 12 y su tía 39; la tía doblará a Elsa dentro de', a: '15', w: 0 },
+  { t: 'La edad de Marcos más la de su hijo es 48 y Marcos triplica al hijo; el hijo tiene', a: '12', w: 0 },
+  { t: 'Hace 5 años yo tenía cuatro veces los de mi prima y hoy ella tiene 10; yo tengo', a: '25', w: 0 },
+  { t: 'Si sumo mi edad a su mitad obtengo 36, entonces tengo exactamente', a: '24', w: 0 },
+  { t: 'Pedro le saca 21 años a Sara y dentro de 7 le doblará; ahora Sara tiene', a: '14', w: 0 },
+  { t: 'Dos amigas tienen edades que se diferencian en 9 y cuyo cociente es 4; la menor tiene', a: '3', w: 0 },
+  { t: 'Mi abuela tenía 26 al nacer mi madre, que tenía 24 al nacer yo; hoy tengo 8 y ella tiene', a: '58', w: 0 },
+  { t: 'Si a mi edad le sumo 7 y multiplico por 2 obtengo 50; mi edad es', a: '18', w: 0 },
+  { t: 'Carla tiene el triple que Dani y hace 4 años tenía el quíntuple; hoy Dani tiene', a: '8', w: 0 },
+  // ── proporciones — calcular ──
+  { t: 'Si un ciclista a 24 km/h tarda 25 minutos, a 30 km/h tardará', a: '20 minutos', w: 0 },
+  { t: 'Para 8 raciones de sopa uso 1,2 litros de caldo; para 14 raciones usaré', a: '2,1 litros', w: 0 },
+  { t: 'Una fuente echa 45 litros cada 9 minutos; en media hora echará', a: '150 litros', w: 0 },
 ]
 
-/* ── deterministic generators (hundreds of unique, intelligence-requiring fillers) ── */
-
-/** Format a number with a Spanish thousands separator left implicit (small ints). */
-function n(x: number): string {
-  return String(x)
-}
-
-/** Arithmetic word problems — each numerically distinct, each needing real computation. */
-export function genArithmetic(): Phrase[] {
-  const out: Phrase[] = []
-  // change-making
-  const pays: Array<[number, number]> = [
-    [20, 13.4], [50, 18.7], [10, 6.25], [20, 7.8], [50, 41.3], [100, 64.5],
-    [20, 11.95], [10, 2.4], [50, 33.85], [20, 16.6], [100, 78.2], [10, 8.7],
-    [20, 4.55], [50, 27.9], [100, 52.35], [20, 19.99], [50, 12.6], [10, 3.15],
-    [100, 88.4], [20, 8.25], [50, 45.7], [100, 31.8],
-  ]
-  for (const [pay, cost] of pays) {
-    const change = Math.round((pay - cost) * 100) / 100
-    out.push({ t: `Pagué con ${pay} euros una cuenta de ${cost.toFixed(2)} y me devolvieron`, a: `${change.toFixed(2)} €`, w: 0 })
-  }
-  // products — most of the times table, the harder rows
-  const prods: Array<[number, number]> = [
-    [7, 8], [12, 12], [6, 9], [13, 4], [15, 6], [11, 11], [14, 5], [9, 9], [8, 12], [7, 13],
-    [6, 7], [8, 8], [9, 6], [7, 7], [12, 8], [11, 7], [13, 6], [14, 4], [9, 8], [15, 4],
-    [6, 12], [8, 9], [7, 9], [11, 9], [12, 6], [13, 3], [16, 4], [6, 11], [7, 12], [9, 11],
-  ]
-  for (const [a, b] of prods) out.push({ t: `${a} por ${b} son`, a: n(a * b), w: 0 })
-  // double minus half
-  const ages = [12, 7, 19, 24, 33, 16, 28, 41, 9, 22, 37, 14, 26, 31, 45, 18]
-  for (const a of ages) out.push({ t: `El doble de ${a} menos ${Math.floor(a / 2)} es`, a: n(2 * a - Math.floor(a / 2)), w: 0 })
-  // percentages
-  const pcts: Array<[number, number]> = [
-    [20, 80], [10, 250], [25, 60], [50, 36], [15, 200], [30, 90],
-    [40, 50], [75, 40], [5, 300], [60, 25], [12, 150], [35, 80],
-  ]
-  for (const [p, base] of pcts) out.push({ t: `El ${p}% de ${base} es`, a: n((p * base) / 100), w: 0 })
-  // halves / thirds (exact)
-  const halves = [48, 64, 96, 38, 150, 84]
-  for (const a of halves) out.push({ t: `La mitad de ${a} es`, a: n(a / 2), w: 0 })
-  const thirds = [99, 63, 144, 81, 27]
-  for (const a of thirds) out.push({ t: `Un tercio de ${a} es`, a: n(a / 3), w: 0 })
-  return out
-}
-
-/** Day-of-week reasoning — modular, must be counted out, not recalled. */
-export function genTime(): Phrase[] {
-  const days = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
-  const offs: Array<[number, string]> = [[2, 'pasado mañana'], [3, 'dentro de tres días'], [5, 'dentro de cinco días']]
-  const out: Phrase[] = []
-  for (let d = 0; d < days.length; d++) {
-    for (const [k, label] of offs) {
-      out.push({ t: `Si hoy es ${days[d]}, ${label} será`, a: days[(d + k) % 7], w: 0 })
-    }
-  }
-  return out
-}
-
-/** Unit conversions — small facts that still need a step of reasoning. */
-export function genUnits(): Phrase[] {
-  const items: Array<[string, string]> = [
-    ['Media hora son', '30 minutos'], ['Un cuarto de hora son', '15 minutos'],
-    ['Dos docenas son', '24'], ['Media docena son', '6'], ['La mitad de un siglo son', '50 años'],
-    ['Un día entero son', '24 horas'], ['Tres cuartos de euro son', '75 céntimos'],
-    ['Una semana y media son', '10 días y medio'], ['Un milenio son', '1000 años'],
-    ['Cien centímetros son', '1 metro'],
-  ]
-  return items.map(([t, a]) => ({ t, a, w: 0 }))
-}
-
-/** Categories — pick the superordinate set the three members share. */
-export function genCategories(): Phrase[] {
-  const cats: Array<[string, string]> = [
-    ['El perro, el gato y el caballo son todos', 'mamíferos'],
-    ['El rojo, el azul y el verde son todos', 'colores'],
-    ['La rosa, el tulipán y el clavel son todas', 'flores'],
-    ['El roble, el pino y el abedul son todos', 'árboles'],
-    ['Júpiter, Saturno y Marte son todos', 'planetas'],
-    ['El cobre, el hierro y el oro son todos', 'metales'],
-    ['El violín, la viola y el chelo son todos de', 'cuerda'],
-    ['El cuadrado, el rombo y el trapecio son todos', 'cuadriláteros'],
-    ['El águila, el gorrión y el búho son todas', 'aves'],
-    ['Enero, marzo y agosto son todos', 'meses'],
-    ['El Nilo, el Amazonas y el Ebro son todos', 'ríos'],
-    ['El francés, el portugués y el rumano son todas lenguas', 'romances'],
-  ]
-  return cats.map(([t, a]) => ({ t, a, w: 0 }))
-}
-
-/** Roman numerals — a small decoding, not a lookup. */
-export function genRoman(): Phrase[] {
-  const r: Array<[string, string]> = [
-    ['IX', '9'], ['XL', '40'], ['XIV', '14'], ['XC', '90'], ['LXVI', '66'],
-    ['CD', '400'], ['XIX', '19'], ['MCM', '1900'], ['XXIV', '24'], ['CM', '900'],
-    ['XLII', '42'], ['LXXX', '80'],
-  ]
-  return r.map(([sym, a]) => ({ t: `El número romano ${sym} vale`, a, w: 0 }))
-}
-
-/** Ordering / superlatives — relational facts that need comparing, not recalling. */
-export function genOrdering(): Phrase[] {
-  const items: Array<[string, string]> = [
-    ['Entre el Everest, el Mont Blanc y el Teide, el más alto es el', 'Everest'],
-    ['Entre Mercurio, la Tierra y Júpiter, el planeta más grande es', 'Júpiter'],
-    ['Entre una hormiga, un perro y una ballena, el más pesado es la', 'ballena'],
-    ['Entre el segundo, la hora y el año, el periodo más largo es el', 'año'],
-    ['Entre el milímetro, el metro y el kilómetro, el más corto es el', 'milímetro'],
-    ['Entre 1/2, 1/3 y 1/4, la fracción mayor es', '1/2'],
-    ['Entre el gramo, el kilo y la tonelada, el mayor es la', 'tonelada'],
-    ['Entre marzo, junio y diciembre, el mes más cercano al verano es', 'junio'],
-  ]
-  return items.map(([t, a]) => ({ t, a, w: 0 }))
-}
-
-/** Number / letter sequences — each a distinct pattern that must be inferred. */
-export function genSequences(): Phrase[] {
-  const seqs: Array<[number[] | string[], string]> = [
-    [[3, 6, 12, 24], '48'],
-    [[1, 2, 4, 7, 11], '16'],
-    [[2, 6, 12, 20, 30], '42'],
-    [[1, 8, 27, 64], '125'],
-    [[100, 96, 88, 72], '40'],
-    [[5, 10, 20, 40], '80'],
-    [[81, 27, 9, 3], '1'],
-    [[1, 2, 6, 24, 120], '720'],
-    [[7, 14, 28, 56], '112'],
-    [[2, 5, 11, 23], '47'],
-    [[1, 3, 9, 27], '81'],
-    [[64, 32, 16, 8], '4'],
-    [[3, 4, 6, 9, 13], '18'],
-    [[1, 2, 4, 8, 16], '32'],
-    [[10, 9, 7, 4], '0'],
-    [[2, 4, 7, 11, 16], '22'],
-    [[1, 5, 14, 30], '55'],
-    [[0, 1, 1, 2, 3, 5], '8'],
-    [['A', 'C', 'E', 'G'], 'I'],
-    [['Z', 'Y', 'X', 'W'], 'V'],
-    [['A', 'B', 'D', 'G', 'K'], 'P'],
-    [['B', 'D', 'F', 'H'], 'J'],
-    [['A', 'A', 'B', 'C', 'E', 'H'], 'M'],
-  ]
-  return seqs.map(([s, a]) => ({ t: `${(s as Array<number | string>).join(', ')},`, a, w: 1 }))
-}
-
-/** Capitals — world knowledge, several deliberately counter-intuitive. */
-export function genCapitals(): Phrase[] {
-  const caps: Array<[string, string]> = [
-    ['Australia', 'Canberra'], ['Canadá', 'Ottawa'], ['Turquía', 'Ankara'], ['Brasil', 'Brasilia'],
-    ['Suiza', 'Berna'], ['Marruecos', 'Rabat'], ['Estados Unidos', 'Washington'], ['Sudáfrica', 'Pretoria'],
-    ['Nueva Zelanda', 'Wellington'], ['Kazajistán', 'Astaná'], ['Birmania', 'Naipyidó'], ['Bolivia', 'Sucre'],
-    ['Portugal', 'Lisboa'], ['Egipto', 'El Cairo'], ['Japón', 'Tokio'], ['Noruega', 'Oslo'],
-    ['Argentina', 'Buenos Aires'], ['Nigeria', 'Abuya'], ['Vietnam', 'Hanói'], ['India', 'Nueva Delhi'],
-    ['Países Bajos', 'Ámsterdam'], ['Tanzania', 'Dodoma'], ['Costa de Marfil', 'Yamusukro'], ['Ecuador', 'Quito'],
-    ['Pakistán', 'Islamabad'], ['Sri Lanka', 'Colombo'], ['Belice', 'Belmopán'], ['Malta', 'La Valeta'],
-  ]
-  return caps.map(([country, city]) => ({ t: `La capital de ${country} es`, a: city, w: 0 }))
-}
-
-/** Analogies — relational reasoning, never mere association. */
-export function genAnalogies(): Phrase[] {
-  const an: Array<[string, string, string, string]> = [
-    ['Mano', 'guante', 'pie', 'calcetín'],
-    ['Pájaro', 'nido', 'abeja', 'colmena'],
-    ['Médico', 'hospital', 'profesor', 'escuela'],
-    ['Caliente', 'frío', 'arriba', 'abajo'],
-    ['Día', 'noche', 'verano', 'invierno'],
-    ['Llave', 'cerradura', 'pregunta', 'respuesta'],
-    ['Agua', 'sed', 'comida', 'hambre'],
-    ['Autor', 'libro', 'pintor', 'cuadro'],
-    ['Oruga', 'mariposa', 'renacuajo', 'rana'],
-    ['Reloj', 'tiempo', 'termómetro', 'temperatura'],
-    ['Cachorro', 'perro', 'potro', 'caballo'],
-    ['Pincel', 'pintar', 'martillo', 'clavar'],
-    ['Dedo', 'mano', 'hoja', 'árbol'],
-    ['Hambre', 'comer', 'sueño', 'dormir'],
-    ['Barco', 'mar', 'avión', 'aire'],
-    ['Norte', 'sur', 'izquierda', 'derecha'],
-    ['Página', 'libro', 'fotograma', 'película'],
-    ['Profesor', 'enseñar', 'juez', 'juzgar'],
-    ['Semilla', 'planta', 'huevo', 'pájaro'],
-    ['Frío', 'tiritar', 'miedo', 'temblar'],
-    ['Uno', 'pocos', 'pocos', 'muchos'],
-    ['Lápiz', 'escribir', 'tijeras', 'cortar'],
-    ['Abeja', 'miel', 'vaca', 'leche'],
-    ['Pez', 'agua', 'topo', 'tierra'],
-  ]
-  return an.map(([a, b, c, d]) => ({ t: `${a} es a ${b} lo que ${c} es a`, a: d, w: 1 }))
-}
-
-/** Antonyms in a sentence frame — semantics with a turn. */
-export function genAntonyms(): Phrase[] {
-  const pairs: Array<[string, string, string]> = [
-    ['Subió', 'el ascensor entero y al llegar arriba ya solo le quedaba', 'bajar'],
-    ['Empezó', 'el libro por la última página, justo por donde otros lo', 'terminan'],
-    ['Encendió', 'todas las luces de casa para no tener que apagar ni', 'una'],
-    ['Llenó', 'la jarra hasta el borde sin derramar ni media', 'gota'],
-  ]
-  return pairs.map(([head, mid, a]) => ({ t: `${head} ${mid}`, a, w: 0 }))
-}
-
-/** Build the full corpus: gems + every generator, in declaration order. */
+/** Build the full corpus — every entry is reasoning-only (see {@link GEMS}). */
 export function buildCorpus(): Phrase[] {
-  return [
-    ...GEMS,
-    ...genSequences(),
-    ...genAnalogies(),
-    ...genCapitals(),
-    ...genArithmetic(),
-    ...genAntonyms(),
-    ...genTime(),
-    ...genUnits(),
-    ...genCategories(),
-    ...genRoman(),
-    ...genOrdering(),
-  ]
+  return GEMS.slice()
 }
 
 /* ── the packer ───────────────────────────────────────────────────────────────── */
@@ -446,8 +269,15 @@ export type LayoutOpts = {
   avgCharEm?: number
   /** Hard cap on placements (runaway guard). Default 6000. */
   maxPlacements?: number
-  /** The phrase whose blank gets the single KIT_BLUE accent (matched on `t`). */
+  /**
+   * The thesis phrase (matched on `t`). It is lifted out of the sea entirely and
+   * returned as the centred {@link Hero}; its blank carries the one KIT_BLUE accent.
+   */
   accentText?: string
+  /** Hero cap-height as a multiple of the legibility floor. Default 6.0 (≈ 3× the sea foreground). */
+  heroCapMultiple?: number
+  /** Target characters per hero line — drives how the thesis wraps. Default 28. */
+  heroLineChars?: number
 }
 
 /** One phrase placed in the wall, in millimetres from the trim origin. */
@@ -477,8 +307,41 @@ export type PlacedPhrase = {
   accent: boolean
 }
 
+/**
+ * The thesis phrase, lifted out of the sea and rendered as one large, dead-centre
+ * line block — «destacada, en el centro, en grande». Its blank is the wall's one
+ * KIT_BLUE accent: the disciplined point the whole sea is built to make you find.
+ */
+export type Hero = {
+  /** The phrase text (everything before the blank). */
+  text: string
+  /** The omitted answer — never rendered; it only sizes the blank. */
+  answer: string
+  /** The phrase pre-wrapped into balanced lines (render each as its own line box). */
+  lines: string[]
+  /** Font size (pt) — feed to `geo.pt`. */
+  fontPt: number
+  /** Rendered cap-height (mm). */
+  capMm: number
+  /** Em box height (mm). */
+  emMm: number
+  /** Line advance (mm) between hero lines. */
+  lineHeightMm: number
+  /** Width of the blank rule (mm). */
+  blankWidthMm: number
+  /** Gap before the blank (mm). */
+  blankGapMm: number
+  /** Bounding box of the hero stack (mm). */
+  box: { wMm: number; hMm: number }
+  /** Centre of the hero on the wall (mm from the trim origin). */
+  centerXMm: number
+  centerYMm: number
+}
+
 export type SeaLayout = {
   placed: PlacedPhrase[]
+  /** The thesis, promoted to a centred hero (null when no `accentText` is given / found). */
+  hero: Hero | null
   floorCapMm: number
   usable: { x: number; y: number; w: number; h: number }
   /** Echoed for QA / the control table. */
@@ -505,6 +368,78 @@ const TIER_PROBS: Record<number, number[]> = {
 }
 /** Base depth per tier (0 dark … 1 light); noise is added per phrase. */
 const TIER_DEPTH = [0.06, 0.42, 0.74]
+
+/** Greedy word-wrap into lines no longer than `maxChars` (a line never splits a word). */
+function wrapWords(words: string[], maxChars: number): string[] {
+  const lines: string[] = []
+  let cur = ''
+  for (const w of words) {
+    const cand = cur ? `${cur} ${w}` : w
+    if (cur === '' || cand.length <= maxChars) cur = cand
+    else {
+      lines.push(cur)
+      cur = w
+    }
+  }
+  if (cur) lines.push(cur)
+  return lines
+}
+
+type HeroOpts = {
+  usable: { x: number; y: number; w: number; h: number }
+  floorCapMm: number
+  heroCapMultiple: number
+  heroLineChars: number
+  avgCharEm: number
+  trimWidthMm: number
+  trimHeightMm: number
+}
+
+/** Size and wrap the thesis into a centred hero, anchored to the legibility floor. */
+function buildHero(phrase: Phrase, o: HeroOpts): Hero {
+  let capMm = o.floorCapMm * o.heroCapMultiple
+  let emMm = capMm / TEXT_CAP_RATIO
+  const lines = wrapWords(phrase.t.split(/\s+/), Math.max(8, Math.round(o.heroLineChars)))
+  const blankChars = Math.max(2, Math.min(9, phrase.a.length))
+
+  // Width of the widest line, with the blank tacked onto the last one.
+  const widest = (em: number) => {
+    const charMm = o.avgCharEm * em
+    const blankWidthMm = Math.max(1.8, blankChars * o.avgCharEm) * em
+    const blankGapMm = 0.45 * em
+    let w = 0
+    lines.forEach((ln, i) => {
+      const lw = ln.length * charMm + (i === lines.length - 1 ? blankGapMm + blankWidthMm : 0)
+      if (lw > w) w = lw
+    })
+    return { w, blankWidthMm, blankGapMm }
+  }
+
+  // Shrink to fit the usable width if the big size overruns the wall.
+  let m = widest(emMm)
+  if (m.w > o.usable.w * 0.94) {
+    const k = (o.usable.w * 0.94) / m.w
+    emMm *= k
+    capMm *= k
+    m = widest(emMm)
+  }
+
+  const lineHeightMm = emMm * 1.12
+  return {
+    text: phrase.t,
+    answer: phrase.a,
+    lines,
+    fontPt: capHeightMmToFontPt(capMm, TEXT_CAP_RATIO),
+    capMm,
+    emMm,
+    lineHeightMm,
+    blankWidthMm: m.blankWidthMm,
+    blankGapMm: m.blankGapMm,
+    box: { wMm: m.w, hMm: lines.length * lineHeightMm },
+    centerXMm: o.trimWidthMm / 2,
+    centerYMm: o.trimHeightMm / 2,
+  }
+}
 
 function pickTier(rng: () => number, weight: number, nTiers: number): number {
   const probs = TIER_PROBS[weight] ?? TIER_PROBS[1]
@@ -539,6 +474,8 @@ export function layoutSea(opts: LayoutOpts): SeaLayout {
     avgCharEm = 0.52,
     maxPlacements = 6000,
     accentText,
+    heroCapMultiple = 6.0,
+    heroLineChars = 28,
   } = opts
 
   if (!(trimWidthMm > 0)) throw new Error(`layoutSea: trimWidthMm must be > 0 (got ${trimWidthMm})`)
@@ -560,6 +497,21 @@ export function layoutSea(opts: LayoutOpts): SeaLayout {
   const usableBottom = usable.y + usable.h
 
   const rng = mulberry32(seed)
+
+  // Lift the thesis out of the sea: it becomes the centred hero, not a sea phrase.
+  const accentPhrase = accentText != null ? phrases.find((p) => p.t === accentText) ?? null : null
+  const seaPhrases = accentPhrase ? phrases.filter((p) => p.t !== accentText) : phrases
+  const hero = accentPhrase
+    ? buildHero(accentPhrase, {
+        usable,
+        floorCapMm,
+        heroCapMultiple,
+        heroLineChars,
+        avgCharEm,
+        trimWidthMm,
+        trimHeightMm,
+      })
+    : null
 
   // Pre-size a phrase into a chosen tier; optionally shrink so it fits one row.
   const prepare = (phrase: Phrase, tier: number): Prepared => {
@@ -599,9 +551,8 @@ export function layoutSea(opts: LayoutOpts): SeaLayout {
   let bag: Prepared[] = []
   let pass = 0
   const refill = () => {
-    const order = shuffle(phrases, mulberry32(seed + 0x9e37 * (pass + 1)))
-    // The thesis phrase always sits in the foreground tier (it carries the one accent).
-    bag = order.map((p) => prepare(p, accentText != null && p.t === accentText ? 0 : pickTier(rng, p.w ?? 1, nTiers)))
+    const order = shuffle(seaPhrases, mulberry32(seed + 0x9e37 * (pass + 1)))
+    bag = order.map((p) => prepare(p, pickTier(rng, p.w ?? 1, nTiers)))
     pass++
   }
   const next = (): Prepared => {
@@ -610,7 +561,6 @@ export function layoutSea(opts: LayoutOpts): SeaLayout {
   }
 
   const placed: PlacedPhrase[] = []
-  let accentDone = false
   let y = usable.y
   const smallestEm = tierCapsMm[nTiers - 1] / TEXT_CAP_RATIO
 
@@ -647,8 +597,6 @@ export function layoutSea(opts: LayoutOpts): SeaLayout {
 
     for (const { p, x: px } of row) {
       const yTop = y + (shelfEm - p.emMm) / 2
-      const isAccent = !accentDone && accentText != null && p.phrase.t === accentText
-      if (isAccent) accentDone = true
       placed.push({
         text: p.phrase.t,
         xMm: px,
@@ -661,11 +609,11 @@ export function layoutSea(opts: LayoutOpts): SeaLayout {
         blankGapMm: p.blankGapMm,
         tier: p.tier,
         depth: p.depth,
-        accent: isAccent,
+        accent: false,
       })
     }
     y += shelfEm * (1.04 + rng() * 0.1)
   }
 
-  return { placed, floorCapMm, usable, tierCapsMm }
+  return { placed, hero, floorCapMm, usable, tierCapsMm }
 }

@@ -1,0 +1,23 @@
+{
+  "id": "pathfinding",
+  "title": "El camino — generador de pathfinding (rejilla neumórfica)",
+  "createdAt": "2026-06-05T00:00:00.000Z",
+  "pageComponentId": "pathfinding",
+  "theme": "light",
+  "surface": "#f4f4fa",
+  "dimensions": {
+    "trimWidthMm": 841,
+    "trimHeightMm": 594,
+    "bleedMm": 5,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 150,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {}
+}

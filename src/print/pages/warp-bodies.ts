@@ -39,15 +39,15 @@ export type WarpBody = {
 }
 
 /**
- * Director's manual moves (swaps): pull recognisable brands/markets into the centre,
- * push the nations out to the laterals — so it isn't all countries next to ChatGPT.
- * Suiza ↔ Netflix · Noruega ↔ Vino · Argentina ↔ Smartphones. Regions use the canvas
- * unfold order [11-W (left) · 5N1 (centre) · 2-E (right)]: Suiza→11-W (left),
- * Noruega/Argentina→2-E (right).
+ * Director's manual moves: pull recognisable brands/markets into the centre, push the
+ * nations out to the laterals — so it isn't all countries next to ChatGPT. Netflix,
+ * Vino and Smartphones → centre; Noruega/Argentina → 2-E (right). Regions use the canvas
+ * unfold order [11-W (left) · 5N1 (centre) · 2-E (right)]. Suiza is dropped from the warp
+ * entirely (see WARP_EXCLUDE), so 11-W is purely the iconic brands and they re-pack to
+ * fill the space it used to take.
  */
 const REGION_OVERRIDES: Record<string, WarpRegion> = {
   netflix: 'center',
-  switzerland: 'left',
   vino: 'center',
   norway: 'right',
   smartphones: 'center',
@@ -55,9 +55,16 @@ const REGION_OVERRIDES: Record<string, WarpRegion> = {
 }
 
 /**
+ * Bodies dropped from the warp installation entirely (they still appear in the orbital
+ * galaxy). Suiza read oddly as a whole nation sitting among the iconic brands on 11-W;
+ * removing it lets the brands re-pack and close the gap.
+ */
+const WARP_EXCLUDE = new Set<string>(['switzerland'])
+
+/**
  * Every non-core body tagged with the region (= print) it belongs to. Unfold order is
  * [11-W (left band) · 5N1 (centre) · 2-E (right band)] — companies on 11-W, nations +
- * Spanish round the core on 5N1, sectors on 2-E.
+ * Spanish round the core on 5N1, sectors on 2-E. Excluded bodies are filtered out last.
  */
 export function warpBodies(): WarpBody[] {
   const tag = (arr: GalaxyBodyDatum[], region: WarpRegion): WarpBody[] =>
@@ -67,7 +74,7 @@ export function warpBodies(): WarpBody[] {
     ...tag(GALAXY_COUNTRIES, 'center'), // 5N1
     ...tag(GALAXY_SPANISH, 'center'), // 5N1
     ...tag(GALAXY_SECTORS, 'right'), // 2-E
-  ]
+  ].filter((b) => !WARP_EXCLUDE.has(b.id))
 }
 
 export type Rect = { x: number; y: number; w: number; h: number }
@@ -116,9 +123,28 @@ export type PlaceOpts = {
   labelCharWFrac?: number
   /** Scale maxRadius (mm). Default = height·WARP_MAX_RADIUS_FRAC (Nvidia's radius). */
   maxRadiusMm?: number
+  /** Per-band PRNG offset override (added to `seed`). Defaults to REGION_SEED_OFFSET. */
+  seedOffsets?: Partial<Record<WarpRegion, number>>
 }
 
 export type PlaceResult = { placed: PlacedSphere[]; skipped: string[] }
+
+/**
+ * Per-band PRNG offset added to the base seed — keeps each print's packing independent.
+ * Centre = 0 so 5N1 reproduces the base-seed layout exactly; the laterals are offset so
+ * their fills can be tuned without touching the centre. Chosen so each band packs evenly
+ * across its full width (no empty edge).
+ */
+const REGION_SEED_OFFSET: Record<WarpRegion, number> = { center: 0, left: 57, right: 39 }
+
+/**
+ * The hole sits INSIDE the centre band, so low dispersion there packs the nations into a
+ * tight ring around the core (the intended look). On the laterals the hole is off-band, so
+ * the same "gravitate toward the hole" pull just rams every sphere against the inner edge
+ * and leaves the outer half empty. Laterals therefore get a dispersion boost → an even
+ * spread across the whole band. Centre is left untouched (5N1 stays identical).
+ */
+const LATERAL_DISPERSION_BOOST = 0.25
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
 
@@ -178,7 +204,6 @@ export function placeWarpSpheres(opts: PlaceOpts): PlaceResult {
   const maxRadius = opts.maxRadiusMm ?? H * WARP_MAX_RADIUS_FRAC
 
   const scale = circleAreaScale({ maxValue: galaxyMaxValue(), maxRadius, minRadius: WARP_MIN_RADIUS_MM })
-  const rng = mulberry32(seed)
 
   const seams = [...opts.seams].sort((a, b) => a - b)
   const bands: Record<WarpRegion, [number, number]> = {
@@ -211,8 +236,15 @@ export function placeWarpSpheres(opts: PlaceOpts): PlaceResult {
     return false
   }
 
-  // centre first → the nations/champions take the prime ring around the hole.
+  // centre first → the nations/champions take the prime ring around the hole. Each band
+  // draws from its OWN PRNG stream (REGION_SEED_OFFSET), so the three prints are truly
+  // self-contained: editing one wall's bodies never reshuffles the others. Centre keeps
+  // the base seed (offset 0) so 5N1 — the room's anchor — is stable across body edits.
+  const offsets = { ...REGION_SEED_OFFSET, ...(opts.seedOffsets ?? {}) }
   for (const region of ['center', 'left', 'right'] as WarpRegion[]) {
+    const rng = mulberry32(seed + offsets[region])
+    // laterals spread (hole is off-band); centre packs toward the in-band hole — see boost note.
+    const disp = region === 'center' ? dispersion : clamp(dispersion + LATERAL_DISPERSION_BOOST, 0, 1)
     const [xMin, xMax] = bands[region]
     for (const body of byRegion[region]) {
       const r = scale.radius(body.value)
@@ -229,7 +261,7 @@ export function placeWarpSpheres(opts: PlaceOpts): PlaceResult {
       }
 
       // jittered grid candidates; ordering blends nearest-to-hole (gravitational) with a
-      // seeded random spread, so `dispersion` lerps from a tight core to an even scatter.
+      // seeded random spread, so `disp` lerps from a tight core to an even scatter.
       const step = Math.max(64, r * 0.6)
       const cands: Array<{ x: number; y: number; dist: number; rnd: number }> = []
       for (let x = cxLo; x <= cxHi; x += step) {
@@ -241,7 +273,7 @@ export function placeWarpSpheres(opts: PlaceOpts): PlaceResult {
       }
       let maxD = 1
       for (const c of cands) if (c.dist > maxD) maxD = c.dist
-      const key = (c: { dist: number; rnd: number }) => c.dist * (1 - dispersion) + c.rnd * maxD * dispersion
+      const key = (c: { dist: number; rnd: number }) => c.dist * (1 - disp) + c.rnd * maxD * disp
       cands.sort((a, b) => key(a) - key(b))
 
       let done = false

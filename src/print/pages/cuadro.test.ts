@@ -140,6 +140,62 @@ describe('layoutCuadro — diptych (secondPainting)', () => {
   })
 })
 
+describe('layoutCuadro — dual-cartela diptych (each relief its own label)', () => {
+  // 8-N-1's new layout: two reliefs on the quarter-points, each with its own cartela
+  // hung ½ m to its inner side, so the wall reads as two independent cuadros.
+  const DUAL: CuadroLayoutOpts = {
+    wallWidthMm: 13000,
+    wallHeightMm: 3000,
+    paintingAspect: 2 / 3,
+    paintingHeightFraction: 0.84,
+    cartelaWidthMm: 560,
+    gapMm: 500, // ½ m
+    secondPainting: true,
+    dualCartela: true,
+  }
+
+  it('returns a second cartela and keeps both reliefs on the quarter-points', () => {
+    const { painting, painting2, cartela2 } = layoutCuadro(DUAL)
+    expect(cartela2).toBeDefined()
+    if (!painting2 || !cartela2) throw new Error('missing diptych boxes')
+    expect(painting.x + painting.width / 2).toBeCloseTo(DUAL.wallWidthMm * 0.25, 6)
+    expect(painting2.x + painting2.width / 2).toBeCloseTo(DUAL.wallWidthMm * 0.75, 6)
+  })
+
+  it('hangs each label exactly gapMm to the inner side of its relief', () => {
+    const { painting, painting2, cartela, cartela2 } = layoutCuadro(DUAL)
+    if (!painting2 || !cartela2) throw new Error('missing diptych boxes')
+    // label 1 sits gapMm to the RIGHT of relief 1; label 2 gapMm to the LEFT of relief 2
+    expect(cartela.x - (painting.x + painting.width)).toBeCloseTo(DUAL.gapMm, 6)
+    expect(painting2.x - (cartela2.x + cartela2.width)).toBeCloseTo(DUAL.gapMm, 6)
+  })
+
+  it('is mirror-symmetric and keeps everything inside the wall without overlap', () => {
+    const { painting, painting2, cartela, cartela2, group } = layoutCuadro(DUAL)
+    if (!painting2 || !cartela2) throw new Error('missing diptych boxes')
+    const centre = DUAL.wallWidthMm / 2
+    // mirror symmetry about the wall centre, for both reliefs and both labels
+    expect(painting.x + painting.width / 2 - centre).toBeCloseTo(centre - (painting2.x + painting2.width / 2), 6)
+    expect(cartela.x + cartela.width / 2 - centre).toBeCloseTo(centre - (cartela2.x + cartela2.width / 2), 6)
+    // order on the wall: P1 | label1 | (air) | label2 | P2, no overlaps
+    expect(painting.x + painting.width).toBeLessThanOrEqual(cartela.x + EPS)
+    expect(cartela.x + cartela.width).toBeLessThanOrEqual(cartela2.x + EPS)
+    expect(cartela2.x + cartela2.width).toBeLessThanOrEqual(painting2.x + EPS)
+    for (const box of [painting, painting2, cartela, cartela2]) {
+      expect(box.x).toBeGreaterThanOrEqual(-EPS)
+      expect(box.x + box.width).toBeLessThanOrEqual(DUAL.wallWidthMm + EPS)
+    }
+    // both labels share the relief height and top edge; the group spans the two reliefs
+    expect(cartela.height).toBeCloseTo(painting.height, 6)
+    expect(cartela2.y).toBeCloseTo(painting.y, 6)
+    expect(group.x).toBeCloseTo(painting.x, 6)
+  })
+
+  it('throws when the two labels would collide in the centre', () => {
+    expect(() => layoutCuadro({ ...DUAL, cartelaWidthMm: 3000 })).toThrow(/collide in the centre/)
+  })
+})
+
 describe('layoutCuadro — everything inside the wall', () => {
   it('keeps both boxes within the wall bounds', () => {
     for (const placement of ['left', 'right'] as const) {

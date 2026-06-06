@@ -25,7 +25,7 @@ const DEFAULT_DOC: PrintDoc = {
   theme: 'light',
   dimensions: { trimWidthMm: 210, trimHeightMm: 297, bleedMm: 3, safeMarginMm: 10, cropMarks: true },
   dpi: 300,
-  color: { mode: 'cmyk', iccProfile: 'icc/CoatedFOGRA39.icc', renderIntent: 'relative', pdfxVariant: 'x1a' },
+  color: { mode: 'cmyk', iccProfile: 'icc/PSOuncoated_v3_FOGRA52.icc', renderIntent: 'relative', pdfxVariant: 'x1a' },
   props: {},
 }
 

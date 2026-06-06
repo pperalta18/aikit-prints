@@ -50,9 +50,9 @@ describe('indice (5-S-1) — registration', () => {
 })
 
 describe('indice (5-S-1) — print contract', () => {
-  it('is a CMYK / FOGRA39 / PDF-X print like the rest of the wall-graphics family', () => {
+  it('is a CMYK / FOGRA52 / PDF-X print like the rest of the wall-graphics family', () => {
     expect(doc.color.mode).toBe('cmyk')
-    expect(doc.color.iccProfile).toBe('icc/CoatedFOGRA39.icc')
+    expect(doc.color.iccProfile).toBe('icc/PSOuncoated_v3_FOGRA52.icc')
     expect(['x1a', 'x4']).toContain(doc.color.pdfxVariant)
     expect(RENDER_INTENTS).toContain(doc.color.renderIntent)
     // flat, vivid typography on a flat ground → not the photo-only 'perceptual' intent.

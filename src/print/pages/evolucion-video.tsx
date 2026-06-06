@@ -20,9 +20,9 @@ import { eventTypeScale } from './tipografia'
  * centrado en el alto de la pared, con celuloide casi-negro, perforaciones finas
  * de 35 mm, filetes de registro que abrazan el fotograma y las imágenes
  * *image-forward* (márgenes de banda delgados para que mande la imagen). La referencia temporal es
- * un **folio hairline** (más contenido que un titular) **sobre un filete a todo el
- * ancho** —gris para el pasado, KIT_BLUE para el presente— que hace de pie editorial
- * de cada tira; el presente además lleva un filete azul de un pelo alrededor.
+ * un **folio hairline** (más contenido que un titular) que flota sobre cada tira
+ * —gris para el pasado, KIT_BLUE para el presente—; el presente además lleva un
+ * filete azul de un pelo alrededor de la banda.
  *
  * Los fotogramas son PNGs reales extraídos de los vídeos, recortados a 3:2, en
  * `public/prints/marco-2-e-image/assets/{old,new}/`. El layout es data-driven:
@@ -98,7 +98,6 @@ export function EvolucionVideo({ doc, geo }: PrintPageProps) {
   const yearEmMm = t.capHeights.h1Mm / DISPLAY_CAP_RATIO // the numeral's em box height
   const YEAR_LEAD = H * 0.04 // air between the year+rule caption and its film band
   const MID_GAP = H * 0.09 // breathing room between the two strips
-  const RULE_W = 1.4 // mm — a true hairline rule, thick enough to read at distance
   const bandH = (i: number) => computeStripGeom(contentW, strips[i].frames.length).bandH
   const unitH = (i: number) => yearEmMm + YEAR_LEAD + bandH(i)
   const totalH = strips.reduce((sum, _s, i) => sum + unitH(i), 0) + (strips.length - 1) * MID_GAP
@@ -117,9 +116,6 @@ export function EvolucionVideo({ doc, geo }: PrintPageProps) {
           const top = bandTop(s)
           const now = !!strip.now
           const accent = now ? KIT_BLUE : pal.ink
-          // The folio rule: full-band hairline underlining the year — present in
-          // KIT_BLUE, past a quiet grey. The editorial device that captions each strip.
-          const ruleColor = now ? KIT_BLUE : pal.muted
           return (
             <div key={`strip-${s}`}>
               {/* the only label: the year folio, hairline, sitting on its rule */}
@@ -137,9 +133,6 @@ export function EvolucionVideo({ doc, geo }: PrintPageProps) {
               >
                 {strip.year}
               </div>
-
-              {/* the folio rule — full band width, underlining the year as one caption unit */}
-              <div style={{ ...at(MX, top - YEAR_LEAD), width: mm(g.bandW), height: mm(RULE_W), background: ruleColor }} />
 
               <FilmStrip geo={geo} leftMm={MX} topMm={top} g={g} frames={strip.frames} now={now} bg={pal.bg} />
             </div>

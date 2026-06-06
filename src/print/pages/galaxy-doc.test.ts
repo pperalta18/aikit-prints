@@ -37,10 +37,10 @@ describe('galaxy — registration & contract', () => {
     }
   })
 
-  it('each is a CMYK / FOGRA39 / PDF-X light print (vivid, not photo-perceptual)', () => {
+  it('each is a CMYK / FOGRA52 / PDF-X light print (vivid, not photo-perceptual)', () => {
     for (const doc of Object.values(DOCS)) {
       expect(doc.color.mode).toBe('cmyk')
-      expect(doc.color.iccProfile).toBe('icc/CoatedFOGRA39.icc')
+      expect(doc.color.iccProfile).toBe('icc/PSOuncoated_v3_FOGRA52.icc')
       expect(['x1a', 'x4']).toContain(doc.color.pdfxVariant)
       expect(doc.color.renderIntent).not.toBe('perceptual')
       expect(doc.theme).toBe('light')

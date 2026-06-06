@@ -114,8 +114,8 @@ capability and never denigrates** (distinct from the darker, more urgent web ton
   image), toggled per-piece in the editor HUD. **Add:** **double-sided** support
   (ids 2, 12).
 - **Export.** Reuse the print generator: `doc.json` (real mm size, low DPI for big
-  walls, CMYK / CoatedFOGRA39) → `scripts/export-print.mjs` → CMYK PDF/X, tiled
-  where needed.
+  walls, CMYK / PSO Uncoated v3 FOGRA52 — the fabric substrate) → `scripts/export-print.mjs`
+  → CMYK PDF/X, tiled where needed.
 
 ## Wall frames — every face is a print (the blank base layer)
 

@@ -1,0 +1,27 @@
+{
+  "id": "solo-2026-tenis",
+  "title": "Solo · 2026 tenis (tamaño en pared 1.54×2.00 m)",
+  "createdAt": "2026-06-06T00:00:00.000Z",
+  "pageComponentId": "raster-wall",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 1542,
+    "trimHeightMm": 2000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "src": "prints/marco-11-w-image/assets/2026-hero.png",
+    "fit": "cover",
+    "position": "center",
+    "alt": "Hero 2026 (tenista Wimbledon, GPT Image 2 + upscale Topaz) al tamaño que ocupa en la pared 11-W-IMAGE"
+  }
+}

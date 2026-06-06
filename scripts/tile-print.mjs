@@ -18,7 +18,7 @@
  *   --max-width <mm>     max printable panel width  (default 1500 — a 1.5 m roll)
  *   --max-height <mm>    max printable panel height (default: none → a single row)
  *   --overlap <mm>       shared seam between adjacent panels (default 20)
- *   --dpi <n>            raster DPI (default: doc dpi, else 150)
+ *   --dpi <n>            raster DPI (default: 150, the EXPORT_DPI standard)
  *   --media-width <mm>   media width  (default: doc, else inferred from px/dpi)
  *   --media-height <mm>  media height (default: doc, else inferred from px/dpi)
  *   --out <dir>          output dir (default out/tiles/<base>)
@@ -35,7 +35,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { planTiles, tileName, panelEdges } from '../src/print/tiling.ts'
-import { mediaSizeMm } from '../src/print/geometry.ts'
+import { mediaSizeMm, EXPORT_DPI } from '../src/print/geometry.ts'
 import { panelPdfBoxesPt } from '../src/print/pdfBoxes.ts'
 import { pngToCmykPdfX } from './lib/cmyk-pdf.mjs'
 
@@ -109,7 +109,9 @@ function resolveSource(args) {
   if (args.doc) {
     const doc = loadDoc(args.doc)
     base = doc.id
-    dpi = dpi ?? doc.dpi
+    // Match the export master (out/prints/<id>.png is rendered at EXPORT_DPI), not the
+    // doc's low preview DPI — otherwise the slices would claim the wrong physical size.
+    dpi = dpi ?? EXPORT_DPI
     const media = mediaSizeMm(doc.dimensions)
     mediaWidth = mediaWidth ?? media.widthMm
     mediaHeight = mediaHeight ?? media.heightMm
@@ -119,7 +121,7 @@ function resolveSource(args) {
   if (!input) throw new Error('no input image (give a path, or --doc <id> with out/prints/<id>.png present)')
   if (!existsSync(input)) throw new Error(`input image not found: ${input}`)
   base = base ?? path.basename(input).replace(/\.[^.]+$/, '')
-  dpi = dpi ?? 150
+  dpi = dpi ?? EXPORT_DPI
 
   // Image-only: infer the media size from the pixels at the given dpi.
   const px = identifyPx(input)

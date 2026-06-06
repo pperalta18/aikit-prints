@@ -93,7 +93,7 @@ function docFor(frame, wallsByInv) {
       cropMarks: false,
     },
     dpi: DPI,
-    color: { mode: 'cmyk', iccProfile: 'icc/CoatedFOGRA39.icc', renderIntent: 'perceptual', pdfxVariant: 'x1a' },
+    color: { mode: 'cmyk', iccProfile: 'icc/PSOuncoated_v3_FOGRA52.icc', renderIntent: 'perceptual', pdfxVariant: 'x1a' },
     // NB: the wall reference is `frameWallInvId`, NOT `invId` — a numeric
     // `props.invId` is the authored-print↔wall join key (control-table / legibility
     // / coverage), and frames must stay out of that 1-print-per-wall join.

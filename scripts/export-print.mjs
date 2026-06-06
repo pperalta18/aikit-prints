@@ -2,7 +2,8 @@
  * export-print — render a print document to a print-ready file.
  * ──────────────────────────────────────────────────────────────
  * Reads public/prints/<id>/doc.json, renders the `PrintPage` Remotion composition
- * (sized to the doc's media via calculateMetadata) to a still PNG at the doc's DPI,
+ * (sized to the doc's media via calculateMetadata) to a still PNG at the EXPORT_DPI
+ * standard (150 ppp; the doc's own low DPI is preview-only) — override with --dpi —
  * then emits — per --format:
  *   png  the rendered raster (sRGB, the master)
  *   jpg  a quality-controlled sRGB JPEG
@@ -14,7 +15,7 @@
  *
  * Options:
  *   --format png|jpg|pdf   output format (default pdf)
- *   --dpi <n>              override the doc DPI (default: doc.dpi)
+ *   --dpi <n>              override the export DPI (default: 150, the EXPORT_DPI standard)
  *   --quality <1-100>      JPG quality (default 92)
  *   --guides              draw preview trim/safe guides (debug; png only)
  *   --out <dir>           output dir (default out/prints)
@@ -36,7 +37,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { pngToCmykPdfX, buildPdfxDef } from './lib/cmyk-pdf.mjs'
 import { posterPdfBoxesPt } from '../src/print/pdfBoxes.ts'
-import { mediaSizeMm, mediaSizePx, MM_PER_INCH } from '../src/print/geometry.ts'
+import { mediaSizeMm, mediaSizePx, MM_PER_INCH, EXPORT_DPI } from '../src/print/geometry.ts'
 import { planTiles } from '../src/print/tiling.ts'
 
 const ROOT = process.cwd()
@@ -243,7 +244,9 @@ async function main() {
     process.exit(1)
   }
   const doc = loadDoc(args.id)
-  if (args.dpi) doc.dpi = args.dpi
+  // Export standard: render at EXPORT_DPI (150) for every deliverable, regardless of
+  // the doc's (low) preview DPI. `--dpi <n>` overrides for a one-off.
+  doc.dpi = Number.isFinite(args.dpi) && args.dpi > 0 ? args.dpi : EXPORT_DPI
   // Per-export overrides of bleed / crop marks (the doc.json stays untouched).
   if (args.bleed != null && Number.isFinite(args.bleed) && args.bleed >= 0) doc.dimensions.bleedMm = args.bleed
   if (args.marks === 'true') doc.dimensions.cropMarks = true

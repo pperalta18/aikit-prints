@@ -18,7 +18,7 @@ import { DEFAULT_WALL_HEIGHT_M, findWallByInvId, resolveWallHeight } from '../sp
  * covers the *authoring* of the print: `public/prints/micro-acento/doc.json` and its
  * registration. The unbiased checks prove the authored dimensions are honest and
  * renderable — the page resolves from the registry, exports through the existing
- * CMYK / FOGRA39 / PDF/X contract, physically fits wall 14 (the tiny 1.5 m S5/S6
+ * CMYK / FOGRA52 / PDF/X contract, physically fits wall 14 (the tiny 1.5 m S5/S6
  * accent) on its eye band, sizes its phrase legibly for the reading distance, and
  * renders the real one-phrase content, not a blank page.
  */
@@ -47,9 +47,9 @@ describe('micro-acento — registration', () => {
 })
 
 describe('micro-acento — print contract', () => {
-  it('is a CMYK / FOGRA39 / PDF-X print like the rest of the wall-graphics family', () => {
+  it('is a CMYK / FOGRA52 / PDF-X print like the rest of the wall-graphics family', () => {
     expect(doc.color.mode).toBe('cmyk')
-    expect(doc.color.iccProfile).toBe('icc/CoatedFOGRA39.icc')
+    expect(doc.color.iccProfile).toBe('icc/PSOuncoated_v3_FOGRA52.icc')
     expect(['x1a', 'x4']).toContain(doc.color.pdfxVariant)
     expect(RENDER_INTENTS).toContain(doc.color.renderIntent)
     // a flat, vivid typographic graphic → not the photo-only 'perceptual' intent.

@@ -53,7 +53,11 @@ type Props = {
   subtitle?: string
   /** The fine editorial label text (1–2 short sentences). */
   paragraphs?: string[]
-  /** The *ficha técnica* (técnica · soporte · colección · año). */
+  /** Title for the **second** cartela of a `dualCartela` diptych (labels the right relief). */
+  title2?: string
+  /** Body text for the second cartela of a `dualCartela` diptych. */
+  paragraphs2?: string[]
+  /** Optional *ficha técnica* (técnica · soporte · colección · año). Omit for a meditation, not a catalogue entry. */
   meta?: string
   /** Draw the short hairline rule between the title and the body. Default `false` (clean). */
   divider?: boolean
@@ -61,6 +65,10 @@ type Props = {
   framed?: boolean
   /** Which side the painting hangs on. Default 'left'. Ignored when `src2` is set. */
   placement?: CuadroPlacement
+  /** Give each relief of a diptych its own cartela (only with `src2`). Default `false` (one centred label). */
+  dualCartela?: boolean
+  /** Gap between each relief and its own label in a `dualCartela` diptych, in mm. Default 500 (½ m). */
+  cartelaGapMm?: number
   /** Painting width ÷ height. Default 2/3 (the portrait reliefs). */
   paintingAspect?: number
   /** Painting height as a fraction of the wall height. Default 0.84. */
@@ -77,12 +85,12 @@ const DEFAULTS = {
   readingDistanceM: 1.7,
   title: 'La ascensión en el umbral',
   paragraphs: [
-    'La diagonal que sacó al hombre del esfuerzo agachado no se detiene: ahora la empuja el cálculo a gran escala.',
-    'Si la curva se prolonga más allá del dintel, lo que aguarda aún no sabemos nombrarlo.',
+    'Toda la historia del hombre cabe en una pendiente: la misma que un día le enderezó la espalda no se detiene en el umbral. Hoy ya no la empuja el músculo, sino un cálculo que no conoce el cansancio.',
+    'Asómate un paso más allá del marco y despunta un país todavía sin nombre. Lo decisivo nunca cabe dentro del cuadro.',
   ],
-  meta: 'Bajorrelieve monocromo · Piedra caliza · Colección AiKit Live · 2026',
   divider: false,
   framed: false,
+  cartelaGapMm: 500,
   placement: 'left' as CuadroPlacement,
   paintingAspect: 2 / 3,
   paintingHeightFraction: 0.84,
@@ -106,7 +114,15 @@ export function Cuadro({ doc, geo }: PrintPageProps) {
   const title = p.title ?? DEFAULTS.title
   const subtitle = typeof p.subtitle === 'string' && p.subtitle.trim() ? p.subtitle : ''
   const paragraphs = Array.isArray(p.paragraphs) ? p.paragraphs : DEFAULTS.paragraphs
-  const meta = p.meta ?? DEFAULTS.meta
+  // A diptych can give each relief its own cartela (relief · ½ m · label, mirrored),
+  // so the wall reads as two independent cuadros rather than one shared central label.
+  const dualCartela = p.dualCartela === true
+  const cartelaGapMm = typeof p.cartelaGapMm === 'number' ? p.cartelaGapMm : DEFAULTS.cartelaGapMm
+  const title2 = p.title2 ?? title
+  const paragraphs2 = Array.isArray(p.paragraphs2) ? p.paragraphs2 : paragraphs
+  // Ficha técnica is opt-in too: an exhibition wall reads as a meditation, not a
+  // catalogue entry — only print the technical line when a doc explicitly asks for it.
+  const meta = typeof p.meta === 'string' && p.meta.trim() ? p.meta : ''
   const divider = typeof p.divider === 'boolean' ? p.divider : DEFAULTS.divider
   const framed = typeof p.framed === 'boolean' ? p.framed : DEFAULTS.framed
   const placement = p.placement ?? DEFAULTS.placement
@@ -135,7 +151,10 @@ export function Cuadro({ doc, geo }: PrintPageProps) {
   // physical width (mm) so the title and paragraphs get room to breathe without the
   // label ever growing into a second wall of text.
   const cartelaWidthMm = clamp(bodyMeasureMm(scale.bodyPt, { chars: cartelaChars }), Math.min(W * 0.12, 300), Math.min(W * 0.45, 560))
-  const gapMm = W * 0.022
+  // A dual-cartela diptych hangs each label an exact ½ m from its relief; otherwise the
+  // single label rides a small proportional gap beside the (one) hung work.
+  const useDual = dualCartela && src2 != null
+  const gapMm = useDual ? cartelaGapMm : W * 0.022
 
   const layout = layoutCuadro({
     wallWidthMm: W,
@@ -146,6 +165,7 @@ export function Cuadro({ doc, geo }: PrintPageProps) {
     gapMm,
     placement,
     secondPainting: src2 != null,
+    dualCartela: useDual,
   })
 
   // Vertical rhythm in the cartela, anchored to the body cap-height. Generous, so the
@@ -190,54 +210,87 @@ export function Cuadro({ doc, geo }: PrintPageProps) {
           </div>
         ) : null}
 
-        {/* ── the cartela (museum label), text vertically centred to the painting ── */}
-        <div
-          style={{
-            position: 'absolute',
-            left: mm(layout.cartela.x),
-            top: mm(layout.cartela.y),
-            width: mm(layout.cartela.width),
-            height: mm(layout.cartela.height),
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-          }}
-        >
-          {/* optional eyebrow with a short warm accent tick */}
-          {eyebrow ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: mm(scale.capHeights.eyebrowMm * 0.9), marginBottom: blockGap }}>
-              <span style={{ width: tickW, height: tickH, background: pal.accent, flex: '0 0 auto' }} />
-              <span style={cartelaEyebrow(geo, scale.eyebrowPt, pal.muted)}>{eyebrow}</span>
+        {useDual && layout.cartela2 ? (
+          /* ── dual cartela: each relief reads as its own cuadro (clean: title → body) ── */
+          [
+            { box: layout.cartela, t: title, ps: paragraphs },
+            { box: layout.cartela2, t: title2, ps: paragraphs2 },
+          ].map(({ box, t, ps }, i) => (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: mm(box.x),
+                top: mm(box.y),
+                width: mm(box.width),
+                height: mm(box.height),
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+              }}
+            >
+              <div style={cartelaTitle(geo, scale.h1Pt, pal)}>{t}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: paraGap, marginTop: blockGap }}>
+                {ps.map((para, j) => (
+                  <p key={j} style={cartelaBody(geo, scale.bodyPt, pal)}>
+                    {para}
+                  </p>
+                ))}
+              </div>
             </div>
-          ) : null}
+          ))
+        ) : (
+          /* ── the single cartela (museum label), text vertically centred to the painting ── */
+          <div
+            style={{
+              position: 'absolute',
+              left: mm(layout.cartela.x),
+              top: mm(layout.cartela.y),
+              width: mm(layout.cartela.width),
+              height: mm(layout.cartela.height),
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+            }}
+          >
+            {/* optional eyebrow with a short warm accent tick */}
+            {eyebrow ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: mm(scale.capHeights.eyebrowMm * 0.9), marginBottom: blockGap }}>
+                <span style={{ width: tickW, height: tickH, background: pal.accent, flex: '0 0 auto' }} />
+                <span style={cartelaEyebrow(geo, scale.eyebrowPt, pal.muted)}>{eyebrow}</span>
+              </div>
+            ) : null}
 
-          {/* title (+ optional subtitle) */}
-          <div style={cartelaTitle(geo, scale.h1Pt, pal)}>{title}</div>
-          {subtitle ? (
-            <div style={{ ...cartelaSubtitle(geo, scale.h3Pt, pal), marginTop: mm(scale.capHeights.h3Mm * 0.5) }}>{subtitle}</div>
-          ) : null}
+            {/* title (+ optional subtitle) */}
+            <div style={cartelaTitle(geo, scale.h1Pt, pal)}>{title}</div>
+            {subtitle ? (
+              <div style={{ ...cartelaSubtitle(geo, scale.h3Pt, pal), marginTop: mm(scale.capHeights.h3Mm * 0.5) }}>{subtitle}</div>
+            ) : null}
 
-          {/* optional divider rule */}
-          {divider ? (
-            <div style={{ marginTop: blockGap, marginBottom: blockGap }}>
-              <CartelaDivider geo={geo} pal={pal} widthMm={cartelaWidthMm * 0.42} color={pal.accent} />
+            {/* optional divider rule */}
+            {divider ? (
+              <div style={{ marginTop: blockGap, marginBottom: blockGap }}>
+                <CartelaDivider geo={geo} pal={pal} widthMm={cartelaWidthMm * 0.42} color={pal.accent} />
+              </div>
+            ) : null}
+
+            {/* the fine editorial label text — its own air below the title */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: paraGap, marginTop: divider ? 0 : blockGap }}>
+              {paragraphs.map((para, i) => (
+                <p key={i} style={cartelaBody(geo, scale.bodyPt, pal)}>
+                  {para}
+                </p>
+              ))}
             </div>
-          ) : null}
 
-          {/* the fine editorial label text — its own air below the title */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: paraGap, marginTop: divider ? 0 : blockGap }}>
-            {paragraphs.map((para, i) => (
-              <p key={i} style={cartelaBody(geo, scale.bodyPt, pal)}>
-                {para}
-              </p>
-            ))}
+            {/* ficha técnica — opt-in; omitted by default to keep the label a meditation */}
+            {meta ? (
+              <div style={{ marginTop: blockGap }}>
+                <span style={cartelaMeta(geo, scale.eyebrowPt, pal.faint)}>{meta}</span>
+              </div>
+            ) : null}
           </div>
-
-          {/* ficha técnica */}
-          <div style={{ marginTop: blockGap }}>
-            <span style={cartelaMeta(geo, scale.eyebrowPt, pal.faint)}>{meta}</span>
-          </div>
-        </div>
+        )}
       </div>
     </>
   )

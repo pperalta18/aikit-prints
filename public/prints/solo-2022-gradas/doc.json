@@ -1,0 +1,27 @@
+{
+  "id": "solo-2022-gradas",
+  "title": "Solo · 2022 gradas (tamaño en pared 0.77×1.00 m)",
+  "createdAt": "2026-06-06T00:00:00.000Z",
+  "pageComponentId": "raster-wall",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 771,
+    "trimHeightMm": 1000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "src": "prints/marco-11-w-image/assets/2022-g1.png",
+    "fit": "cover",
+    "position": "center",
+    "alt": "Gradas de estadio 2022 (SD 1.5) al tamaño que ocupa cada celda del grid en la pared 11-W-IMAGE"
+  }
+}

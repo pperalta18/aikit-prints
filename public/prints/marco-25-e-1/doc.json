@@ -1,6 +1,6 @@
 {
   "id": "marco-25-e-1",
-  "title": "Cubo central S2 — 02 · 25-E-1 (2×2.50 m)",
+  "title": "Cubo central S2 — 04 · 25-E-1 (2×2.50 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "cubo-cara",
   "theme": "light",
@@ -14,7 +14,7 @@
   "dpi": 24,
   "color": {
     "mode": "cmyk",
-    "iccProfile": "icc/CoatedFOGRA39.icc",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
     "renderIntent": "relative",
     "pdfxVariant": "x1a"
   },
@@ -23,8 +23,8 @@
     "wallId": "wall-23",
     "frameId": "25-E-1",
     "side": 1,
-    "index": "02",
-    "title": "Título de la sección dos",
+    "index": "04",
+    "title": "Título de la sección cuatro",
     "ground": "#ffa322",
     "eyebrow": "AiKit Live · S2",
     "inkMode": "dark"

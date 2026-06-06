@@ -85,22 +85,21 @@ type Props = {
 /* ── slot builders for the default art direction ───────────────────────────── */
 const img = (image: string, rows: number): MosaicSlot => ({ kind: 'image', image, rows })
 const solid = (tone: number, rows: number): MosaicSlot => ({ kind: 'solid', rows, fill: `tone:${tone}` })
-const solidColor = (fill: string, rows: number): MosaicSlot => ({ kind: 'solid', rows, fill })
 const ph = (rows: number, label?: string): MosaicSlot => ({ kind: 'placeholder', rows, label })
 
 /**
- * The default composition for the grid region (≈14 cols on this wall). The real images
- * sit in the leftmost bays so they're never clipped if the region is narrow; `fillBays`
- * tops up any extra width with the placeholder/solid rhythm. A calm contact-sheet of
- * half-height landscapes anchored, on the right, by the full-height brand **póster** as
- * the wall's hero — and a flat brand-orange block where the póster used to sit, holding
- * the rhythm of the grid.
+ * The default composition for the grid region (12 cols on this wall, full height 3 m).
+ * The real images sit in the leftmost bays so they're never clipped if the region is
+ * narrow; `fillBays` tops up any extra width with the placeholder/solid rhythm. A calm
+ * contact-sheet of half-height landscapes anchored, on the right, by the full-height
+ * brand **póster** as the wall's hero. The póster is itself a 1.43∶1 landscape, so it
+ * gets a wide **6-col** bay (≈1.46∶1) — it reads whole, edge to edge, never squeezed
+ * into a portrait sliver.
  */
 const DEFAULT_BAYS: MosaicBay[] = [
-  { cols: 3, slots: [img('vending', 2), img('bottles', 2)] }, //  0– 2  vending / botellas
-  { cols: 3, slots: [solidColor(ORANGE, 2), img('taxi', 2)] }, // 3– 5  naranja de marca / robotaxi
-  { cols: 3, slots: [img('factory', 2), img('landscape', 2)] }, // 6– 8  micro-fábrica / paisaje
-  { cols: 5, slots: [img('poster', 4)] }, //                      9–13  póster héroe — altura completa, a sangre
+  { cols: 3, slots: [img('vending', 2), img('bottles', 2)] }, // 0– 2  vending / botellas
+  { cols: 3, slots: [img('taxi', 2), img('landscape', 2)] }, //  3– 5  robotaxi / paisaje
+  { cols: 6, slots: [img('poster', 4)] }, //                     6–11  póster héroe — landscape a sangre, sin recorte
 ]
 
 export function Mosaico({ doc, geo }: PrintPageProps) {

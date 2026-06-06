@@ -1,14 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  buildCorpus,
-  GEMS,
-  genArithmetic,
-  genCapitals,
-  layoutSea,
-  mulberry32,
-  shuffle,
-  type Phrase,
-} from './palabra-faltante'
+import { buildCorpus, GEMS, layoutSea, mulberry32, shuffle, type Phrase } from './palabra-faltante'
 
 const WALL = { trimWidthMm: 6500, trimHeightMm: 2500, readingDistanceM: 3 }
 
@@ -35,9 +26,10 @@ describe('mulberry32 / shuffle — deterministic primitives', () => {
 describe('corpus — every phrase is a real fill-in-the-blank', () => {
   const corpus = buildCorpus()
 
-  it('builds a large pool from gems + generators', () => {
-    expect(corpus.length).toBeGreaterThan(GEMS.length)
-    expect(corpus.length).toBeGreaterThan(180)
+  it('is a sizable, hand-curated reasoning-only pool (no generators)', () => {
+    // the corpus IS the gems — every phrase is authored + adversarially verified
+    expect(corpus.length).toBe(GEMS.length)
+    expect(corpus.length).toBeGreaterThan(120)
   })
 
   const allValid = (phrases: Phrase[], label: string) =>
@@ -54,18 +46,19 @@ describe('corpus — every phrase is a real fill-in-the-blank', () => {
   allValid(GEMS, 'gems')
   allValid(corpus, 'corpus')
 
-  it('arithmetic answers are correct (the blank really needs computing)', () => {
-    const ar = genArithmetic()
-    const prod = ar.find((p) => p.t === '7 por 8 son')
-    expect(prod?.a).toBe('56')
-    const pct = ar.find((p) => p.t === 'El 20% de 80 es')
-    expect(pct?.a).toBe('16')
+  it('carries no pure-recall phrases (the wall argues «no es solo memoria»)', () => {
+    // retrieval-only patterns must never reappear: capitals, roman numerals, unit
+    // conversions, day-of-week, do-re-mi, rote times tables.
+    expect(corpus.some((p) => p.t.startsWith('La capital de '))).toBe(false)
+    expect(corpus.some((p) => p.t.startsWith('El número romano '))).toBe(false)
+    expect(corpus.some((p) => /^(Media docena|Dos docenas|Media hora) /.test(p.t))).toBe(false)
+    expect(corpus.some((p) => / por \d+ son$/.test(p.t))).toBe(false)
   })
 
-  it('includes deliberately counter-intuitive capitals', () => {
-    const caps = genCapitals()
-    expect(caps.find((p) => p.t.includes('Australia'))?.a).toBe('Canberra')
-    expect(caps.find((p) => p.t.includes('Turquía'))?.a).toBe('Ankara')
+  it('keeps a real depth gradient (foreground gems + a haze of background phrases)', () => {
+    const weights = new Set(corpus.map((p) => p.w ?? 1))
+    expect(weights.has(2)).toBe(true) // foreground
+    expect(weights.has(0)).toBe(true) // haze
   })
 
   it('carries exactly one explicit thesis gem about intelligence', () => {
@@ -117,10 +110,27 @@ describe('layoutSea — deterministic, in-bounds, fills the wall', () => {
     for (const p of layout.placed) expect(p.blankWidthMm).toBeGreaterThan(0)
   })
 
-  it('marks exactly one accented phrase', () => {
-    const accents = layout.placed.filter((p) => p.accent)
-    expect(accents).toHaveLength(1)
-    expect(accents[0].text).toBe(accentText)
+  it('lifts the thesis out of the sea into a centred hero', () => {
+    // the thesis is no longer a sea phrase…
+    expect(layout.placed.some((p) => p.text === accentText)).toBe(false)
+    expect(layout.placed.some((p) => p.accent)).toBe(false)
+    // …it is the hero, dead-centre, wrapped into lines, with its blank sized
+    expect(layout.hero).not.toBeNull()
+    const hero = layout.hero!
+    expect(hero.text).toBe(accentText)
+    expect(hero.answer).toBe('inteligencia')
+    expect(hero.lines.length).toBeGreaterThanOrEqual(1)
+    expect(hero.lines.join(' ')).toBe(accentText)
+    expect(hero.centerXMm).toBeCloseTo(WALL.trimWidthMm / 2)
+    expect(hero.centerYMm).toBeCloseTo(WALL.trimHeightMm / 2)
+    // the hero dominates the sea foreground and stays inside the wall
+    expect(hero.capMm).toBeGreaterThan(layout.tierCapsMm[0])
+    expect(hero.box.wMm).toBeLessThanOrEqual(layout.usable.w)
+  })
+
+  it('has no hero when no thesis text is given', () => {
+    const plain = layoutSea({ ...WALL, seed: 3 })
+    expect(plain.hero).toBeNull()
   })
 
   it('uses the full tier range (depth + size variety → a sea, not a grid)', () => {

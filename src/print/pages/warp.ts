@@ -22,8 +22,15 @@
 import { circleAreaScale } from './dataviz-scales'
 import { GALAXY_SUN, GALAXY_PLANETS, galaxyMaxValue } from '../space/galaxy-data'
 
-/** Nvidia (the global-max body) radius as a fraction of canvas height — the galaxy's shared scale. */
-export const WARP_MAX_RADIUS_FRAC = 0.27
+/**
+ * Nvidia (the global-max body) radius as a fraction of canvas height — the galaxy's
+ * shared scale. Drives BOTH the market spheres and the IA+Nvidia hole/core, so they
+ * stay area-true to each other. Tuned down from 0.27 after the 3 m wall raise (H went
+ * 2500→3000 mm, which scaled every sphere up ×1.2): 0.22 restores roughly the prior
+ * absolute sphere size. The warp grid is unaffected (it fills out to `maxR`, driven by
+ * canvas width), so the field keeps occupying the whole wall.
+ */
+export const WARP_MAX_RADIUS_FRAC = 0.22
 
 export type WarpOpts = {
   /** Full canvas width (mm) — the three walls joined: 2-E + 5N1 + 11-W. */
