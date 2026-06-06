@@ -5,7 +5,7 @@
   "pageComponentId": "contexto",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 7000,
+    "trimWidthMm": 6625,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

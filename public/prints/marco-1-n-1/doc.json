@@ -1,11 +1,11 @@
 {
   "id": "marco-1-n-1",
-  "title": "Marco vacío 1-N-1 — Bici / combustión (7×2.50 m)",
+  "title": "Marco vacío 1-N-1 — Bici / combustión (5.50×3 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "blank",
   "theme": "dark",
   "dimensions": {
-    "trimWidthMm": 7000,
+    "trimWidthMm": 5500,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

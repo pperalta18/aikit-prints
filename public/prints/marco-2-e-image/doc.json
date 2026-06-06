@@ -5,7 +5,7 @@
   "pageComponentId": "evolucion-video",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 6750,
+    "trimWidthMm": 7000,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

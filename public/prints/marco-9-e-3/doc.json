@@ -1,11 +1,11 @@
 {
   "id": "marco-9-e-3",
-  "title": "Marco vacío 9-E-3 — Perímetro O — combustión (1.75×2.50 m)",
+  "title": "Marco vacío 9-E-3 — Perímetro O — combustión (2×3 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "blank",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 1750,
+    "trimWidthMm": 2000,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

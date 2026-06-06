@@ -1,11 +1,11 @@
 {
   "id": "marco-9-w-1",
-  "title": "Marco vacío 9-W-1 — Perímetro O — combustión (19×2.50 m)",
+  "title": "Marco vacío 9-W-1 — Perímetro O — combustión (19.25×3 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "blank",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 19000,
+    "trimWidthMm": 19250,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

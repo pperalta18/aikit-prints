@@ -5,7 +5,7 @@
   "pageComponentId": "palabra-faltante",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 6500,
+    "trimWidthMm": 5000,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

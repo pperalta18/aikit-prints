@@ -5,7 +5,7 @@
   "pageComponentId": "proxima-sala",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 6500,
+    "trimWidthMm": 4500,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
@@ -28,7 +28,10 @@
     "eyebrow": "Próxima sección",
     "num": "06",
     "sala": "Hasta aquí hemos llegado",
-    "salaLines": ["Hasta aquí", "hemos llegado"],
+    "salaLines": [
+      "Hasta aquí",
+      "hemos llegado"
+    ],
     "subtitle": "Validación histórica · «Ya pasó antes»",
     "arrow": "right",
     "showFilete": false,

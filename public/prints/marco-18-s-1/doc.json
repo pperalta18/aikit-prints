@@ -5,7 +5,7 @@
   "pageComponentId": "raster-wall",
   "theme": "dark",
   "dimensions": {
-    "trimWidthMm": 3500,
+    "trimWidthMm": 3125,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

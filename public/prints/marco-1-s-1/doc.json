@@ -5,7 +5,7 @@
   "pageComponentId": "aikit-live-mural",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 7000,
+    "trimWidthMm": 5500,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

@@ -5,7 +5,7 @@
   "pageComponentId": "wayfinding-s1-s2",
   "theme": "dark",
   "dimensions": {
-    "trimWidthMm": 6500,
+    "trimWidthMm": 5000,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

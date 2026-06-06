@@ -5,7 +5,7 @@
   "pageComponentId": "proxima-sala",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 4500,
+    "trimWidthMm": 4375,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
@@ -28,7 +28,9 @@
     "eyebrow": "Próxima sección",
     "num": "01",
     "sala": "El principio",
-    "salaLines": ["El principio"],
+    "salaLines": [
+      "El principio"
+    ],
     "arrow": "right",
     "showFilete": false,
     "showTick": false,

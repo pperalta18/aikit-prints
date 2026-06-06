@@ -1,11 +1,11 @@
 {
   "id": "marco-21-n-1",
-  "title": "Marco vacío 21-N-1 — Mundo / energía (7×2.50 m)",
+  "title": "Marco vacío 21-N-1 — Transición (4.50×3 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "blank",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 7000,
+    "trimWidthMm": 4500,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

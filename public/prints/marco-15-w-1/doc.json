@@ -5,7 +5,7 @@
   "pageComponentId": "proxima-sala",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 4000,
+    "trimWidthMm": 3500,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
@@ -28,7 +28,10 @@
     "eyebrow": "Próxima sección",
     "num": "04",
     "sala": "Un caso de éxito",
-    "salaLines": ["Un caso", "de éxito"],
+    "salaLines": [
+      "Un caso",
+      "de éxito"
+    ],
     "arrow": "right",
     "showFilete": false,
     "showTick": false

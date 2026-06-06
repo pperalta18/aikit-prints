@@ -6,7 +6,7 @@
   "theme": "light",
   "surface": "#ffffff",
   "dimensions": {
-    "trimWidthMm": 12250,
+    "trimWidthMm": 11750,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
@@ -29,7 +29,10 @@
     "eyebrow": "Próxima sección",
     "num": "05",
     "sala": "Cuello de botella",
-    "salaLines": ["Cuello", "de botella"],
+    "salaLines": [
+      "Cuello",
+      "de botella"
+    ],
     "arrow": "left",
     "showFilete": false,
     "showTick": false,
@@ -44,10 +47,61 @@
       }
     },
     "bays": [
-      { "cols": 2, "slots": [{ "kind": "image", "image": "runner", "rows": 4 }] },
-      { "cols": 4, "slots": [{ "kind": "image", "image": "vending", "rows": 2 }, { "kind": "image", "image": "bottles", "rows": 2 }] },
-      { "cols": 3, "slots": [{ "kind": "image", "image": "taxi", "rows": 2 }, { "kind": "image", "image": "landscape", "rows": 2 }] },
-      { "cols": 3, "slots": [{ "kind": "image", "image": "poster", "rows": 2 }, { "kind": "solid", "rows": 2, "fill": "tone:0" }] }
+      {
+        "cols": 2,
+        "slots": [
+          {
+            "kind": "image",
+            "image": "runner",
+            "rows": 4
+          }
+        ]
+      },
+      {
+        "cols": 4,
+        "slots": [
+          {
+            "kind": "image",
+            "image": "vending",
+            "rows": 2
+          },
+          {
+            "kind": "image",
+            "image": "bottles",
+            "rows": 2
+          }
+        ]
+      },
+      {
+        "cols": 3,
+        "slots": [
+          {
+            "kind": "image",
+            "image": "taxi",
+            "rows": 2
+          },
+          {
+            "kind": "image",
+            "image": "landscape",
+            "rows": 2
+          }
+        ]
+      },
+      {
+        "cols": 3,
+        "slots": [
+          {
+            "kind": "image",
+            "image": "poster",
+            "rows": 2
+          },
+          {
+            "kind": "solid",
+            "rows": 2,
+            "fill": "tone:0"
+          }
+        ]
+      }
     ]
   }
 }

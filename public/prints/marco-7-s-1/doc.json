@@ -1,11 +1,11 @@
 {
   "id": "marco-7-s-1",
-  "title": "Marco vacío 7-S-1 — Cinema (9×2.50 m)",
+  "title": "Marco vacío 7-S-1 — Cinema (7×3 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "blank",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 9000,
+    "trimWidthMm": 7000,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

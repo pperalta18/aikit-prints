@@ -1,11 +1,11 @@
 {
   "id": "marco-6-w-1",
-  "title": "Marco vacío 6-W-1 — Cinema (3.50×2.50 m)",
+  "title": "Marco vacío 6-W-1 — Cinema (3.25×3 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "blank",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 3500,
+    "trimWidthMm": 3250,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

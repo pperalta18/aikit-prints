@@ -1,11 +1,11 @@
 {
   "id": "marco-21-s-1",
-  "title": "Marco vacío 21-S-1 — Transición (7×2.50 m)",
+  "title": "Marco vacío 21-S-1 — Transición (4.38×3 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "blank",
   "theme": "dark",
   "dimensions": {
-    "trimWidthMm": 7000,
+    "trimWidthMm": 4375,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

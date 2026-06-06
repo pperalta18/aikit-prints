@@ -107,10 +107,17 @@ function touchedFace(host: Wall, p: Wall): 1 | -1 | null {
   const pCenter = normalValueOf(host, { cx: p.cx, cz: p.cz })
   const pLow = pCenter - p.length / 2
   const pHigh = pCenter + p.length / 2
-  const nearHigh = Math.abs(pLow - faceHigh) <= TOUCH_TOL_M || Math.abs(pHigh - faceHigh) <= TOUCH_TOL_M
-  const nearLow = Math.abs(pLow - faceLow) <= TOUCH_TOL_M || Math.abs(pHigh - faceLow) <= TOUCH_TOL_M
-  if (nearHigh) return 1
-  if (nearLow) return -1
+  // Penetration-aware: `p` touches a face when its run-span *reaches* that face —
+  // flush (an end at the face) OR penetrated past it. This matters because the venue
+  // is drawn at the planner's thin-wall centreline but rendered at the true 0.5 m
+  // depth, so a wall drawn flush ends up a fraction inside the thicker face; a simple
+  // "end within tolerance of the face" test would miss it (the end is now *past* the
+  // face, not near it) and the face would wrongly collapse to a single panel. A wall
+  // that genuinely stops short of the face still doesn't reach it, so no spurious cut.
+  const touchesHigh = pLow <= faceHigh + TOUCH_TOL_M && pHigh >= faceHigh - TOUCH_TOL_M
+  const touchesLow = pLow <= faceLow + TOUCH_TOL_M && pHigh >= faceLow - TOUCH_TOL_M
+  if (touchesHigh) return 1
+  if (touchesLow) return -1
   return null
 }
 

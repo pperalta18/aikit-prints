@@ -46,7 +46,10 @@ describe('coverage', () => {
         // minus any corner inset where a wall stands on the face (e.g. the nave end
         // wall over wall 2's INVERSIÓN corner pulls that bay 0.5 m off the end).
         expect(faceWidth).toBeLessThanOrEqual(w.length + 0.01)
-        expect(faceWidth).toBeGreaterThan(w.length - 0.6)
+        // The central S2 cube (inv 22–25) is a tight 2.0×1.5 m box of 0.5 m walls,
+        // so its occluded inner faces pull in 0.5 m at each corner (1.0 m of a 2.0 m
+        // run). Tolerate up to that; the outer (printed) faces stay full-length.
+        expect(faceWidth).toBeGreaterThan(w.length - 1.05)
       }
     }
   })
@@ -78,9 +81,9 @@ describe('nave zone projection', () => {
     const naveBays = forWall(2).filter((f) => f.zone)
     expect(naveBays.map((f) => f.zone)).toEqual([...NAVE_ZONE_ORDER])
     const widths = naveBays.map((f) => f.widthM)
-    // Divisoria projections → 6.75 / 7, and INVERSIÓN pulled 0.5 m off the back-wall
-    // corner (it stands on this face for the last 0.5 m) → 8.25, not 8.75.
-    expect(widths).toEqual([6.75, 7, 8.25])
+    // 2026-06-06 plan: divisoria projections → 7 / 6.625, INVERSIÓN pulled 0.5 m off
+    // the back-wall corner (it stands on this face for the last 0.5 m) → 8.625.
+    expect(widths).toEqual([7, 6.625, 8.625])
     expect(sumWidth(naveBays)).toBeCloseTo(findWallByInvId(2)!.length - 0.5, 5)
   })
 
@@ -88,8 +91,8 @@ describe('nave zone projection', () => {
     const naveBays = forWall(11).filter((f) => f.zone)
     expect(naveBays.map((f) => f.zone)).toEqual([...NAVE_ZONE_ORDER])
     const widths = naveBays.map((f) => f.widthM)
-    // Cut at the real divisoria projections → 9.25 / 7 / 5.75, not equal thirds.
-    expect(widths).toEqual([9.25, 7, 5.75])
+    // 2026-06-06 plan: cut at the real divisoria projections → 9.25 / 6.625 / 6.125.
+    expect(widths).toEqual([9.25, 6.625, 6.125])
     expect(sumWidth(naveBays)).toBeCloseTo(findWallByInvId(11)!.length, 5)
   })
 

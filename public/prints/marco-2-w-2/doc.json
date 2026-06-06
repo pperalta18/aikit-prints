@@ -1,11 +1,11 @@
 {
   "id": "marco-2-w-2",
-  "title": "Marco vacío 2-W-2 — Nave O (doble cara) (10.50×2.50 m)",
+  "title": "Marco vacío 2-W-2 — Nave O (doble cara) (10.63×3 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "blank",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 10500,
+    "trimWidthMm": 10625,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

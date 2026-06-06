@@ -5,7 +5,7 @@
   "pageComponentId": "cubo-cara",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 2500,
+    "trimWidthMm": 2000,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

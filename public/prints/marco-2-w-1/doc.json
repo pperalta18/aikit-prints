@@ -5,7 +5,7 @@
   "pageComponentId": "proxima-sala",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 6250,
+    "trimWidthMm": 6375,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
@@ -28,7 +28,10 @@
     "eyebrow": "Próxima sección",
     "num": "03",
     "sala": "Velocidad de progreso",
-    "salaLines": ["Velocidad", "de progreso"],
+    "salaLines": [
+      "Velocidad",
+      "de progreso"
+    ],
     "arrow": "left",
     "showFilete": false,
     "showTick": false

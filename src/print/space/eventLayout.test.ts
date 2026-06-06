@@ -130,11 +130,12 @@ describe('findWallsBySala — room lookup understands spanning walls', () => {
 })
 
 describe('geometry preserved through registry injection (brief anchors)', () => {
-  it('inv 1 (S1 Bici) is 7.0 m long', () => {
-    expect(findWallByInvId(1)!.length).toBeCloseTo(7.0, 5)
+  // Anchors reflect the 2026-06-06 floor plan (inv 1 7.0→5.5 m, inv 4 28.5→28.25 m).
+  it('inv 1 (S1 Bici) is 5.5 m long', () => {
+    expect(findWallByInvId(1)!.length).toBeCloseTo(5.5, 5)
   })
 
-  it('inv 4 (Naranja Mecánica light-box) is the 28.5 m run', () => {
-    expect(findWallByInvId(4)!.length).toBeCloseTo(28.5, 5)
+  it('inv 4 (Naranja Mecánica light-box) is the 28.25 m run', () => {
+    expect(findWallByInvId(4)!.length).toBeCloseTo(28.25, 5)
   })
 })

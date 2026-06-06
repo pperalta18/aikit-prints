@@ -5,7 +5,7 @@
   "pageComponentId": "indice",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 9500,
+    "trimWidthMm": 9125,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
@@ -25,12 +25,30 @@
     "side": 1,
     "readingDistanceM": 3,
     "entries": [
-      { "no": "01", "title": "El principio" },
-      { "no": "02", "title": "Del mito al dato" },
-      { "no": "03", "title": "Velocidad de progreso" },
-      { "no": "04", "title": "Un caso de éxito" },
-      { "no": "05", "title": "Cuello de botella" },
-      { "no": "06", "title": "Hasta aquí hemos llegado" }
+      {
+        "no": "01",
+        "title": "El principio"
+      },
+      {
+        "no": "02",
+        "title": "Del mito al dato"
+      },
+      {
+        "no": "03",
+        "title": "Velocidad de progreso"
+      },
+      {
+        "no": "04",
+        "title": "Un caso de éxito"
+      },
+      {
+        "no": "05",
+        "title": "Cuello de botella"
+      },
+      {
+        "no": "06",
+        "title": "Hasta aquí hemos llegado"
+      }
     ],
     "marginXFraction": 0.02,
     "columnWidthFraction": 0.28,

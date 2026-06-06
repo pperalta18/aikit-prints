@@ -1,12 +1,12 @@
 {
   "id": "marco-20-n-1",
-  "title": "Marco vacío 20-N-1 — Pobreza — salones por siglos (3.50×2.50 m)",
+  "title": "Marco vacío 20-N-1 — Pobreza — salones por siglos (3.25×3 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "blank",
   "theme": "light",
   "surface": "#f7f3e8",
   "dimensions": {
-    "trimWidthMm": 3500,
+    "trimWidthMm": 3250,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

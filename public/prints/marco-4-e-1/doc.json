@@ -1,11 +1,11 @@
 {
   "id": "marco-4-e-1",
-  "title": "Marco vacío 4-E-1 — Cuellos — Naranja Mecánica (28.50×2.50 m)",
+  "title": "Marco vacío 4-E-1 — Cuellos — Naranja Mecánica (28.25×3 m)",
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "blank",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 28500,
+    "trimWidthMm": 28250,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
