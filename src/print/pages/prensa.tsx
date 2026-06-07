@@ -30,7 +30,7 @@ import { tipoPalette, type TipoPalette } from './tipografia-kit'
 
 /** Brand orange («el naranja de la sala», from the wordmark) — the only accent. */
 const ORANGE = '#fe6d01'
-const ASSET_DIR = 'prints/marco-4-w-2/assets/news'
+const ASSET_DIR = 'prints/4-w-2/assets/news'
 
 type Story = {
   /** Section label — small-caps orange kicker (e.g. «Energía»). */
@@ -78,21 +78,21 @@ const s = (kicker: string, headline: string, body: string, dateline: string, slu
  * sell-the-idea.
  */
 const DEFAULT_STORIES: Story[] = [
-  s('Agricultura', 'Granjas verticales: fruta todo el año, sin tierra ni estaciones', 'Una nave sin ventanas da cuatro millones de kilos de fruta al año con un 90 % menos de agua.', 'Richmond, EE. UU. · 2024', 'agricultura', 'Granja vertical: torres de fresas bajo luz LED'),
-  s('Cosecha', 'Robots recolectores: recogen la fruta una a una, sin descanso', 'La mayor flota de recolectores autónomos del mundo elige cada fruta por su madurez, día y noche.', 'Colorado · 2024', 'cosecha', 'Brazo robótico cogiendo una fresa madura'),
-  s('Industria', 'Fábricas autónomas: 150.000 botellas por hora sin nadie dentro', 'Una línea llena, tapa, etiqueta y apila siete millones de envases al día, a oscuras y sin descanso.', 'Arabia Saudí · 2024', 'industria', 'Línea automatizada de botellas de zumo, sin operarios'),
+  s('Agricultura', 'Granjas verticales que producen fruta todo el año, sin tierra', 'Una instalación sin ventanas en Richmond genera cuatro millones de kilos de fruta anuales con un 90 % menos de agua que la agricultura convencional.', '2024', 'agricultura', 'Granja vertical: torres de fresas bajo luz LED'),
+  s('Cosecha', 'Robots autónomos que recogen la fruta una a una', 'La mayor flota de cosechadores robóticos del mundo identifica el nivel de madurez de cada pieza y la recoge de forma individual. Opera de forma continua en Colorado.', '2024', 'cosecha', 'Brazo robótico cogiendo una fresa madura'),
+  s('Industria', 'Una planta embotelladora que funciona sin personal humano', 'Una línea totalmente automatizada en Arabia Saudí llena, tapa, etiqueta y apila siete millones de envases al día, a un ritmo de 150.000 botellas por hora.', '2024', 'industria', 'Línea automatizada de botellas de zumo, sin operarios'),
 
-  s('Energía', 'Energía solar a céntimos: la electricidad nunca fue tan barata', 'La mayor planta solar del mundo da el kilovatio-hora a 1,3 céntimos, un 90 % menos que en 2010.', 'Abu Dabi · 2024', 'energia', 'Mar de paneles solares en el desierto al atardecer'),
-  s('Almacén', 'Un millón de robots ya mueven los pedidos solos', 'Amazon supera el millón de robots en sus almacenes, casi tantos como trabajadores humanos.', 'EE. UU. · 2025', 'almacen-amazon-millon-robots', 'Almacén con cientos de robots naranjas moviendo estanterías'),
-  s('Trabajo', 'Robots humanoides: ya hacen turnos en la fábrica', 'Un humanoide montó treinta mil coches en once meses con precisión milimétrica, y ya pasa a otras plantas.', 'Spartanburg, EE. UU. · 2025', 'trabajo', 'Robot humanoide en una línea de montaje de coches'),
+  s('Energía', 'Energía solar a menos de dos céntimos por kilovatio-hora', 'La mayor instalación solar del mundo, en Abu Dabi, genera electricidad a 1,3 céntimos por kWh. Es un 90 % más barato que en 2010.', '2024', 'energia', 'Mar de paneles solares en el desierto al atardecer'),
+  s('Almacén', 'La flota de robots de Amazon supera el millón de unidades', 'La compañía opera ya más de un millón de robots en sus centros de distribución, una cifra cercana a su plantilla humana total.', '2025', 'almacen-amazon-millon-robots', 'Almacén con cientos de robots naranjas moviendo estanterías'),
+  s('Trabajo', 'Robots humanoides se incorporan a las cadenas de montaje', 'Un robot humanoide en Spartanburg montó 30.000 vehículos en once meses. El programa se amplía ahora a otras plantas de fabricación.', '2025', 'trabajo', 'Robot humanoide en una línea de montaje de coches'),
 
-  s('Transporte', 'Camiones sin conductor: la carga cruza el país sola', 'Un tráiler de cuarenta toneladas circula como servicio comercial, día y noche, con la cabina vacía.', 'Texas, EE. UU. · 2025', 'transporte', 'Tráiler autónomo en autopista al atardecer, cabina vacía'),
-  s('Marítimo', 'Cargueros eléctricos que navegan solos', 'El Yara Birkeland lleva carga entre puertos noruegos sin emisiones ni tripulación al mando, y borra 40.000 viajes de camión.', 'Noruega · 2024', 'carguero-electrico-yara-birkeland', 'Carguero eléctrico navegando por un fiordo noruego'),
-  s('Reparto', 'Drones de reparto: el pedido llega al porche sin repartidor', 'Más de dos millones de entregas: el dron baja el paquete con un cable, en treinta minutos.', 'Texas · Ruanda · 2024', 'reparto', 'Dron de reparto bajando un paquete sobre una casa'),
+  s('Transporte', 'Camiones de cuarenta toneladas circulan por rutas comerciales sin conductor', 'Remolques autónomos operan día y noche en las carreteras de Texas, prestando servicios de carga regulares con la cabina vacía.', '2025', 'transporte', 'Tráiler autónomo en autopista al atardecer, cabina vacía'),
+  s('Marítimo', 'Un buque de carga eléctrico que navega sin tripulación entre puertos', 'El Yara Birkeland transporta mercancías entre puertos noruegos sin emisiones ni tripulación a bordo, eliminando 40.000 viajes anuales de camión.', '2024', 'carguero-electrico-yara-birkeland', 'Carguero eléctrico navegando por un fiordo noruego'),
+  s('Reparto', 'Dos millones de entregas por dron', 'Las operaciones en Texas y Ruanda han completado más de dos millones de entregas, bajando los paquetes a los clientes mediante un cable en menos de media hora.', '2024', 'reparto', 'Dron de reparto bajando un paquete sobre una casa'),
 
-  s('Comercio', 'Tiendas sin caja: coges lo que quieres y sales', 'La tecnología Just Walk Out cobra sola en más de 80 estadios y 300 locales sin pasar por caja.', 'EE. UU. · 2025', 'tienda-sin-cajero-just-walk-out', 'Tienda sin cajero: cliente saliendo con la compra'),
-  s('Movilidad', 'Taxis sin conductor: medio millón de viajes por semana', 'Waymo realiza más de 500.000 trayectos pagados sin conductor cada semana en diez ciudades.', 'EE. UU. · 2026', 'robotaxis-waymo', 'Robotaxi blanco con sensor en el techo, sin conductor'),
-  s('Publicidad', 'Anuncios hechos por IA: una campaña global en un mes', 'El anuncio de Navidad más famoso del mundo se generó con IA: un año de rodaje hecho en un mes.', '2024', 'publicidad', 'Camión rojo de reparto navideño bajo la nieve'),
+  s('Comercio', 'Tiendas en las que coges los productos y te vas sin pasar por caja', 'La tecnología Just Walk Out está instalada en más de 80 estadios y 300 locales comerciales, cobrando a los clientes automáticamente al salir.', '2025', 'tienda-sin-cajero-just-walk-out', 'Tienda sin cajero: cliente saliendo con la compra'),
+  s('Movilidad', 'Medio millón de trayectos autónomos de pago por semana', 'Waymo completa más de 500.000 trayectos de pago cada semana en diez ciudades, todos sin conductor humano al volante.', '2026', 'robotaxis-waymo', 'Robotaxi blanco con sensor en el techo, sin conductor'),
+  s('Publicidad', 'Una campaña navideña producida por IA en un mes', 'Un anuncio navideño de alcance global se generó íntegramente con inteligencia artificial, reduciendo a cuatro semanas lo que tradicionalmente supone un año de producción.', '2024', 'publicidad', 'Camión rojo de reparto navideño bajo la nieve'),
 ]
 
 export function Prensa({ doc, geo }: PrintPageProps) {

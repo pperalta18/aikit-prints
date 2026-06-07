@@ -23,9 +23,9 @@ const read = (id: string) =>
   JSON.parse(readFileSync(fileURLToPath(new URL(`../../../public/prints/${id}/doc.json`, import.meta.url)), 'utf8')) as PrintDoc
 
 const DOCS = {
-  back: read('marco-5-n-1'),
-  left: read('marco-2-e-inversion'),
-  right: read('marco-11-w-inversion'),
+  back: read('5-n-1'),
+  left: read('2-e-inversion'),
+  right: read('11-w-inversion'),
 }
 
 describe('galaxy — registration & contract', () => {

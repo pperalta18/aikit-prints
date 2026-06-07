@@ -1,0 +1,37 @@
+{
+  "id": "19-n-1",
+  "title": "19-N-1",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "cuadro",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 4750,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 19,
+    "wallId": "wall-17",
+    "frameId": "19-N-1",
+    "side": -1,
+    "readingDistanceM": 1.7,
+    "placement": "left",
+    "divider": false,
+    "framed": false,
+    "title": "La red de las pequeñas luces",
+    "paragraphs": [
+      "Ninguna luz piensa a solas. La inteligencia, en carne o en silicio, no es una llama, sino mil chispas simples que arden a la vez.",
+      "Esta noche tú también ardes en la red. Y lo que encendemos juntos empieza a prender afuera: el mundo se ilumina, y nosotros con él, al fin."
+    ],
+    "alt": "Bajorrelieve vertical en mármol pálido. En el centro, una figura humana de pie con túnica clásica, el rostro sereno vuelto hacia la luz, sostiene en alto una única bombilla encendida de la que parten hilos finos que se ramifican como dendritas. Decenas de figuras menores, dispuestas en anillos concéntricos, son los nodos de la red: brazos enlazados, manos que se rozan, cada una encendida por el mismo hilo. Entre las articulaciones, engranajes diminutos se funden con los cuerpos, uniendo carne y mecanismo. La bombilla es la sola fuente de luz; su filamento proyecta sombras largas que trazan la trama sináptica sobre la piedra. Marco rectangular tallado en la misma caliza. Registro cálido y humano: el cierre del recorrido."
+  }
+}

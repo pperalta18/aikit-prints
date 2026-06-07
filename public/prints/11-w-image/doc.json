@@ -1,0 +1,28 @@
+{
+  "id": "11-w-image",
+  "title": "11-W-IMAGE",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "evolucion-imagen",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 9250,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 11,
+    "wallId": "wall-10",
+    "frameId": "11-W-IMAGE",
+    "side": -1,
+    "zone": "IMAGE"
+  }
+}

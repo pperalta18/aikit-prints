@@ -112,6 +112,12 @@ import { Prensa } from './prensa'
 // opacity — most empty, the rest random. `columnas.ts` (pure layout + cell/scatter
 // maths) shares the basename → explicit `.tsx`.
 import { Columnas } from './columnas.tsx'
+// Pared combinada — joins a wall's per-zone prints (IMAGE · TEXT+CODE · INVERSIÓN)
+// into ONE wall-sized deliverable, panels butted in as-viewed order at real width.
+import { ParedCombinada } from './pared-combinada'
+// Wordmark — a single logo/wordmark centred on the wall at a controlled size
+// (statement wall). First used by 13-S-1 («La Naranja Mecánica»).
+import { Wordmark } from './wordmark'
 
 /**
  * Page registry — maps a `doc.pageComponentId` to its React component. Add a new
@@ -203,6 +209,10 @@ export const PRINT_PAGES: Record<string, PrintPageComponent> = {
   prensa: Prensa,
   // ── «Dos columnas» (19-S-1): dos bandas esbeltas centradas — grid azul de marca a toda altura + degradado azul desde el suelo; la tinta del grid se invierte (blanco↔azul) en la disolución ──
   columnas: Columnas,
+  // ── Pared combinada (2-E · 11-W): une los paneles de zona de una pared (IMAGE · TEXT+CODE · INVERSIÓN) en UN solo print del tamaño de la pared ──
+  'pared-combinada': ParedCombinada,
+  // ── Wordmark (13-S-1 «La Naranja Mecánica»): un logo/wordmark centrado a tamaño controlado sobre el fondo ──
+  wordmark: Wordmark,
 }
 
 export function getPrintPage(id: string): PrintPageComponent | undefined {

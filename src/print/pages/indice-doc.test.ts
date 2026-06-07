@@ -15,7 +15,7 @@ import { DEFAULT_WALL_HEIGHT_M, findWallByInvId, resolveWallHeight } from '../sp
  * indice (print 5-S-1) doc + registration tests
  * ──────────────────────────────────────────────
  * The type-scale maths lives in `tipografia.ts` and is unit-tested there. This file
- * covers the *authoring* of print **5-S-1** — `public/prints/marco-5-s-1/doc.json` —
+ * covers the *authoring* of print **5-S-1** — `public/prints/5-s-1/doc.json` —
  * which now carries the editorial **índice** (table of contents of the whole show)
  * instead of the earlier four-heading bridge piece. Like the other full-wall vinyls
  * its trim equals the whole 9.5 × 2.5 m wall and the bleed wraps the edge, so the fit
@@ -25,7 +25,7 @@ import { DEFAULT_WALL_HEIGHT_M, findWallByInvId, resolveWallHeight } from '../sp
  */
 
 const INV_ID = 5 // wall 5 (`wall-4`), the S5→S6 bridge
-const DOC_PATH = fileURLToPath(new URL('../../../public/prints/marco-5-s-1/doc.json', import.meta.url))
+const DOC_PATH = fileURLToPath(new URL('../../../public/prints/5-s-1/doc.json', import.meta.url))
 const doc = JSON.parse(readFileSync(DOC_PATH, 'utf8')) as PrintDoc
 
 const RENDER_INTENTS = ['perceptual', 'relative', 'saturation', 'absolute']
@@ -43,7 +43,7 @@ describe('indice (5-S-1) — registration', () => {
   })
 
   it('is the print 5-S-1 doc', () => {
-    expect(doc.id).toBe('marco-5-s-1')
+    expect(doc.id).toBe('5-s-1')
     expect(doc.props?.frameId).toBe('5-S-1')
     expect(doc.props?.frameWallInvId).toBe(INV_ID)
   })

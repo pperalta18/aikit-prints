@@ -1,0 +1,31 @@
+{
+  "id": "18-s-1",
+  "title": "18-S-1",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "raster-wall",
+  "theme": "dark",
+  "dimensions": {
+    "trimWidthMm": 3125,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 24,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 18,
+    "wallId": "wall-16",
+    "frameId": "18-S-1",
+    "side": 1,
+    "src": "prints/18-s-1/assets/18-s-1.png",
+    "fit": "cover",
+    "position": "center",
+    "alt": "Dibujo orgánico a tinta en blanco y negro — pared 18 (Bici / combustión)"
+  }
+}

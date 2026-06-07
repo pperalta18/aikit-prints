@@ -1,0 +1,27 @@
+{
+  "id": "9-e-2",
+  "title": "9-E-2",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "blank",
+  "theme": "dark",
+  "dimensions": {
+    "trimWidthMm": 6875,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 24,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 9,
+    "wallId": "wall-8",
+    "frameId": "9-E-2",
+    "side": 1
+  }
+}

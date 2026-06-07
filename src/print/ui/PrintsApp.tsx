@@ -1,10 +1,12 @@
 import { Component, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { getFontEmbedCSS, toCanvas } from 'html-to-image'
 import { KIT_BLUE } from '@/lib/neumorphism'
 import { PrintStage } from '../PrintRenderer'
 import { buildGeometry, EXPORT_DPI } from '../geometry'
 import { getPrintPage } from '../pages'
 import { PrintScaleScene } from './PrintScaleScene'
 import { EventSpaceScene } from './EventSpaceScene'
+import { applySoftProof } from './softProof'
 import type { PrintDoc } from '../types'
 
 /**
@@ -252,9 +254,13 @@ function TrashIcon({ color }: { color: string }) {
 
 function PrintDetail({ doc, onBack }: { doc: PrintDoc; onBack: () => void }) {
   const viewportRef = useRef<HTMLDivElement>(null)
+  const printRef = useRef<HTMLDivElement>(null) // the live page node we snapshot for the proof
+  const overlayRef = useRef<HTMLCanvasElement>(null) // the soft-proofed image painted on top
   const [zoom, setZoom] = useState<number | null>(null) // media-px → screen-px
   const [showGuides, setShowGuides] = useState(true)
   const [view3d, setView3d] = useState(false) // 2D preview ↔ true-scale 3D scene
+  const [cmyk, setCmyk] = useState(false) // CMYK soft-proof overlay (ICC of doc.color)
+  const [proof, setProof] = useState<'idle' | 'rendering' | 'ready' | 'error'>('idle')
   // Bleed + crop marks are tweakable at export time and reflected live in the preview.
   const [bleedMm, setBleedMm] = useState(doc.dimensions.bleedMm)
   const [cropMarks, setCropMarks] = useState(doc.dimensions.cropMarks)
@@ -263,6 +269,61 @@ function PrintDetail({ doc, onBack }: { doc: PrintDoc; onBack: () => void }) {
     [doc, bleedMm, cropMarks],
   )
   const geo = buildGeometry(effDoc.dimensions, effDoc.dpi)
+
+  // CMYK soft-proof: snapshot the live page, run it through the doc's ICC LUT (+ exact
+  // brand override), and paint the result over the preview. Re-runs whenever the toggle
+  // turns on or the design changes; zoom is pure CSS so it needs no re-snapshot.
+  useEffect(() => {
+    if (!cmyk) {
+      setProof('idle')
+      return
+    }
+    const node = printRef.current
+    if (!node) return
+    let alive = true
+    setProof('rendering')
+    ;(async () => {
+      try {
+        await document.fonts?.ready
+        await Promise.all(
+          Array.from(node.querySelectorAll('img')).map((im) =>
+            im.complete ? Promise.resolve() : im.decode().catch(() => {}),
+          ),
+        )
+        await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+        if (!alive) return
+        // Cap the snapshot's long edge; the canvas CSS-scales with the zoom transform.
+        const sc = Math.min(1, 2400 / Math.max(geo.mediaWidthPx, geo.mediaHeightPx))
+        const outW = Math.max(1, Math.round(geo.mediaWidthPx * sc))
+        const outH = Math.max(1, Math.round(geo.mediaHeightPx * sc))
+        const fontCss = await getFontEmbedCSS(node).catch(() => '')
+        const snap = await toCanvas(node, {
+          canvasWidth: outW,
+          canvasHeight: outH,
+          pixelRatio: 1,
+          backgroundColor: '#ffffff',
+          fontEmbedCSS: fontCss || undefined,
+          cacheBust: true,
+        })
+        if (!alive) return
+        const proofed = await applySoftProof(snap, effDoc.color)
+        if (!alive) return
+        const cv = overlayRef.current
+        if (!cv) return
+        cv.width = proofed.width
+        cv.height = proofed.height
+        cv.getContext('2d')?.drawImage(proofed, 0, 0)
+        setProof('ready')
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn('[softProof] proof failed', e)
+        if (alive) setProof('error')
+      }
+    })()
+    return () => {
+      alive = false
+    }
+  }, [cmyk, effDoc, showGuides, geo.mediaWidthPx, geo.mediaHeightPx])
 
   const fit = useCallback(() => {
     const el = viewportRef.current
@@ -300,6 +361,14 @@ function PrintDetail({ doc, onBack }: { doc: PrintDoc; onBack: () => void }) {
               <span style={{ width: 1, alignSelf: 'stretch', background: 'rgba(255,255,255,0.1)' }} />
               <button onClick={() => setShowGuides((g) => !g)} style={{ ...ghostBtn, color: showGuides ? KIT_BLUE : '#a7adba' }}>guías</button>
               <span style={{ width: 1, alignSelf: 'stretch', background: 'rgba(255,255,255,0.1)' }} />
+              <button
+                onClick={() => setCmyk((v) => !v)}
+                title={`Soft-proof CMYK · ICC ${effDoc.color.iccProfile.split('/').pop()} · intent ${effDoc.color.renderIntent ?? 'relative'}`}
+                style={{ ...ghostBtn, color: proof === 'error' ? '#e0a23a' : cmyk ? KIT_BLUE : '#a7adba' }}
+              >
+                CMYK{cmyk && proof === 'rendering' ? '…' : proof === 'error' ? ' ⚠' : ''}
+              </button>
+              <span style={{ width: 1, alignSelf: 'stretch', background: 'rgba(255,255,255,0.1)' }} />
             </>
           )}
           <button onClick={() => setView3d((v) => !v)} style={{ ...ghostBtn, color: view3d ? KIT_BLUE : '#a7adba' }}>escena 3D</button>
@@ -319,8 +388,26 @@ function PrintDetail({ doc, onBack }: { doc: PrintDoc; onBack: () => void }) {
                 boxShadow: '0 12px 48px rgba(0,0,0,0.5)',
               }}
             >
-              <div style={{ width: geo.mediaWidthPx, height: geo.mediaHeightPx, transform: `scale(${z})`, transformOrigin: 'top left' }}>
-                <LivePrintPage doc={effDoc} showGuides={showGuides} />
+              <div style={{ position: 'relative', width: geo.mediaWidthPx, height: geo.mediaHeightPx, transform: `scale(${z})`, transformOrigin: 'top left' }}>
+                {/* The live page — snapshotted (cleanly, no overlay inside) for the CMYK proof. */}
+                <div ref={printRef} style={{ position: 'absolute', inset: 0 }}>
+                  <LivePrintPage doc={effDoc} showGuides={showGuides} />
+                </div>
+                {/* CMYK soft-proof, painted over the page. Hidden until the first proof lands. */}
+                {cmyk && (
+                  <canvas
+                    ref={overlayRef}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      width: '100%',
+                      height: '100%',
+                      pointerEvents: 'none',
+                      opacity: proof === 'ready' ? 1 : 0,
+                      transition: 'opacity 120ms ease',
+                    }}
+                  />
+                )}
               </div>
             </div>
           </div>

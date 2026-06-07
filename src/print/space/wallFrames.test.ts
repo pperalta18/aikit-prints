@@ -38,18 +38,26 @@ describe('coverage', () => {
   })
 
   it('each face\'s panels tile the full wall length (sum of widths ≈ wall length)', () => {
+    // The central S2 cube (inv 22–25) is a free-standing box: each OUTER face clads
+    // the whole side (wall length + the neighbour's 0.5 m depth) so the four prints
+    // wrap to the corner edges, while the occluded INNER faces pull in at the corners.
+    const CUBE_INV = new Set([22, 23, 24, 25])
     for (const w of REGISTERED_WALLS) {
-      const fs = forWall(w.registry!.invId)
+      const inv = w.registry!.invId
+      const fs = forWall(inv)
       for (const side of [1, -1] as const) {
         const faceWidth = sumWidth(fs.filter((f) => f.side === side))
-        // Cuts have zero gap, so panels reconstruct the wall run within a sliver —
-        // minus any corner inset where a wall stands on the face (e.g. the nave end
-        // wall over wall 2's INVERSIÓN corner pulls that bay 0.5 m off the end).
-        expect(faceWidth).toBeLessThanOrEqual(w.length + 0.01)
-        // The central S2 cube (inv 22–25) is a tight 2.0×1.5 m box of 0.5 m walls,
-        // so its occluded inner faces pull in 0.5 m at each corner (1.0 m of a 2.0 m
-        // run). Tolerate up to that; the outer (printed) faces stay full-length.
-        expect(faceWidth).toBeGreaterThan(w.length - 1.05)
+        if (CUBE_INV.has(inv)) {
+          // Outer face overhangs by ≤ one neighbour depth (0.5 m); inner stays ≥ half.
+          expect(faceWidth).toBeGreaterThan(w.length / 2 - 0.05)
+          expect(faceWidth).toBeLessThanOrEqual(w.length + 0.6)
+        } else {
+          // Cuts have zero gap, so panels reconstruct the wall run within a sliver —
+          // minus any corner inset where a wall stands on the face (e.g. the nave end
+          // wall over wall 2's INVERSIÓN corner pulls that bay 0.5 m off the end).
+          expect(faceWidth).toBeLessThanOrEqual(w.length + 0.01)
+          expect(faceWidth).toBeGreaterThan(w.length - 1.05)
+        }
       }
     }
   })

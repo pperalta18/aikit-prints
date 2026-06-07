@@ -152,7 +152,7 @@ export function isPaired(placement: Placement, all: Placement[]): boolean {
  * `pairId` are deliberately per-face and never synced; `mount` / `glow` are allowed
  * to differ (a light-box on one side, a vinyl on the other).
  */
-export const SYNCED_FACE_FIELDS = ['along', 'centerY', 'scale'] as const
+export const SYNCED_FACE_FIELDS = ['along', 'centerY', 'scale', 'offset'] as const
 
 /**
  * Project an edit patch down to just the fields that should mirror onto the other

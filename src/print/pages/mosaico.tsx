@@ -53,7 +53,7 @@ const PLACEHOLDER_FRAME = 'rgba(241,90,34,0.28)'
 const PLACEHOLDER_GLYPH = 'rgba(241,90,34,0.40)'
 const PLACEHOLDER_LABEL = 'rgba(241,90,34,0.62)'
 
-const ASSET_DIR = 'prints/marco-11-e-2/assets'
+const ASSET_DIR = 'prints/11-e-2/assets'
 
 type ImageRef = { src: string; alt?: string }
 

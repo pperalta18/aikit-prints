@@ -9,7 +9,7 @@ import { faceCropUV } from './printFaceTexture'
  */
 describe('faceCropUV', () => {
   it('crops a symmetric bleed to the centred trim rectangle', () => {
-    // marco-10-s-1 @ 24 dpi: trim 6000×2500 mm, 10 mm bleed → media = trim + 2·bleed.
+    // 10-s-1 @ 24 dpi: trim 6000×2500 mm, 10 mm bleed → media = trim + 2·bleed.
     // In px the ratios are what matter; use round numbers that share the same ratios.
     const media = { mediaWidthPx: 6020, mediaHeightPx: 2520, trimWidthPx: 6000, trimHeightPx: 2500, bleedPx: 10 }
     const { offset, repeat } = faceCropUV(media)

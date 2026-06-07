@@ -25,14 +25,14 @@ import { eventTypeScale } from './tipografia'
  * filete azul de un pelo alrededor de la banda.
  *
  * Los fotogramas son PNGs reales extraídos de los vídeos, recortados a 3:2, en
- * `public/prints/marco-2-e-image/assets/{old,new}/`. El layout es data-driven:
+ * `public/prints/2-e-image/assets/{old,new}/`. El layout es data-driven:
  * `doc.props.strips` puede sustituir las tiras; si no, usa los defaults de abajo.
  *
  * Autoría en milímetros desde el origen de trim, tipografía en puntos vía la
  * escala museográfica `eventTypeScale` (no se eligen pt a ojo).
  */
 
-const ASSET_DIR = 'prints/marco-2-e-image/assets'
+const ASSET_DIR = 'prints/2-e-image/assets'
 const seq = (sub: string, n: number) =>
   Array.from({ length: n }, (_, i) => `${ASSET_DIR}/${sub}/${String(i + 1).padStart(2, '0')}.png`)
 

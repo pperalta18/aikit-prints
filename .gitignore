@@ -10,8 +10,11 @@ out
 .work/
 logs/
 
-# Oversized upscaled asset (>100MB GitHub limit) — kept locally, regenerable from assets/_lowres/
-public/prints/marco-18-s-1/assets/marco-18-s-1.png
+# Oversized print assets — kept locally, regenerable from assets/_lowres/.
+# Over GitHub's limits (18-s-1.png >100MB hard, bottles/poster >50MB warning).
+public/prints/18-s-1/assets/18-s-1.png
+public/prints/11-e-2/assets/bottles.png
+public/prints/11-e-2/assets/poster.png
 
 # Generated build/bundle output
 build/

@@ -93,31 +93,18 @@ function PhraseLine({ p, geo, theme }: { p: PlacedPhrase; geo: PrintPageProps['g
 
 /**
  * The thesis, lifted out of the sea and rendered dead-centre, large: «destacada, en
- * el centro, en grande». It sits in a soft clearing (a ground-coloured halo that lets
- * the sea recede around it) and keeps the wall's one disciplined KIT_BLUE accent in
- * its blank. Each wrapped line is its own flex item (never a wrapped block) so the
- * live 3D texture doesn't overlap the lines — see live-texture-multiline-overlap.
+ * el centro, en grande». It needs no painted backdrop: the packer carves a
+ * rectangular hole in the sea around it, so the phrases stop at the clearing's edges
+ * and *their absence* is the white square. The thesis keeps the wall's one
+ * disciplined KIT_BLUE accent in its blank. Each wrapped line is its own flex item
+ * (never a wrapped block) so the live 3D texture doesn't overlap the lines — see
+ * live-texture-multiline-overlap.
  */
-function HeroBlock({ hero, geo, theme, bg }: { hero: Hero; geo: PrintPageProps['geo']; theme: 'light' | 'dark'; bg: string }) {
+function HeroBlock({ hero, geo, theme }: { hero: Hero; geo: PrintPageProps['geo']; theme: 'light' | 'dark' }) {
   const { mm, pt } = geo
   const ink = theme === 'dark' ? '#f4f4fa' : '#141414'
   const ruleThickMm = Math.max(2.5, hero.capMm * 0.13)
-  const padX = hero.emMm * 2.2
-  const padY = hero.emMm * 1.4
-  const feather = hero.emMm * 3.6
 
-  const clearing: CSSProperties = {
-    position: 'absolute',
-    left: mm(hero.centerXMm),
-    top: mm(hero.centerYMm),
-    transform: 'translate(-50%, -50%)',
-    width: mm(hero.box.wMm + padX * 2),
-    height: mm(hero.box.hMm + padY * 2),
-    background: bg,
-    borderRadius: mm(hero.emMm),
-    // a wide, same-colour halo feathers the clearing into the surrounding sea
-    boxShadow: `0 0 ${mm(feather)}px ${mm(feather)}px ${bg}`,
-  }
   const stack: CSSProperties = {
     position: 'absolute',
     left: mm(hero.centerXMm),
@@ -142,17 +129,14 @@ function HeroBlock({ hero, geo, theme, bg }: { hero: Hero; geo: PrintPageProps['
     verticalAlign: '-0.04em',
   }
   return (
-    <>
-      <div style={clearing} />
-      <div style={stack}>
-        {hero.lines.map((ln, i) => (
-          <div key={i} style={{ whiteSpace: 'nowrap' }}>
-            {ln}
-            {i === hero.lines.length - 1 ? <span style={blank} /> : null}
-          </div>
-        ))}
-      </div>
-    </>
+    <div style={stack}>
+      {hero.lines.map((ln, i) => (
+        <div key={i} style={{ whiteSpace: 'nowrap' }}>
+          {ln}
+          {i === hero.lines.length - 1 ? <span style={blank} /> : null}
+        </div>
+      ))}
+    </div>
   )
 }
 
@@ -185,7 +169,7 @@ export function PalabraFaltante({ doc, geo }: PrintPageProps) {
         {sea.placed.map((pl, i) => (
           <PhraseLine key={i} p={pl} geo={geo} theme={theme} />
         ))}
-        {sea.hero && <HeroBlock hero={sea.hero} geo={geo} theme={theme} bg={pal.bg} />}
+        {sea.hero && <HeroBlock hero={sea.hero} geo={geo} theme={theme} />}
       </div>
     </>
   )

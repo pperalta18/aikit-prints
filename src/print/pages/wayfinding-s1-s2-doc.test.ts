@@ -15,7 +15,7 @@ import { DEFAULT_WALL_HEIGHT_M, findWallByInvId, resolveWallHeight } from '../sp
  * wayfinding-s1-s2 (#10) doc + registration tests
  * ───────────────────────────────────────────────
  * The museographic maths lives in `tipografia.ts` / `wayfinding.ts` and is unit-tested
- * there. This file covers the *authoring* of the print: `public/prints/marco-10-s-1/doc.json`
+ * there. This file covers the *authoring* of the print: `public/prints/10-s-1/doc.json`
  * (the South face of wall 10) and its registration. The unbiased checks here prove the
  * authored **dimensions are honest and renderable** — the page resolves from the registry,
  * exports through the existing CMYK / FOGRA52 / PDF/X contract, physically fits wall 10
@@ -25,7 +25,7 @@ import { DEFAULT_WALL_HEIGHT_M, findWallByInvId, resolveWallHeight } from '../sp
  */
 
 // public/ lives outside the src bundle root → read the committed file directly.
-const DOC_PATH = fileURLToPath(new URL('../../../public/prints/marco-10-s-1/doc.json', import.meta.url))
+const DOC_PATH = fileURLToPath(new URL('../../../public/prints/10-s-1/doc.json', import.meta.url))
 const doc = JSON.parse(readFileSync(DOC_PATH, 'utf8')) as PrintDoc
 
 const RENDER_INTENTS = ['perceptual', 'relative', 'saturation', 'absolute']
@@ -47,7 +47,7 @@ describe('wayfinding-s1-s2 — registration', () => {
   })
 
   it('doc id matches its folder (the wall-10 South face frame)', () => {
-    expect(doc.id).toBe('marco-10-s-1')
+    expect(doc.id).toBe('10-s-1')
   })
 })
 

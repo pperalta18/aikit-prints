@@ -1,0 +1,47 @@
+{
+  "id": "11-w-inversion",
+  "title": "11-W-INVERSIÓN",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "warp",
+  "theme": "light",
+  "surface": "#ffffff",
+  "dimensions": {
+    "trimWidthMm": 6125,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 11,
+    "wallId": "wall-10",
+    "frameId": "11-W-INVERSIÓN",
+    "side": -1,
+    "zone": "INVERSIÓN",
+    "fullWidthMm": 23500,
+    "originXMm": 0,
+    "holeCenterXMm": 10500,
+    "seams": [
+      5750,
+      15250
+    ],
+    "foreshorten": 0.38,
+    "holeCenterYFrac": 0.63,
+    "horizonYFrac": 0.35,
+    "funnelFalloff": 1.12,
+    "ringGrowth": 1.15,
+    "shadeSpanMm": 4200,
+    "shadeGamma": 1.12,
+    "dispersion": 0.72,
+    "bodyGapMm": 240,
+    "perspectiveCompensate": false,
+    "centerTitle": "Laboratorios de IA\ny GPUs"
+  }
+}

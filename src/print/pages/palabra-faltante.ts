@@ -513,6 +513,24 @@ export function layoutSea(opts: LayoutOpts): SeaLayout {
       })
     : null
 
+  // The thesis sits in a deliberate clearing. Rather than painting a soft gradient
+  // mask over the sea, we carve a rectangular **hole** in the packing: the phrases
+  // themselves stop short at its edges and leave the centre blank — *where the
+  // phrases end is what makes the white square*. The hole tracks the hero box plus a
+  // breathing pad, sized at roughly the old halo rectangle (a touch less).
+  const hole =
+    hero != null
+      ? {
+          left: trimWidthMm / 2 - (hero.box.wMm / 2 + hero.emMm * 2.0),
+          right: trimWidthMm / 2 + (hero.box.wMm / 2 + hero.emMm * 2.0),
+          top: trimHeightMm / 2 - (hero.box.hMm / 2 + hero.emMm * 1.0),
+          bottom: trimHeightMm / 2 + (hero.box.hMm / 2 + hero.emMm * 1.0),
+        }
+      : null
+  // Tallest a single shelf can be — used so a row that *could* reach the hole from
+  // above is split too, and no phrase ever pokes into the clearing.
+  const maxShelfEm = tierCapsMm[0] / TEXT_CAP_RATIO
+
   // Pre-size a phrase into a chosen tier; optionally shrink so it fits one row.
   const prepare = (phrase: Phrase, tier: number): Prepared => {
     let capMm = tierCapsMm[tier]
@@ -565,32 +583,61 @@ export function layoutSea(opts: LayoutOpts): SeaLayout {
   const smallestEm = tierCapsMm[nTiers - 1] / TEXT_CAP_RATIO
 
   while (y + smallestEm <= usableBottom && placed.length < maxPlacements) {
-    // Build one shelf (row): fill left→right with a small look-ahead so the *tail*
-    // of the row gets packed with whatever short phrase still fits — that kills the
-    // ragged right whitespace and makes the field read as a dense sea, not lines.
+    // A row normally spans the full usable width, filled left→right with a small
+    // look-ahead so the *tail* gets packed with whatever short phrase still fits —
+    // that kills the ragged right whitespace and reads as a dense sea, not lines.
+    // But when the row's band crosses the central hole it is split into a left and a
+    // right segment, so the phrases stop dead at the hole's edges and leave the
+    // clearing blank. (Membership uses the tallest possible shelf so no phrase can
+    // poke into the hole from a row that starts just above it.)
+    const holeRow = hole != null && y < hole.bottom && y + maxShelfEm > hole.top
+    const segments: Array<[number, number]> = holeRow
+      ? [
+          [usable.x, hole!.left],
+          [hole!.right, usableRight],
+        ]
+      : [[usable.x, usableRight]]
+
     const row: Array<{ p: Prepared; x: number }> = []
-    let x = usable.x + rng() * smallestEm * 1.2 // tiny left indent so the edge isn't a column
     let shelfEm = 0
     const deferred: Prepared[] = []
-    let misses = 0
-    while (placed.length + row.length < maxPlacements && misses < 14) {
-      const p = next()
-      const total = p.textWidthMm + p.blankGapMm + p.blankWidthMm
-      const gap = row.length === 0 ? 0 : (0.45 + rng() * 0.7) * p.emMm
-      if (row.length === 0 || x + gap + total <= usableRight) {
-        x += gap
-        row.push({ p, x })
-        x += total
-        if (p.emMm > shelfEm) shelfEm = p.emMm
-        misses = 0
-      } else {
-        deferred.push(p) // doesn't fit the remaining width — try a shorter one
-        misses++
+    for (let s = 0; s < segments.length; s++) {
+      const [segLeft, segRight] = segments[s]
+      // tiny left indent on the outer-left segment so the edge isn't a column; later
+      // segments start flush at the hole edge for a clean vertical boundary.
+      let x = s === 0 ? segLeft + rng() * smallestEm * 1.2 : segLeft
+      let firstInSeg = true
+      let misses = 0
+      while (placed.length + row.length < maxPlacements && misses < 14) {
+        const p = next()
+        const total = p.textWidthMm + p.blankGapMm + p.blankWidthMm
+        const gap = firstInSeg ? 0 : (0.45 + rng() * 0.7) * p.emMm
+        // Force-place the very first phrase of a full-width row (guarantees progress);
+        // never force inside a hole row, so phrases can't spill into the clearing.
+        const force = firstInSeg && row.length === 0 && !holeRow
+        if (force || x + gap + total <= segRight) {
+          x += gap
+          row.push({ p, x })
+          x += total
+          if (p.emMm > shelfEm) shelfEm = p.emMm
+          misses = 0
+          firstInSeg = false
+        } else {
+          deferred.push(p) // doesn't fit the remaining width — try a shorter one
+          misses++
+        }
       }
     }
     // Return the look-ahead misses to the front of the bag, in original order.
     for (let i = deferred.length - 1; i >= 0; i--) bag.unshift(deferred[i])
-    if (row.length === 0) break
+    if (row.length === 0) {
+      // A degenerate empty hole row: step past it rather than ending the whole sea.
+      if (holeRow) {
+        y += maxShelfEm
+        continue
+      }
+      break
+    }
 
     // Would this shelf overflow the bottom? Stop before placing it (keep the bound).
     if (y + shelfEm > usableBottom) break

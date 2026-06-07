@@ -22,7 +22,7 @@ import { tipoPalette, type TipoPalette } from './tipografia-kit'
  * Tailwind).
  */
 
-const ASSET = 'prints/marco-2-e-text-code/assets'
+const ASSET = 'prints/2-e-text-code/assets'
 
 type Item = {
   /** The card title — *el logro*, what the AI achieved (the protagonist line). */

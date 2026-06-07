@@ -9,12 +9,14 @@
  * `wallFrames.ts`; this file only reads the layout from disk, builds the `Wall[]`
  * it needs (same derivation as `eventLayout.ts`), and writes the docs.
  *
- *   npm run frames            # regenerate the public/prints/marco-… frame docs
+ *   npm run frames            # regenerate the blank wall-frame docs
  *
- * Re-runnable + deterministic: every `marco-*` doc is removed first, then rewritten,
- * so a geometry change drops stale frames and adds new ones with no manual cleanup.
+ * Re-runnable + deterministic: each frame doc is named by its bare wall code (e.g.
+ * `13-s-1`). The generator only touches its own *blank* placeholders — authored
+ * pages and user-named overrides survive — so a geometry change drops stale empty
+ * frames and adds new ones with no manual cleanup, without clobbering real designs.
  */
-import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { computeWallFrames } from '../src/print/space/wallFrames.ts'
@@ -64,7 +66,7 @@ function loadWalls() {
   return { walls, wallHeight }
 }
 
-/** A frame id → a filesystem/URL-safe doc id, e.g. `2-E-TEXT+CODE` → `marco-2-e-text-code`. */
+/** A frame id → a filesystem/URL-safe doc id, e.g. `2-E-TEXT+CODE` → `2-e-text-code`. */
 function docIdFor(frame) {
   const slug = frame.id
     .toLowerCase()
@@ -72,16 +74,13 @@ function docIdFor(frame) {
     .replace(/[̀-ͯ]/g, '') // strip accents (ó → o)
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
-  return `marco-${slug}`
+  return slug
 }
 
-const fmtM = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(2))
-
-function docFor(frame, wallsByInv) {
-  const tema = wallsByInv.get(frame.invId)?.registry?.tema ?? ''
+function docFor(frame) {
   return {
     id: docIdFor(frame),
-    title: `Marco vacío ${frame.id} — ${tema} (${fmtM(frame.widthM)}×${fmtM(frame.heightM)} m)`,
+    title: frame.id,
     createdAt: CREATED_AT,
     pageComponentId: 'blank',
     theme: 'light',
@@ -104,26 +103,43 @@ function docFor(frame, wallsByInv) {
 function main() {
   const { walls, wallHeight } = loadWalls()
   const registered = walls.filter((w) => w.registry).sort((a, b) => a.registry.invId - b.registry.invId)
-  const wallsByInv = new Map(registered.map((w) => [w.registry.invId, w]))
   const frames = computeWallFrames({ walls: registered, allWalls: walls, fallbackHeight: wallHeight })
 
-  // Drop any previously-generated frame docs so removed segments don't linger.
+  // Drop the generator's own blank placeholders so removed segments don't linger.
+  // Only canonical-named blank frames are wiped; authored pages (non-blank) and
+  // user-named overrides (id ≠ frame code) survive a regeneration untouched.
   let removed = 0
   for (const entry of readdirSync(PRINTS_DIR, { withFileTypes: true })) {
-    if (entry.isDirectory() && entry.name.startsWith('marco-')) {
+    if (!entry.isDirectory()) continue
+    const dp = join(PRINTS_DIR, entry.name, 'doc.json')
+    if (!existsSync(dp)) continue
+    let doc
+    try { doc = JSON.parse(readFileSync(dp, 'utf8')) } catch { continue }
+    const fid = doc?.props?.frameId
+    if (doc?.pageComponentId === 'blank' && typeof fid === 'string' && entry.name === docIdFor({ id: fid })) {
       rmSync(join(PRINTS_DIR, entry.name), { recursive: true, force: true })
       removed += 1
     }
   }
 
+  let wrote = 0
+  let kept = 0
   for (const frame of frames) {
-    const doc = docFor(frame, wallsByInv)
+    const doc = docFor(frame)
     const dir = join(PRINTS_DIR, doc.id)
+    const dp = join(dir, 'doc.json')
+    // Never clobber an authored page that already lives at the canonical frame name.
+    if (existsSync(dp)) {
+      try {
+        if (JSON.parse(readFileSync(dp, 'utf8')).pageComponentId !== 'blank') { kept += 1; continue }
+      } catch { /* unreadable — rewrite a clean placeholder */ }
+    }
     mkdirSync(dir, { recursive: true })
-    writeFileSync(join(dir, 'doc.json'), JSON.stringify(doc, null, 2) + '\n')
+    writeFileSync(dp, JSON.stringify(doc, null, 2) + '\n')
+    wrote += 1
   }
 
-  console.log(`Wrote ${frames.length} blank-frame doc(s) to public/prints/marco-* (removed ${removed} stale).`)
+  console.log(`Frames: wrote ${wrote} blank placeholder(s), kept ${kept} authored, removed ${removed} stale.`)
 }
 
 main()

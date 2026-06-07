@@ -1,7 +1,8 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
-import { ContactShadows, Environment, Grid, Html, Lightformer, OrbitControls } from '@react-three/drei'
+import { ContactShadows, Environment, Grid, Html, Lightformer, Line, OrbitControls, OrthographicCamera } from '@react-three/drei'
 import { InstancedMesh, MathUtils, Object3D, Plane, Vector3 } from 'three'
+import { snapMove, fmtGap, type Box, type AlignGuide, type MeasureGuide } from '../space/snapping'
 import { KIT_BLUE, lightTheme, darkTheme } from '@/lib/neumorphism'
 import { buildGeometry } from '../geometry'
 import { getPrintPage } from '../pages'
@@ -105,6 +106,10 @@ const POT_COL = '#8a6a4a'
 
 type Vec3 = [number, number, number]
 
+type DragKind = 'furn' | 'wall'
+/** Live drag feedback: the dragged box plus the alignment + distance guides to show. */
+type DragSession = { kind: DragKind; box: Box; aligns: AlignGuide[]; measures: MeasureGuide[] }
+
 /** A tool armed in the "edit space" palette: a furniture kind, or a wall. */
 type SpaceTool = FurnitureKind | 'wall'
 
@@ -136,6 +141,10 @@ function placementTransform(wall: Wall, p: Placement, pw: number) {
     pos = [surf, p.centerY, along]
     rotY = p.side > 0 ? Math.PI / 2 : -Math.PI / 2
   }
+  // Free world-space nudge (X/Y/Z) on top of the wall-anchored position — lets the
+  // piece be moved on any axis, including off the wall surface (depth).
+  const o = p.offset
+  if (o) pos = [pos[0] + o.x, pos[1] + o.y, pos[2] + o.z]
   return { pos, rotY }
 }
 
@@ -173,6 +182,10 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
   // print behind it — the space reads like real life, nothing pops on top. On by
   // default (the space's primary view); toggle off for the live, selectable Html faces.
   const [realista, setRealista] = useState(true)
+  // "Vista de plano": a true top-down ORTHOGRAPHIC camera (no perspective) — reads the
+  // venue as a flat floor plan. Toggling it swaps the default camera to the ortho one
+  // (drei restores the perspective camera when turned off) and locks orbit rotation.
+  const [planMode, setPlanMode] = useState(false)
   const cameraApi = useRef<{ setView: (pos: Vec3, target: Vec3) => void } | null>(null)
 
   // Movable furniture (tables / bar / plants). Seeded from the layout file; the
@@ -198,6 +211,77 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
   // in memory so it can be pasted any number of times (and survives deselection).
   const [furnitureClipboard, setFurnitureClipboard] = useState<FurnitureItem | null>(null)
 
+  // ── Undo / redo (Ctrl/Cmd+Z) ──────────────────────────────────────────────────
+  // History of the editable layout (furniture + walls + hung prints). Every mutation is
+  // immutable (new arrays/objects), so a snapshot is just the current array refs — no
+  // deep copy. `beginEdit()` records the pre-edit state right before a change; drags
+  // snapshot once on grab (deduped on release if nothing moved); slider streams coalesce
+  // by `tag` so a continuous resize is one undo step.
+  type EditSnap = { furniture: FurnitureItem[]; walls: EditableWall[]; placements: Placement[] }
+  const stateRef = useRef<EditSnap>({ furniture, walls, placements })
+  stateRef.current = { furniture, walls, placements }
+  const undoStack = useRef<EditSnap[]>([])
+  const redoStack = useRef<EditSnap[]>([])
+  const [, setHistTick] = useState(0)
+  const bumpHistory = useCallback(() => setHistTick((t) => t + 1), [])
+  const lastEdit = useRef<{ tag?: string; t: number }>({ t: 0 })
+  const beginEdit = useCallback((tag?: string) => {
+    const now = performance.now()
+    if (tag && lastEdit.current.tag === tag && now - lastEdit.current.t < 700) {
+      lastEdit.current.t = now
+      return // coalesce a stream of same-tag edits (e.g. dragging a size slider)
+    }
+    undoStack.current.push(stateRef.current)
+    if (undoStack.current.length > 120) undoStack.current.shift()
+    redoStack.current = []
+    lastEdit.current = { tag, t: now }
+    bumpHistory()
+  }, [bumpHistory])
+  const applySnap = useCallback((s: EditSnap) => {
+    setFurniture(s.furniture)
+    setWalls(s.walls)
+    setPlacements(s.placements)
+    setFurnitureDirty(true)
+    setWallsDirty(true)
+    setSelectedFurnId(null)
+    setSelectedWallId(null)
+    setSelectedId(null)
+  }, [])
+  const undo = useCallback(() => {
+    if (!undoStack.current.length) return
+    redoStack.current.push(stateRef.current)
+    applySnap(undoStack.current.pop()!)
+    lastEdit.current = { t: 0 }
+    bumpHistory()
+  }, [applySnap, bumpHistory])
+  const redo = useCallback(() => {
+    if (!redoStack.current.length) return
+    undoStack.current.push(stateRef.current)
+    applySnap(redoStack.current.pop()!)
+    lastEdit.current = { t: 0 }
+    bumpHistory()
+  }, [applySnap, bumpHistory])
+  const canUndo = undoStack.current.length > 0
+  const canRedo = redoStack.current.length > 0
+
+  useEffect(() => {
+    const isText = (t: EventTarget | null) => t instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || isText(e.target)) return
+      const k = e.key.toLowerCase()
+      if (k === 'z') {
+        e.preventDefault()
+        if (e.shiftKey) redo()
+        else undo()
+      } else if (k === 'y') {
+        e.preventDefault()
+        redo()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [undo, redo])
+
   const docById = useCallback((id: string) => docs.find((d) => d.id === id), [docs])
 
   // Keep a furniture piece inside the room: clamp its centre so its footprint
@@ -210,6 +294,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
 
   const addFurniture = useCallback(
     (kind: FurnitureKind, x: number, z: number) => {
+      beginEdit()
       const { sx, sz } = FURNITURE_DEFAULTS[kind]
       const id = nextFurnitureId(furniture, kind)
       const { cx, cz } = clampToRoom(x, z, sx, sz)
@@ -218,7 +303,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
       setSelectedWallId(null)
       setFurnitureDirty(true)
     },
-    [furniture, clampToRoom],
+    [furniture, clampToRoom, beginEdit],
   )
 
   const moveFurniture = useCallback(
@@ -233,6 +318,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
 
   const updateSelectedFurn = useCallback(
     (patch: Partial<FurnitureItem>) => {
+      beginEdit('furn-edit')
       setFurniture((cur) =>
         cur.map((it) => {
           if (it.id !== selectedFurnId) return it
@@ -243,14 +329,15 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
       )
       setFurnitureDirty(true)
     },
-    [selectedFurnId, clampToRoom],
+    [selectedFurnId, clampToRoom, beginEdit],
   )
 
   const removeSelectedFurn = useCallback(() => {
+    beginEdit()
     setFurniture((cur) => cur.filter((it) => it.id !== selectedFurnId))
     setSelectedFurnId(null)
     setFurnitureDirty(true)
-  }, [selectedFurnId])
+  }, [selectedFurnId, beginEdit])
 
   const selectedFurn = furniture.find((f) => f.id === selectedFurnId) ?? null
 
@@ -259,6 +346,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
   // of paste and duplicate.
   const placeFurnitureCopy = useCallback(
     (src: FurnitureItem) => {
+      beginEdit()
       const id = nextFurnitureId(furniture, src.kind)
       const { cx, cz } = clampToRoom(
         src.cx + FURNITURE_PASTE_OFFSET_M,
@@ -271,7 +359,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
       setSelectedWallId(null)
       setFurnitureDirty(true)
     },
-    [furniture, clampToRoom],
+    [furniture, clampToRoom, beginEdit],
   )
   // Copy stores a snapshot; paste drops it; duplicate drops a copy of the current
   // selection directly (without disturbing the clipboard, so an earlier copy survives).
@@ -310,6 +398,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
 
   const addWall = useCallback(
     (x: number, z: number) => {
+      beginEdit()
       const sx = 4 // default: a 4 m run…
       const sz = 0.2 // …0.2 m thick (rotate 90° to swap which axis runs)
       const id = nextWallId(walls)
@@ -319,7 +408,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
       setSelectedFurnId(null)
       setWallsDirty(true)
     },
-    [walls, clampToRoom],
+    [walls, clampToRoom, beginEdit],
   )
 
   const moveWall = useCallback(
@@ -332,6 +421,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
 
   const updateSelectedWall = useCallback(
     (patch: Partial<EditableWall>) => {
+      beginEdit('wall-edit')
       setWalls((cur) =>
         cur.map((w) => {
           if (w.id !== selectedWallId) return w
@@ -341,22 +431,24 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
       )
       setWallsDirty(true)
     },
-    [selectedWallId, clampToRoom],
+    [selectedWallId, clampToRoom, beginEdit],
   )
 
   // Rotate 90°: swap the footprint's run/thickness axes about the centre. The wall
   // stays axis-aligned, so its normal axis — and every mounting calculation — stays
   // exact (no need to rework `wallRun` / `placementTransform` / frames).
   const rotateSelectedWall = useCallback(() => {
+    beginEdit()
     setWalls((cur) => cur.map((w) => (w.id === selectedWallId ? { ...w, sx: w.sz, sz: w.sx } : w)))
     setWallsDirty(true)
-  }, [selectedWallId])
+  }, [selectedWallId, beginEdit])
 
   const removeSelectedWall = useCallback(() => {
+    beginEdit()
     setWalls((cur) => cur.filter((w) => w.id !== selectedWallId))
     setSelectedWallId(null)
     setWallsDirty(true)
-  }, [selectedWallId])
+  }, [selectedWallId, beginEdit])
 
   const selectedWallItem = walls.find((w) => w.id === selectedWallId) ?? null
 
@@ -370,6 +462,48 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
     setSelectedWallId(id)
     setSelectedFurnId(null)
   }, [])
+
+  /* ── drag with snapping + live guides ────────────────────────────────────────── */
+  // Lifted so the guide overlay can render while a piece is being dragged. On grab we
+  // snapshot the OTHER elements' footprints once (they don't move during the drag), then
+  // each move snaps the dragged box against them and reports the alignment + gap guides.
+  const [dragSession, setDragSession] = useState<DragSession | null>(null)
+  const dragRef = useRef<{ kind: DragKind; id: string; others: Box[]; sx: number; sz: number; start: { cx: number; cz: number } } | null>(null)
+
+  const dragStart = useCallback((kind: DragKind, id: string) => {
+    const me = (kind === 'furn' ? stateRef.current.furniture : stateRef.current.walls).find((x) => x.id === id)
+    if (!me) return
+    const others: Box[] = [
+      ...stateRef.current.furniture.filter((f) => !(kind === 'furn' && f.id === id)).map((f) => ({ cx: f.cx, cz: f.cz, sx: f.sx, sz: f.sz })),
+      ...stateRef.current.walls.filter((w) => !(kind === 'wall' && w.id === id)).map((w) => ({ cx: w.cx, cz: w.cz, sx: w.sx, sz: w.sz })),
+    ]
+    dragRef.current = { kind, id, others, sx: me.sx, sz: me.sz, start: { cx: me.cx, cz: me.cz } }
+    beginEdit() // one snapshot per drag; dropped on release if nothing moved
+  }, [beginEdit])
+
+  const dragMove = useCallback((kind: DragKind, id: string, rawX: number, rawZ: number, noSnap: boolean) => {
+    const d = dragRef.current
+    const moving = { sx: d?.sx ?? 1, sz: d?.sz ?? 1 }
+    const res = noSnap || !d
+      ? { cx: rawX, cz: rawZ, aligns: [] as AlignGuide[], measures: [] as MeasureGuide[] }
+      : snapMove({ moving, cx: rawX, cz: rawZ, others: d.others, room: { width: SPACE_WIDTH, depth: SPACE_DEPTH }, threshold: 0.3, grid: 0.5 })
+    if (kind === 'furn') moveFurniture(id, res.cx, res.cz)
+    else moveWall(id, res.cx, res.cz)
+    setDragSession({ kind, box: { cx: res.cx, cz: res.cz, sx: moving.sx, sz: moving.sz }, aligns: res.aligns, measures: res.measures })
+  }, [moveFurniture, moveWall])
+
+  const dragEnd = useCallback(() => {
+    const d = dragRef.current
+    if (d) {
+      const me = (d.kind === 'furn' ? stateRef.current.furniture : stateRef.current.walls).find((x) => x.id === d.id)
+      if (me && Math.abs(me.cx - d.start.cx) < 1e-4 && Math.abs(me.cz - d.start.cz) < 1e-4) {
+        undoStack.current.pop() // a click that didn't move: discard the snapshot
+        bumpHistory()
+      }
+    }
+    dragRef.current = null
+    setDragSession(null)
+  }, [bumpHistory])
 
   const toggleEditFurniture = useCallback(() => {
     setEditFurniture((p) => {
@@ -465,14 +599,16 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
         scale: 1,
         side,
       }
+      beginEdit()
       setPlacements((cur) => [...cur, next])
       setSelectedId(id)
     },
-    [armedId, docById, placements.length, fallbackHeight],
+    [armedId, docById, placements.length, fallbackHeight, beginEdit],
   )
 
   const updateSelected = useCallback(
     (patch: Partial<Placement>) => {
+      beginEdit('place-edit')
       setPlacements((cur) => {
         const sel = cur.find((p) => p.id === selectedId)
         if (!sel) return cur
@@ -487,9 +623,10 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
         })
       })
     },
-    [selectedId],
+    [selectedId, beginEdit],
   )
   const removeSelected = useCallback(() => {
+    beginEdit()
     setPlacements((cur) => {
       const sel = cur.find((p) => p.id === selectedId)
       if (!sel) return cur
@@ -498,7 +635,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
       return cur.filter((p) => !drop.has(p.id))
     })
     setSelectedId(null)
-  }, [selectedId])
+  }, [selectedId, beginEdit])
 
   // Delete / Backspace removes the current selection (unless a form field has
   // focus, e.g. a dropdown). In edit-space mode the selected wall or furniture
@@ -569,6 +706,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
       const doc = docById(selected.printId)
       if (!wall || !doc) return
       const { runCenter } = wallRun(wall)
+      beginEdit()
       const zoned = planZonePlacements({
         base: selected,
         runCenter,
@@ -580,7 +718,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
       setPlacements((cur) => [...cur.filter((p) => p.id !== selected.id), ...zoned])
       setSelectedId(zoned[0]?.id ?? null)
     },
-    [selected, docById, placements.length],
+    [selected, docById, placements.length, beginEdit],
   )
 
   // Double-sided (Phase 2): convert the selected single-face piece into a coherent
@@ -595,16 +733,18 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
       backPrintId,
       idPrefix: `ds${placements.length}-${selected.wallId}`,
     })
+    beginEdit()
     setPlacements((cur) => [...cur.filter((p) => p.id !== selected.id), front, back])
     setSelectedId(front.id)
-  }, [selected, placements, armedId])
+  }, [selected, placements, armedId, beginEdit])
 
   // Unlink a double-sided pair back into two independent single-face placements.
   const splitSelectedFaces = useCallback(() => {
     const pid = selected?.pairId
     if (!pid) return
+    beginEdit()
     setPlacements((cur) => unlinkPair(pid, cur))
-  }, [selected])
+  }, [selected, beginEdit])
 
   // Portable layout file: export the current placements / import a saved one /
   // clear back to empty. The auto-persist effect above keeps localStorage in sync.
@@ -619,19 +759,29 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
   }, [placements])
 
   const importLayout = useCallback((text: string) => {
+    beginEdit()
     setPlacements(parsePlacements(text))
     setSelectedId(null)
-  }, [])
+  }, [beginEdit])
 
   const clearLayout = useCallback(() => {
+    beginEdit()
     setPlacements([])
     setSelectedId(null)
     clearPlacements()
-  }, [])
+  }, [beginEdit])
 
   const setView = useCallback((pos: Vec3, target: Vec3) => cameraApi.current?.setView(pos, target), [])
-  const aerialView = useCallback(() => setView([0, 30, 32], [0, 0, 0]), [setView])
-  const walkView = useCallback(() => setView([0, 1.6, SPACE_DEPTH / 2 - 4], [0, 1.6, 0]), [setView])
+  // Aerial / walk drive the perspective camera. If we're leaving plan mode, the default
+  // camera only swaps back to the perspective one after this render commits — so defer the
+  // framing one frame (rAF) so setView lands on the perspective camera, not the ortho one.
+  const perspView = useCallback((pos: Vec3, target: Vec3) => {
+    if (planMode) { setPlanMode(false); requestAnimationFrame(() => setView(pos, target)) }
+    else setView(pos, target)
+  }, [planMode, setView])
+  const aerialView = useCallback(() => perspView([0, 30, 32], [0, 0, 0]), [perspView])
+  const walkView = useCallback(() => perspView([0, 1.6, SPACE_DEPTH / 2 - 4], [0, 1.6, 0]), [perspView])
+  const planView = useCallback(() => setPlanMode(true), [])
 
   // Phase 4 hero slice: mount "Sistema solar de la inversión" on wall 2's S3 face
   // as a light-box, at true scale on the eye band, and frame it head-on so the
@@ -649,6 +799,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
       trimHeightMm: heroDoc.dimensions.trimHeightMm,
       fallbackHeight,
     })
+    beginEdit()
     setArmedId(HERO_PRINT_ID)
     setPlacements((cur) => [...cur.filter((p) => p.printId !== HERO_PRINT_ID), asVinyl(placement)])
     setSelectedId(placement.id)
@@ -664,7 +815,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
         ? [normalCenter, placement.centerY, runCenter]
         : [runCenter, placement.centerY, normalCenter]
     setView(eye, target)
-  }, [heroWall, heroDoc, fallbackHeight, setView, findWallByInvIdLocal])
+  }, [heroWall, heroDoc, fallbackHeight, setView, findWallByInvIdLocal, beginEdit])
 
   // Phase 5 (S3 nave): mount wall 2's S3 face as a ZONED light-box per nave camera
   // — three bays (IMAGE / TEXT+CODE / INVERSIÓN) instead of one stretched poster —
@@ -679,6 +830,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
       trimHeightMm: heroDoc.dimensions.trimHeightMm,
       fallbackHeight,
     })
+    beginEdit()
     setArmedId(HERO_PRINT_ID)
     setPlacements((cur) => [
       ...cur.filter((p) => p.printId !== HERO_PRINT_ID && !p.id.startsWith(`hero-nave-${heroWall.id}`)),
@@ -698,7 +850,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
         ? [normalCenter, plan.centerY, heroP?.along ?? 0]
         : [heroP?.along ?? 0, plan.centerY, normalCenter]
     setView(eye, target)
-  }, [heroWall, heroDoc, fallbackHeight, setView, findWallByInvIdLocal])
+  }, [heroWall, heroDoc, fallbackHeight, setView, findWallByInvIdLocal, beginEdit])
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,#1b1e25 0%,#101218 100%)' }}>
@@ -749,7 +901,9 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
           editable={editFurniture}
           selectedId={selectedWallId}
           onSelect={selectWall}
-          onMove={moveWall}
+          onDragStart={(id) => dragStart('wall', id)}
+          onDragMove={(id, x, z, noSnap) => dragMove('wall', id, x, z, noSnap)}
+          onDragEnd={dragEnd}
           onPlace={placeOnWall}
         />
         <GlassPanels fallback={fallbackHeight} onPlace={placeOnWall} />
@@ -771,7 +925,9 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
           showTables={showPeople || editFurniture}
           selectedId={selectedFurnId}
           onSelect={selectFurniture}
-          onMove={moveFurniture}
+          onDragStart={(id) => dragStart('furn', id)}
+          onDragMove={(id, x, z, noSnap) => dragMove('furn', id, x, z, noSnap)}
+          onDragEnd={dragEnd}
         />
         {showPeople && SPAWNS.map((s, i) => <SpawnMarker key={i} box={s} />)}
         {showPeople && <Crowd />}
@@ -796,8 +952,10 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
         </Suspense>
 
         <ContactShadows position={[0, 0.01, 0]} opacity={0.32} scale={Math.max(SPACE_WIDTH, SPACE_DEPTH) * 1.2} blur={2.6} far={3} resolution={512} />
-        <OrbitControls makeDefault enablePan enableZoom minDistance={1} maxDistance={120} maxPolarAngle={Math.PI / 2 - 0.03} target={[0, 1, 0]} />
-        <CameraRig apiRef={cameraApi} />
+        <OrbitControls makeDefault enablePan enableZoom enableRotate={!planMode} minDistance={1} maxDistance={200} maxPolarAngle={Math.PI / 2 - 0.03} target={[0, 1, 0]} />
+        <DragGuides session={dragSession} />
+        <PlanCamera enabled={planMode} />
+        <CameraRig apiRef={cameraApi} planMode={planMode} />
       </Canvas>
 
       <Hud
@@ -849,6 +1007,12 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
         onBack={onBack}
         onAerial={aerialView}
         onWalk={walkView}
+        onPlan={planView}
+        planMode={planMode}
+        onUndo={undo}
+        onRedo={redo}
+        canUndo={canUndo}
+        canRedo={canRedo}
         onMountHero={mountHero}
         onMountHeroZoned={mountHeroZoned}
         canMountHero={canMountHero}
@@ -907,14 +1071,18 @@ function Walls({
   editable,
   selectedId,
   onSelect,
-  onMove,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
   onPlace,
 }: {
   walls: Wall[]
   editable: boolean
   selectedId: string | null
   onSelect: (id: string) => void
-  onMove: (id: string, x: number, z: number) => void
+  onDragStart: (id: string) => void
+  onDragMove: (id: string, x: number, z: number, noSnap: boolean) => void
+  onDragEnd: () => void
   onPlace: (w: Wall, p: Vector3) => void
 }) {
   return (
@@ -926,7 +1094,9 @@ function Walls({
           editable={editable}
           selected={w.id === selectedId}
           onSelect={onSelect}
-          onMove={onMove}
+          onDragStart={onDragStart}
+          onDragMove={onDragMove}
+          onDragEnd={onDragEnd}
           onPlace={onPlace}
         />
       ))}
@@ -939,14 +1109,18 @@ function WallMesh({
   editable,
   selected,
   onSelect,
-  onMove,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
   onPlace,
 }: {
   wall: Wall
   editable: boolean
   selected: boolean
   onSelect: (id: string) => void
-  onMove: (id: string, x: number, z: number) => void
+  onDragStart: (id: string) => void
+  onDragMove: (id: string, x: number, z: number, noSnap: boolean) => void
+  onDragEnd: () => void
   onPlace: (w: Wall, p: Vector3) => void
 }) {
   const { controls } = useThree() as unknown as { controls: { enabled: boolean } | null }
@@ -960,6 +1134,7 @@ function WallMesh({
     onSelect(wall.id)
     if (!e.ray.intersectPlane(floor, hit.current)) return
     drag.current = { dx: wall.cx - hit.current.x, dz: wall.cz - hit.current.z }
+    onDragStart(wall.id)
     ;(e.target as Element).setPointerCapture?.(e.pointerId)
     if (controls) controls.enabled = false
     document.body.style.cursor = 'grabbing'
@@ -968,12 +1143,13 @@ function WallMesh({
     if (!drag.current) return
     e.stopPropagation()
     if (!e.ray.intersectPlane(floor, hit.current)) return
-    onMove(wall.id, hit.current.x + drag.current.dx, hit.current.z + drag.current.dz)
+    onDragMove(wall.id, hit.current.x + drag.current.dx, hit.current.z + drag.current.dz, e.nativeEvent.altKey)
   }
   const onUp = (e: ThreeEvent<PointerEvent>) => {
     if (!drag.current) return
     e.stopPropagation()
     drag.current = null
+    onDragEnd()
     ;(e.target as Element).releasePointerCapture?.(e.pointerId)
     if (controls) controls.enabled = true
     document.body.style.cursor = ''
@@ -1161,13 +1337,17 @@ function FurnitureMesh({
   editable,
   selected,
   onSelect,
-  onMove,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
 }: {
   item: FurnitureItem
   editable: boolean
   selected: boolean
   onSelect: (id: string) => void
-  onMove: (id: string, x: number, z: number) => void
+  onDragStart: (id: string) => void
+  onDragMove: (id: string, x: number, z: number, noSnap: boolean) => void
+  onDragEnd: () => void
 }) {
   const { controls } = useThree() as unknown as { controls: { enabled: boolean } | null }
   const floor = useMemo(() => new Plane(new Vector3(0, 1, 0), 0), [])
@@ -1180,6 +1360,7 @@ function FurnitureMesh({
     onSelect(item.id)
     if (!e.ray.intersectPlane(floor, hit.current)) return
     drag.current = { dx: item.cx - hit.current.x, dz: item.cz - hit.current.z }
+    onDragStart(item.id)
     ;(e.target as Element).setPointerCapture?.(e.pointerId)
     if (controls) controls.enabled = false
     document.body.style.cursor = 'grabbing'
@@ -1188,12 +1369,13 @@ function FurnitureMesh({
     if (!drag.current) return
     e.stopPropagation()
     if (!e.ray.intersectPlane(floor, hit.current)) return
-    onMove(item.id, hit.current.x + drag.current.dx, hit.current.z + drag.current.dz)
+    onDragMove(item.id, hit.current.x + drag.current.dx, hit.current.z + drag.current.dz, e.nativeEvent.altKey)
   }
   const onUp = (e: ThreeEvent<PointerEvent>) => {
     if (!drag.current) return
     e.stopPropagation()
     drag.current = null
+    onDragEnd()
     ;(e.target as Element).releasePointerCapture?.(e.pointerId)
     if (controls) controls.enabled = true
     document.body.style.cursor = ''
@@ -1230,14 +1412,18 @@ function FurniturePieces({
   showTables,
   selectedId,
   onSelect,
-  onMove,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
 }: {
   items: FurnitureItem[]
   editable: boolean
   showTables: boolean
   selectedId: string | null
   onSelect: (id: string) => void
-  onMove: (id: string, x: number, z: number) => void
+  onDragStart: (id: string) => void
+  onDragMove: (id: string, x: number, z: number, noSnap: boolean) => void
+  onDragEnd: () => void
 }) {
   return (
     <group>
@@ -1249,7 +1435,9 @@ function FurniturePieces({
             editable={editable}
             selected={it.id === selectedId}
             onSelect={onSelect}
-            onMove={onMove}
+            onDragStart={onDragStart}
+            onDragMove={onDragMove}
+            onDragEnd={onDragEnd}
           />
         ),
       )}
@@ -1318,14 +1506,27 @@ const FRAME_EDGE_MARGIN_M = 0.04 // clearance from floor/ceiling and adjacent fr
 const surfaceForTheme = (theme?: string): string =>
   theme === 'dark' ? darkTheme.surface : lightTheme.surface
 
+/** Filesystem-safe slug of a frame code, matching `generate-frames` `docIdFor`. */
+const frameCodeSlug = (fid: string): string =>
+  fid
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
 /**
  * Rank to pick the winning doc when several share a `frameId`: a real page beats a
- * `blank`; a user design (`pared-*` / anything) beats the generator's `marco-*`
- * placeholder. So a frame the user dressed (e.g. a dark `pared-2-w-2`) overrides its
- * blank `marco-*` twin, and an arted frame overrides everything.
+ * `blank`; a user design (`pared-*` / anything) beats the generator's placeholder.
+ * The generator names its frame docs by the bare wall code (e.g. `2-w-2`), so a doc
+ * whose id *differs* from its frame code is a deliberate user override and wins the
+ * tiebreak — a dark `pared-2-w-2` overrides its blank `2-w-2` twin, and an arted
+ * frame overrides everything.
  */
 function frameDocRank(d: PrintDoc): number {
-  return (d.pageComponentId !== 'blank' ? 2 : 0) + (d.id.startsWith('marco-') ? 0 : 1)
+  const fid = (d.props as Record<string, unknown> | undefined)?.frameId
+  const isCanonical = typeof fid === 'string' && d.id === frameCodeSlug(fid)
+  return (d.pageComponentId !== 'blank' ? 2 : 0) + (isCanonical ? 0 : 1)
 }
 
 /**
@@ -1386,7 +1587,9 @@ function WallFrames({
         const { runCenter, normalCenter } = wallRun(wall)
         const pw = f.widthM
         const ph = f.heightM
-        const maxOff = Math.max(0, wall.length / 2 - pw / 2)
+        // A panel wider than its wall (a cube outer face cladding the corner returns)
+        // is meant to overhang, so allow its centre to sit off the wall centre too.
+        const maxOff = Math.abs(wall.length / 2 - pw / 2)
         const along = MathUtils.clamp(f.alongCenter, runCenter - maxOff, runCenter + maxOff)
         const centerY = ph / 2
         const surf = normalCenter + f.side * (wall.thickness / 2 + FRAME_SURFACE_OFFSET_M)
@@ -1403,8 +1606,11 @@ function WallFrames({
         const doc = docByFrameId.get(f.id)
 
         // Arted frame → paint the live print edge-to-edge over the whole face.
+        // The frame code still shows over the art while labels are on.
         if (doc && doc.pageComponentId !== 'blank') {
-          return <FramePrint key={f.id} doc={doc} pos={pos} rotY={rotY} panelW={pw} panelH={ph} realista={realista} />
+          return (
+            <FramePrint key={f.id} doc={doc} pos={pos} rotY={rotY} panelW={pw} panelH={ph} realista={realista} showLabels={showLabels} code={f.id} />
+          )
         }
 
         // Blank frame → its *themed background* (a dark frame paints dark, a light
@@ -1426,24 +1632,7 @@ function WallFrames({
               <planeGeometry args={[innerW, innerH]} />
               <meshStandardMaterial color={field} roughness={0.95} metalness={0} />
             </mesh>
-            {showLabels && (
-              <Html position={[0, 0, 0.01]} center zIndexRange={[12, 0]} style={{ pointerEvents: 'none', userSelect: 'none' }}>
-                <div
-                  style={{
-                    fontSize: 9,
-                    fontWeight: 700,
-                    color: '#7c8190',
-                    fontFamily: UI_FONT,
-                    background: 'rgba(255,255,255,0.66)',
-                    padding: '1px 5px',
-                    borderRadius: 5,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {f.id}
-                </div>
-              </Html>
-            )}
+            {showLabels && <FrameCodeLabel code={f.id} />}
           </group>
         )
       })}
@@ -1466,6 +1655,8 @@ function FramePrint({
   panelW,
   panelH,
   realista,
+  showLabels,
+  code,
 }: {
   doc: PrintDoc
   pos: Vec3
@@ -1473,6 +1664,8 @@ function FramePrint({
   panelW: number
   panelH: number
   realista: boolean
+  showLabels: boolean
+  code: string
 }) {
   const geo = useMemo(() => buildGeometry(doc.dimensions, doc.dpi), [doc])
   const page = getPrintPage(doc.pageComponentId)
@@ -1489,6 +1682,7 @@ function FramePrint({
     return (
       <group position={pos} rotation={[0, rotY, 0]}>
         <PrintFaceMesh doc={doc} w={panelW} h={panelH} />
+        {showLabels && <FrameCodeLabel code={code} />}
       </group>
     )
   }
@@ -1518,7 +1712,35 @@ function FramePrint({
           </div>
         </div>
       </Html>
+      {showLabels && <FrameCodeLabel code={code} />}
     </group>
+  )
+}
+
+/**
+ * FrameCodeLabel — the frame's id (e.g. `9-E-1`) painted as a small chip at the
+ * centre of the face. Shared by blank frames and arted ones so the code stays
+ * visible over a live print while the Etiquetas overlay is on.
+ */
+function FrameCodeLabel({ code }: { code: string }) {
+  return (
+    <Html position={[0, 0, 0.02]} center zIndexRange={[20, 0]} style={{ pointerEvents: 'none', userSelect: 'none' }}>
+      <div
+        style={{
+          fontSize: 9,
+          fontWeight: 700,
+          color: '#7c8190',
+          fontFamily: UI_FONT,
+          background: 'rgba(255,255,255,0.82)',
+          padding: '1px 5px',
+          borderRadius: 5,
+          whiteSpace: 'nowrap',
+          boxShadow: '0 0 0 1px rgba(124,129,144,0.25)',
+        }}
+      >
+        {code}
+      </div>
+    </Html>
   )
 }
 
@@ -1676,7 +1898,80 @@ function WallPrint({
 
 /* ── camera: orbit + WASD fly, with imperative view presets ──────────────────── */
 
-function CameraRig({ apiRef }: { apiRef: React.MutableRefObject<{ setView: (pos: Vec3, target: Vec3) => void } | null> }) {
+/**
+ * PlanCamera — a true top-down ORTHOGRAPHIC camera for the «Vista de plano» mode.
+ * While enabled it becomes the default camera (drei restores the perspective camera when
+ * disabled). It sits straight above the room with up = −Z so the venue's depth runs
+ * vertically on screen, and its zoom is sized so the whole floor fits the viewport.
+ * Orthographic = no perspective, so walls read as flat footprints — a floor plan, not a
+ * 3-D view. OrbitControls (rotation locked while in plan) still handles pan + wheel-zoom.
+ */
+function PlanCamera({ enabled }: { enabled: boolean }) {
+  const ref = useRef<any>(null)
+  const size = useThree((s) => s.size)
+  const invalidate = useThree((s) => s.invalidate)
+  // drei's ortho frustum spans the viewport in pixels; zoom = pixels per metre. Fit both
+  // axes (room width → screen X, depth → screen Y) with a small breathing margin.
+  const zoom = Math.min(size.width / SPACE_WIDTH, size.height / SPACE_DEPTH) / 1.08
+  useEffect(() => {
+    const cam = ref.current
+    if (!cam || !enabled) return
+    cam.up.set(0, 0, -1)
+    cam.position.set(0, 100, 0)
+    cam.lookAt(0, 0, 0)
+    cam.zoom = zoom
+    cam.updateProjectionMatrix()
+    invalidate()
+  }, [enabled, zoom, invalidate])
+  return <OrthographicCamera ref={ref} makeDefault={enabled} position={[0, 100, 0]} up={[0, 0, -1]} zoom={zoom} near={1} far={400} />
+}
+
+/**
+ * DragGuides — Figma-style overlay drawn on the floor while a piece is dragged: bright
+ * alignment lines where an edge/centre lines up with another element (or a room wall),
+ * plus a measured gap (ticked segment + label) to the nearest neighbour on each axis.
+ * Non-interactive; lives just above the floor so it reads over the grid.
+ */
+function DragGuides({ session }: { session: DragSession | null }) {
+  if (!session) return null
+  const y = 0.06
+  const COL = '#ff3b6b'
+  const tick = 0.18
+  return (
+    <group>
+      {session.aligns.map((g, i) => (
+        <Line
+          key={`a${i}`}
+          points={g.axis === 'x' ? [[g.at, y, g.min], [g.at, y, g.max]] : [[g.min, y, g.at], [g.max, y, g.at]]}
+          color={COL}
+          lineWidth={1.5}
+        />
+      ))}
+      {session.measures.map((g, i) => {
+        const pts: [number, number, number][] = g.axis === 'x' ? [[g.a, y, g.along], [g.b, y, g.along]] : [[g.along, y, g.a], [g.along, y, g.b]]
+        const ends: [number, number, number][][] = g.axis === 'x'
+          ? [[[g.a, y, g.along - tick], [g.a, y, g.along + tick]], [[g.b, y, g.along - tick], [g.b, y, g.along + tick]]]
+          : [[[g.along - tick, y, g.a], [g.along + tick, y, g.a]], [[g.along - tick, y, g.b], [g.along + tick, y, g.b]]]
+        const mid: [number, number, number] = g.axis === 'x' ? [(g.a + g.b) / 2, y, g.along] : [g.along, y, (g.a + g.b) / 2]
+        return (
+          <group key={`m${i}`}>
+            <Line points={pts} color={COL} lineWidth={1.5} />
+            {ends.map((e, j) => (
+              <Line key={j} points={e} color={COL} lineWidth={1.5} />
+            ))}
+            <Html position={mid} center zIndexRange={[40, 0]} style={{ pointerEvents: 'none', userSelect: 'none' }}>
+              <div style={{ background: COL, color: '#fff', fontFamily: 'system-ui, sans-serif', fontSize: 11, fontWeight: 700, padding: '2px 6px', borderRadius: 5, whiteSpace: 'nowrap' }}>
+                {fmtGap(g.dist)}
+              </div>
+            </Html>
+          </group>
+        )
+      })}
+    </group>
+  )
+}
+
+function CameraRig({ apiRef, planMode }: { apiRef: React.MutableRefObject<{ setView: (pos: Vec3, target: Vec3) => void } | null>; planMode: boolean }) {
   const { camera, controls, invalidate } = useThree() as unknown as {
     camera: any
     controls: any
@@ -1694,12 +1989,13 @@ function CameraRig({ apiRef }: { apiRef: React.MutableRefObject<{ setView: (pos:
           c.target.set(target[0], target[1], target[2])
           c.update()
         }
+        invalidate() // demand mode: render the new framing now
       },
     }
     return () => {
       apiRef.current = null
     }
-  }, [apiRef, camera, controls])
+  }, [apiRef, camera, controls, invalidate])
 
   useEffect(() => {
     const isText = (t: EventTarget | null) => t instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)
@@ -1721,7 +2017,7 @@ function CameraRig({ apiRef }: { apiRef: React.MutableRefObject<{ setView: (pos:
 
   useFrame((_, dt) => {
     const c = controls
-    if (!c) return
+    if (!c || planMode) return // no WASD fly in the locked top-down plan view
     const { a, b, c: cc } = tmp.current
     const k = keys.current
     const move = a.set(0, 0, 0)
@@ -1800,6 +2096,12 @@ function Hud({
   onBack,
   onAerial,
   onWalk,
+  onPlan,
+  planMode,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
   onMountHero,
   onMountHeroZoned,
   canMountHero,
@@ -1855,6 +2157,12 @@ function Hud({
   onBack: () => void
   onAerial: () => void
   onWalk: () => void
+  onPlan: () => void
+  planMode: boolean
+  onUndo: () => void
+  onRedo: () => void
+  canUndo: boolean
+  canRedo: boolean
   onMountHero: () => void
   onMountHeroZoned: () => void
   canMountHero: boolean
@@ -1898,12 +2206,15 @@ function Hud({
         )}
         <button onClick={onAerial} style={{ ...glassBtn, pointerEvents: 'auto' }}>Vista aérea</button>
         <button onClick={onWalk} style={{ ...glassBtn, pointerEvents: 'auto' }}>Vista a pie</button>
+        <button onClick={onPlan} title="Vista de plano: cámara cenital recta sobre el recinto (se lee como un plano de planta). Rotación bloqueada; arrastra para mover y rueda para acercar." style={{ ...glassBtn, pointerEvents: 'auto', color: planMode ? KIT_BLUE : '#c9cdd6' }}>Vista de plano</button>
         <button onClick={() => setShowPeople((p) => !p)} title="Muestra/oculta la simulación de uso: personas, mesas y punto de spawn. Oculto por defecto." style={{ ...glassBtn, pointerEvents: 'auto', color: showPeople ? KIT_BLUE : '#c9cdd6' }}>
           👥 Personas {showPeople ? 'on' : 'off'}
         </button>
-        <button onClick={onToggleEditFurniture} title="Editar espacio: mover, añadir, girar y quitar mobiliario (mesas, barra, plantas) y paredes. Al activarlo se muestran y se pueden arrastrar todas las piezas." style={{ ...glassBtn, pointerEvents: 'auto', color: editFurniture ? KIT_BLUE : '#c9cdd6' }}>
+        <button onClick={onToggleEditFurniture} title="Editar espacio: mover, añadir, girar y quitar mobiliario (mesas, barra, plantas) y paredes. Al activarlo se muestran y se pueden arrastrar todas las piezas. Al mover, las piezas hacen snap a las demás y muestran las distancias (mantén Alt para mover libre)." style={{ ...glassBtn, pointerEvents: 'auto', color: editFurniture ? KIT_BLUE : '#c9cdd6' }}>
           ✏️ Editar espacio {editFurniture ? 'on' : 'off'}{editFurniture && furnitureDirty ? ' •' : ''}
         </button>
+        <button onClick={onUndo} disabled={!canUndo} title="Deshacer (Ctrl/Cmd+Z)" style={{ ...glassBtn, pointerEvents: 'auto', opacity: canUndo ? 1 : 0.4 }}>↶</button>
+        <button onClick={onRedo} disabled={!canRedo} title="Rehacer (Ctrl/Cmd+Shift+Z)" style={{ ...glassBtn, pointerEvents: 'auto', opacity: canRedo ? 1 : 0.4 }}>↷</button>
         <button onClick={() => setShowFrames((p) => !p)} style={{ ...glassBtn, pointerEvents: 'auto', color: showFrames ? KIT_BLUE : '#c9cdd6' }}>
           ▦ Marcos {showFrames ? 'on' : 'off'}
         </button>
@@ -1989,6 +2300,22 @@ function Hud({
               <Slider label="Tamaño" value={selected.scale} display={`${Math.round(selected.scale * 100)}%`} min={0.25} max={4} step={0.05} onChange={(v) => updateSelected({ scale: v })} />
               <Slider label="Altura (centro)" value={selected.centerY} display={`${selected.centerY.toFixed(2)} m`} min={0.3} max={Math.max(0.3, selectedWallHeight - 0.1)} step={0.05} onChange={(v) => updateSelected({ centerY: v })} />
               <Slider label="Posición lateral" value={selected.along} display={`${selected.along.toFixed(1)} m`} min={-Math.max(SPACE_WIDTH, SPACE_DEPTH) / 2} max={Math.max(SPACE_WIDTH, SPACE_DEPTH) / 2} step={0.1} onChange={(v) => updateSelected({ along: v })} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: 10 }}>
+                <div style={{ fontSize: 11.5, fontWeight: 700, color: '#a7adba', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Mover (X · Y · Z)</span>
+                  {selected.offset && (selected.offset.x || selected.offset.y || selected.offset.z) ? (
+                    <button onClick={() => updateSelected({ offset: undefined })} style={{ ...glassBtn, padding: '2px 8px', fontSize: 10 }}>
+                      reset
+                    </button>
+                  ) : null}
+                </div>
+                <Slider label="X (lateral)" value={selected.offset?.x ?? 0} display={`${(selected.offset?.x ?? 0).toFixed(2)} m`} min={-5} max={5} step={0.01} onChange={(v) => updateSelected({ offset: { x: v, y: selected.offset?.y ?? 0, z: selected.offset?.z ?? 0 } })} />
+                <Slider label="Y (altura)" value={selected.offset?.y ?? 0} display={`${(selected.offset?.y ?? 0).toFixed(2)} m`} min={-5} max={5} step={0.01} onChange={(v) => updateSelected({ offset: { x: selected.offset?.x ?? 0, y: v, z: selected.offset?.z ?? 0 } })} />
+                <Slider label="Z (fondo)" value={selected.offset?.z ?? 0} display={`${(selected.offset?.z ?? 0).toFixed(2)} m`} min={-5} max={5} step={0.01} onChange={(v) => updateSelected({ offset: { x: selected.offset?.x ?? 0, y: selected.offset?.y ?? 0, z: v } })} />
+                <div style={{ fontSize: 10, color: '#7c8190', lineHeight: 1.4 }}>
+                  Desplaza la pieza libremente en los tres ejes del espacio, incluso despegándola de la pared (Z = fondo).
+                </div>
+              </div>
               {!selectedIsPaired && (
                 <div>
                   <div style={{ fontSize: 11.5, fontWeight: 700, color: '#a7adba', marginBottom: 6 }}>

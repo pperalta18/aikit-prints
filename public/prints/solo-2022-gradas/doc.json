@@ -19,7 +19,7 @@
     "pdfxVariant": "x1a"
   },
   "props": {
-    "src": "prints/marco-11-w-image/assets/2022-g1.png",
+    "src": "prints/11-w-image/assets/2022-g1.png",
     "fit": "cover",
     "position": "center",
     "alt": "Gradas de estadio 2022 (SD 1.5) al tamaño que ocupa cada celda del grid en la pared 11-W-IMAGE"

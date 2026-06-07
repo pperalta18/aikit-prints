@@ -44,7 +44,7 @@ const GREEN = '#3a8a3f' // campaign green
 const CREAM = '#f7f3e8' // brand paper (matches 4-W-1's ground)
 const DEFAULT_TONES = [ORANGE, AMBER, GREEN]
 
-const ASSET_DIR = 'prints/marco-4-w-2/assets'
+const ASSET_DIR = 'prints/4-w-2/assets'
 const DEFAULT_LOGO = `${ASSET_DIR}/la-naranja-mecanica.svg`
 
 type ImageRef = { src: string; alt?: string }

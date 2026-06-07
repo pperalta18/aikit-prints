@@ -21,9 +21,9 @@ import { findWallByInvId, resolveWallHeight } from '../space/eventLayout'
  */
 
 const WALLS = [
-  { slug: 'marco-3-n-1', invId: 3 },
-  { slug: 'marco-8-n-1', invId: 8 },
-  { slug: 'marco-19-n-1', invId: 19 },
+  { slug: '3-n-1', invId: 3 },
+  { slug: '8-n-1', invId: 8 },
+  { slug: '19-n-1', invId: 19 },
 ] as const
 
 // Defaults mirrored from `cuadro.tsx` DEFAULTS, so the authored canvas is proven

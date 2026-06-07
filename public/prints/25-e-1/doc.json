@@ -1,0 +1,32 @@
+{
+  "id": "25-e-1",
+  "title": "25-E-1",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "cubo-cara",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 2508,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 24,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 25,
+    "wallId": "wall-23",
+    "frameId": "25-E-1",
+    "side": 1,
+    "index": "04",
+    "title": "Título de la sección cuatro",
+    "ground": "#ffa322",
+    "eyebrow": "AiKit Live · S2",
+    "inkMode": "dark"
+  }
+}

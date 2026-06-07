@@ -52,6 +52,14 @@ export type PrintColor = {
   /** sRGB→CMYK rendering intent. Default `relative`. */
   renderIntent?: RenderIntent
   pdfxVariant: PdfxVariant
+  /**
+   * Brand-colour override. The brand blue must print on its exact CMYK rather than
+   * whatever the ICC conversion lands on, so every export (and the in-app CMYK
+   * soft-proof) forces brand-tint pixels to `α × cmyk`. Omit to use the default
+   * (KIT_BLUE → C100 M48 Y0 K1); set to `null` to disable the override.
+   * See scripts/lib/{cmyk-pdf,brand-cmyk}.mjs and src/print/ui/softProof.ts.
+   */
+  brand?: { rgb: string | [number, number, number]; cmyk: [number, number, number, number]; tol: number } | null
 }
 
 export type PrintDoc = {

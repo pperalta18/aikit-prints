@@ -154,6 +154,80 @@ function sideTag(wall: Wall, side: 1 | -1): string {
   return side > 0 ? 'S' : 'N'
 }
 
+/** Largest AABB side (m) a 4-wall cluster may span to count as a display *box*. */
+const BOX_MAX_SPAN_M = 6
+
+/** A free-standing display box (e.g. the central cube): its member walls + outer AABB. */
+type WallBox = {
+  wallIds: Set<string>
+  xRange: [number, number]
+  zRange: [number, number]
+}
+
+/** Footprint AABB of a wall in world coords (true 0.5 m depth). */
+function footprint(w: Wall): { x0: number; x1: number; z0: number; z1: number } {
+  return { x0: w.cx - w.sx / 2, x1: w.cx + w.sx / 2, z0: w.cz - w.sz / 2, z1: w.cz + w.sz / 2 }
+}
+
+/** Perpendicular walls whose footprints meet at a corner (overlap/touch on both axes). */
+function cornerLinked(a: Wall, b: Wall): boolean {
+  if (a.normalAxis === b.normalAxis) return false
+  const A = footprint(a)
+  const B = footprint(b)
+  const ox = Math.min(A.x1, B.x1) - Math.max(A.x0, B.x0)
+  const oz = Math.min(A.z1, B.z1) - Math.max(A.z0, B.z0)
+  return ox > -TOUCH_TOL_M && oz > -TOUCH_TOL_M
+}
+
+/**
+ * Detect free-standing display *boxes* — the central exhibition cube: a closed ring
+ * of exactly four corner-linked walls, two per orientation, within a small footprint.
+ * Each *outer* face of such a box must clad its whole side (the wall length **plus the
+ * neighbour's depth**) so the four prints wrap the cube edge-to-edge with no bare
+ * corner return — the opposite of the T-junction inset that shrinks a normal face.
+ */
+function detectBoxes(walls: Wall[]): WallBox[] {
+  const seen = new Set<string>()
+  const boxes: WallBox[] = []
+  for (const start of walls) {
+    if (seen.has(start.id)) continue
+    const comp: Wall[] = []
+    const stack = [start]
+    seen.add(start.id)
+    while (stack.length) {
+      const w = stack.pop() as Wall
+      comp.push(w)
+      for (const o of walls) {
+        if (seen.has(o.id)) continue
+        if (cornerLinked(w, o)) {
+          seen.add(o.id)
+          stack.push(o)
+        }
+      }
+    }
+    if (comp.length !== 4) continue
+    const nx = comp.filter((w) => w.normalAxis === 'x').length
+    if (nx !== 2) continue // 2 per orientation ⇒ a closed rectangular ring
+    const xRange: [number, number] = [Math.min(...comp.map((w) => footprint(w).x0)), Math.max(...comp.map((w) => footprint(w).x1))]
+    const zRange: [number, number] = [Math.min(...comp.map((w) => footprint(w).z0)), Math.max(...comp.map((w) => footprint(w).z1))]
+    if (xRange[1] - xRange[0] > BOX_MAX_SPAN_M || zRange[1] - zRange[0] > BOX_MAX_SPAN_M) continue
+    boxes.push({ wallIds: new Set(comp.map((w) => w.id)), xRange, zRange })
+  }
+  return boxes
+}
+
+/** The box a wall belongs to, or undefined. */
+function boxOf(wall: Wall, boxes: WallBox[]): WallBox | undefined {
+  return boxes.find((b) => b.wallIds.has(wall.id))
+}
+
+/** The outer side (+1/−1) of a box wall: the face pointing away from the box centre. */
+function outerBoxSide(wall: Wall, box: WallBox): 1 | -1 {
+  const range = wall.normalAxis === 'x' ? box.xRange : box.zRange
+  const center = (range[0] + range[1]) / 2
+  return normalValueOf(wall, { cx: wall.cx, cz: wall.cz }) >= center ? 1 : -1
+}
+
 export type WallFramesOptions = {
   /** The registry-bearing event walls to frame (both faces of each). */
   walls: Wall[]
@@ -172,6 +246,7 @@ export function computeWallFrames(opts: WallFramesOptions): WallFrame[] {
   const fallback = opts.fallbackHeight ?? FRAME_FALLBACK_HEIGHT_M
   const { walls, allWalls } = opts
   const frames: WallFrame[] = []
+  const boxes = detectBoxes(walls)
 
   for (const wall of walls) {
     const invId = wall.registry?.invId
@@ -181,8 +256,28 @@ export function computeWallFrames(opts: WallFramesOptions): WallFrame[] {
     const runStart = runC - wall.length / 2
     const runEnd = runC + wall.length / 2
     const naveSide = naveFacingSide(wall, allWalls)
+    const box = boxOf(wall, boxes)
+    const outerSide = box ? outerBoxSide(wall, box) : null
 
     for (const side of [1, -1] as const) {
+      // Free-standing cube outer face: clad the whole side (wall + neighbour depth)
+      // so the four faces wrap to the corner edges with no bare return. One panel,
+      // spanning the box's outer extent on this wall's run axis.
+      if (box && side === outerSide) {
+        const range = wall.normalAxis === 'x' ? box.zRange : box.xRange
+        const tag = sideTag(wall, side)
+        frames.push({
+          id: `${invId}-${tag}-1`,
+          invId,
+          wallId: wall.id,
+          side,
+          label: `#${invId}·${tag} 1/1`,
+          alongCenter: round4((range[0] + range[1]) / 2),
+          widthM: round4(range[1] - range[0]),
+          heightM: round4(height),
+        })
+        continue
+      }
       // 0 — corner inset: a perpendicular wall standing ON this face AND covering an
       //     END (e.g. the nave end wall over a side wall's corner) occludes that strip
       //     in 3D, so pull the framable run in to the occluder's near edge — the panel

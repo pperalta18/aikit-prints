@@ -1,0 +1,27 @@
+{
+  "id": "iceberg-avivaron",
+  "title": "Marco vacío — cara sur muro 10 (5.00×3.00 m)",
+  "createdAt": "2026-06-06T00:00:00.000Z",
+  "pageComponentId": "blank",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 5000,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 10,
+    "wallId": "wall-9",
+    "frameId": "10-S-1",
+    "side": 1
+  }
+}

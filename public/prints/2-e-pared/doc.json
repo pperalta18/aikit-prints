@@ -1,0 +1,104 @@
+{
+  "id": "2-e-pared",
+  "title": "2-E · pared completa",
+  "createdAt": "2026-06-07T00:00:00.000Z",
+  "pageComponentId": "pared-combinada",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 22250,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "wall": "2-E",
+    "panelsLeftToRight": [
+      "2-e-inversion",
+      "2-e-text-code",
+      "2-e-image"
+    ],
+    "children": [
+      {
+        "id": "2-e-inversion",
+        "pageComponentId": "warp",
+        "theme": "light",
+        "surface": "#ffffff",
+        "trimWidthMm": 8625,
+        "bleedMm": 10,
+        "props": {
+          "frameWallInvId": 2,
+          "wallId": "wall-1",
+          "frameId": "2-E-INVERSIÓN",
+          "side": 1,
+          "zone": "INVERSIÓN",
+          "fullWidthMm": 23500,
+          "originXMm": 15250,
+          "holeCenterXMm": 10500,
+          "seams": [
+            5750,
+            15250
+          ],
+          "foreshorten": 0.38,
+          "holeCenterYFrac": 0.63,
+          "horizonYFrac": 0.35,
+          "funnelFalloff": 1.12,
+          "ringGrowth": 1.15,
+          "shadeSpanMm": 4200,
+          "shadeGamma": 1.12,
+          "dispersion": 0.72,
+          "bodyGapMm": 240,
+          "perspectiveCompensate": false,
+          "centerTitle": "Laboratorios de IA\ny GPUs",
+          "chartOverlay": {
+            "chart": "frontier-intelligence",
+            "xMm": 4619.25,
+            "yMm": 348,
+            "wMm": 3136.5,
+            "hMm": 1804
+          },
+          "gridFadeStartXMm": 16900,
+          "gridFadeEndXMm": 19150
+        }
+      },
+      {
+        "id": "2-e-text-code",
+        "pageComponentId": "hitos",
+        "theme": "light",
+        "surface": "#ffffff",
+        "trimWidthMm": 6625,
+        "bleedMm": 10,
+        "props": {
+          "frameWallInvId": 2,
+          "wallId": "wall-1",
+          "frameId": "2-E-TEXT+CODE",
+          "side": 1,
+          "zone": "TEXT+CODE",
+          "eyebrow": "Hitos de la inteligencia artificial",
+          "readingDistanceM": 3
+        }
+      },
+      {
+        "id": "2-e-image",
+        "pageComponentId": "evolucion-video",
+        "theme": "light",
+        "trimWidthMm": 7000,
+        "bleedMm": 10,
+        "props": {
+          "frameWallInvId": 2,
+          "wallId": "wall-1",
+          "frameId": "2-E-IMAGE",
+          "side": 1,
+          "zone": "IMAGE"
+        }
+      }
+    ]
+  }
+}

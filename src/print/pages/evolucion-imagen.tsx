@@ -72,7 +72,7 @@ type Props = {
  * v3 (2024) → GPT Image 2 (2026). Years are skipped on purpose to read as
  * acceleration. `src` paths resolve under `public/` via `staticFile`.
  */
-const A = 'prints/marco-11-w-image/assets'
+const A = 'prints/11-w-image/assets'
 const DEFAULT_ERAS: Era[] = [
   {
     year: '2022',

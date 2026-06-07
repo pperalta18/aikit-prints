@@ -16,12 +16,29 @@ import { existsSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { PDFDocument } from 'pdf-lib'
+import { pngToBrandCmykTiff } from './brand-cmyk.mjs'
 
 const ROOT = process.cwd()
 const SRGB_PROFILE = path.join(ROOT, 'public', 'icc', 'sRGB.icc')
 
 /** ICC rendering-intent names → Ghostscript -dRenderIntent codes. */
 export const RENDER_INTENT = { perceptual: 0, relative: 1, saturation: 2, absolute: 3 }
+
+/**
+ * Brand-colour override applied to EVERY export: the brand blue must print on its
+ * exact CMYK, not on whatever the generic ICC conversion yields. Brand pixels — the
+ * blue at any opacity tint over white — are forced to `α × cmyk`; every off-line
+ * pixel is ICC-converted as before. A doc opts out / overrides via `color.brand`
+ * (set it to `null` to disable). See `brand-cmyk.mjs` for the tint model.
+ * KIT_BLUE #0070f9 → C100 M48 Y0 K1.
+ */
+export const DEFAULT_BRAND = { rgb: '#0070f9', cmyk: [100, 48, 0, 1], tol: 0.03 }
+
+/** Effective brand spec for a doc `color` block — explicit `brand` wins (incl. null). */
+export function resolveBrand(color) {
+  if (color && Object.prototype.hasOwnProperty.call(color, 'brand')) return color.brand
+  return DEFAULT_BRAND
+}
 
 /** Run a binary, capture stdout; on failure surface stderr and rethrow. */
 function run(cmd, cmdArgs) {
@@ -126,20 +143,87 @@ export function rgbToCmykPdfX(rgbPdf, cmykPdf, color, idTag = 'print') {
 }
 
 /**
+ * Already-CMYK PDF → CMYK PDF/X with ICC OutputIntent, WITHOUT recolouring. Used
+ * when the raster was pre-converted to DeviceCMYK (the brand-override path): the
+ * brand pixels already carry their exact CMYK, so Ghostscript must only add the
+ * PDF/X OutputIntent and keep ink values bit-exact. `-sDefaultCMYKProfile=icc`
+ * tags the incoming device CMYK as the output profile → the CMYK→CMYK transform is
+ * identity, so C100 M48 Y0 K1 survives untouched.
+ */
+export function cmykPdfToPdfX(cmykInPdf, cmykPdf, color, idTag = 'print') {
+  const icc = path.join(ROOT, 'public', color.iccProfile)
+  if (!existsSync(icc)) throw new Error(`ICC profile not found: ${icc}`)
+  const label = path.basename(icc).replace(/\.icc$/i, '')
+  const defPath = path.join(os.tmpdir(), `pdfx-${idTag}-${process.pid}.ps`)
+  writeFileSync(defPath, buildPdfxDef(icc, label))
+  if (color.pdfxVariant === 'x4') {
+    console.error('note: PDF/X-4 not fully implemented — producing an X-1a-style CMYK PDF (F5).')
+  }
+  try {
+    run('gs', [
+      '-dPDFX',
+      '-dBATCH',
+      '-dNOPAUSE',
+      '-dNOSAFER',
+      '-dPDFXCompatibilityPolicy=1',
+      '-sColorConversionStrategy=CMYK',
+      '-sProcessColorModel=DeviceCMYK',
+      '-sDEVICE=pdfwrite',
+      '-dPDFSETTINGS=/prepress',
+      // Keep the CMYK raster lossless — never let pdfwrite re-encode it as JPEG, or
+      // the exact brand ink (and the crisp edges) would be corrupted.
+      '-dAutoFilterColorImages=false', '-dColorImageFilter=/FlateEncode',
+      '-dAutoFilterGrayImages=false', '-dGrayImageFilter=/FlateEncode',
+      '-dEncodeColorImages=true', '-dEncodeGrayImages=true',
+      `-sDefaultCMYKProfile=${icc}`, // interpret incoming device CMYK as the output profile → identity
+      `-sOutputICCProfile=${icc}`,
+      `-sOutputFile=${cmykPdf}`,
+      defPath,
+      cmykInPdf,
+    ])
+  } finally {
+    rmSync(defPath, { force: true })
+  }
+}
+
+/**
  * Full pipeline: a PNG → a CMYK PDF/X at `outPdf`. `makeBoxes(Wpt,Hpt)` supplies
  * the page boxes (e.g. `posterPdfBoxesPt`/`panelPdfBoxesPt`); `color` is the doc's
  * colour block; `dpi` sizes the page. Temp RGB/boxed PDFs are cleaned up.
+ *
+ * Unless disabled (`color.brand: null`), the brand blue and its opacity tints are
+ * forced to their exact CMYK first (brand-aware path): master PNG → DeviceCMYK TIFF
+ * (brand pixels overridden, the rest ICC-converted) → CMYK PDF → boxes → PDF/X wrap
+ * with no further recolour. Otherwise the plain sRGB→CMYK path runs.
  */
 export async function pngToCmykPdfX({ png, outPdf, dpi, makeBoxes, color, idTag = 'print' }) {
   if (!existsSync(png)) throw new Error(`PNG not found: ${png}`)
-  const rgbPdf = path.join(os.tmpdir(), `${idTag}-rgb-${process.pid}.pdf`)
+  const midPdf = path.join(os.tmpdir(), `${idTag}-mid-${process.pid}.pdf`)
   const boxedPdf = path.join(os.tmpdir(), `${idTag}-boxed-${process.pid}.pdf`)
+  const cmykTiff = path.join(os.tmpdir(), `${idTag}-brand-${process.pid}.tiff`)
+  const brand = resolveBrand(color)
   try {
-    pngToRgbPdf(png, rgbPdf, dpi)
-    await setPdfBoxes(rgbPdf, boxedPdf, makeBoxes)
-    rgbToCmykPdfX(boxedPdf, outPdf, color, idTag)
+    if (brand) {
+      const cmykIcc = path.join(ROOT, 'public', color.iccProfile)
+      if (!existsSync(cmykIcc)) throw new Error(`ICC profile not found: ${cmykIcc}`)
+      pngToBrandCmykTiff({
+        srcPng: png, outTiff: cmykTiff, srgbIcc: SRGB_PROFILE, cmykIcc,
+        intentName: color.renderIntent ?? 'relative', brand,
+      })
+      // CMYK TIFF → sized DeviceCMYK PDF (page = px/dpi, like pngToRgbPdf). Force
+      // Zip (Flate) — magick's default for CMYK is lossy JPEG, which would smear the
+      // crisp art and shift the exact brand ink.
+      run('magick', ['-units', 'PixelsPerInch', '-density', String(dpi), cmykTiff, '-compress', 'Zip', midPdf])
+      await setPdfBoxes(midPdf, boxedPdf, makeBoxes)
+      cmykPdfToPdfX(boxedPdf, outPdf, color, idTag)
+    } else {
+      pngToRgbPdf(png, midPdf, dpi)
+      await setPdfBoxes(midPdf, boxedPdf, makeBoxes)
+      rgbToCmykPdfX(boxedPdf, outPdf, color, idTag)
+    }
   } finally {
-    rmSync(rgbPdf, { force: true })
+    rmSync(midPdf, { force: true })
     rmSync(boxedPdf, { force: true })
+    rmSync(cmykTiff, { force: true })
   }
 }

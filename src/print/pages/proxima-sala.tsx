@@ -16,7 +16,7 @@ import { PrintFonts } from '../printFonts'
 /**
  * proxima-sala — a small editorial **next-room indicator** (a "marginalia" tag).
  * ──────────────────────────────────────────────────────────────────────────
- * First authored on the West / combustión face of wall 2 (`public/prints/marco-2-w-1/`,
+ * First authored on the West / combustión face of wall 2 (`public/prints/2-w-1/`,
  * the left 6.25 m print of the Nave O wall) to announce the next room — **«La
  * velocidad de escala»**.
  *

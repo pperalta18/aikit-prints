@@ -1,0 +1,32 @@
+{
+  "id": "24-w-1",
+  "title": "24-W-1",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "cubo-cara",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 2508,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 24,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 24,
+    "wallId": "wall-22",
+    "frameId": "24-W-1",
+    "side": -1,
+    "index": "02",
+    "title": "Título de la sección dos",
+    "ground": "#b84fed",
+    "eyebrow": "AiKit Live · S2",
+    "inkMode": "light"
+  }
+}

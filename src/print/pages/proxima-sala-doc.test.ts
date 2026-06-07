@@ -15,7 +15,7 @@ import { DEFAULT_WALL_HEIGHT_M, findWallByInvId, resolveWallHeight } from '../sp
  * proxima-sala — doc + registration tests for the wall 2-W-1 indicator.
  * ───────────────────────────────────────────────────────────────────────
  * The museographic maths lives in `tipografia.ts` and is unit-tested there. This
- * file covers the *authoring* of the print: `public/prints/marco-2-w-1/doc.json`
+ * file covers the *authoring* of the print: `public/prints/2-w-1/doc.json`
  * (the left 6.25 m print of the West / combustión face of wall 2) and its
  * registration. The checks prove the authored piece is honest and renderable — it
  * resolves from the registry, ships the CMYK / FOGRA52 / PDF/X contract on a clean
@@ -25,7 +25,7 @@ import { DEFAULT_WALL_HEIGHT_M, findWallByInvId, resolveWallHeight } from '../sp
  */
 
 // public/ lives outside the src bundle root → read the committed file directly.
-const DOC_PATH = fileURLToPath(new URL('../../../public/prints/marco-2-w-1/doc.json', import.meta.url))
+const DOC_PATH = fileURLToPath(new URL('../../../public/prints/2-w-1/doc.json', import.meta.url))
 const doc = JSON.parse(readFileSync(DOC_PATH, 'utf8')) as PrintDoc
 
 const RENDER_INTENTS = ['perceptual', 'relative', 'saturation', 'absolute']
@@ -48,7 +48,7 @@ describe('proxima-sala — registration', () => {
   })
 
   it('doc id matches its folder (the wall-2 West-face left frame)', () => {
-    expect(doc.id).toBe('marco-2-w-1')
+    expect(doc.id).toBe('2-w-1')
   })
 })
 

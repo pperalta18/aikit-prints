@@ -1,0 +1,59 @@
+{
+  "id": "5-s-1",
+  "title": "5-S-1",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "indice",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 9125,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 5,
+    "wallId": "wall-4",
+    "frameId": "5-S-1",
+    "side": 1,
+    "readingDistanceM": 3,
+    "entries": [
+      {
+        "no": "01",
+        "title": "El principio"
+      },
+      {
+        "no": "02",
+        "title": "Del mito al dato"
+      },
+      {
+        "no": "03",
+        "title": "Velocidad de progreso"
+      },
+      {
+        "no": "04",
+        "title": "Un caso de éxito"
+      },
+      {
+        "no": "05",
+        "title": "Cuello de botella"
+      },
+      {
+        "no": "06",
+        "title": "Hasta aquí hemos llegado"
+      }
+    ],
+    "marginXFraction": 0.02,
+    "columnWidthFraction": 0.28,
+    "separatorWidthFraction": 0.13,
+    "titleCapFraction": 0.016,
+    "ratio": 1.6
+  }
+}

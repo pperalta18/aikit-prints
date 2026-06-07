@@ -15,7 +15,7 @@ import { BRAND } from '@/lib/neumorphism'
 
 /**
  * wayfinding-s1-s2 — the #10 print page (wall 10 / `wall-9`, S1→S2 threshold).
- * Authored as `public/prints/marco-10-s-1/doc.json` (the South face).
+ * Authored as `public/prints/10-s-1/doc.json` (the South face).
  * ──────────────────────────────────────────────────────────────────────────
  * The brief (Pablo): «señalética en la mitad derecha — Sala 2: Introducción a la
  * inteligencia artificial, con una flecha a la izquierda. Muy editorial, muy de

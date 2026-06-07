@@ -13,7 +13,7 @@ agent can lay out a new text wall without re-inventing sizes by eye.
 **Sources**: `src/print/pages/tipografia.ts` (scale maths), `src/print/pages/tipografia-kit.tsx`
 (palettes + type styles + ground/rule/lockup), `src/print/pages/tipografia.tsx`
 (the editorial text-wall page), `src/print/printFonts.tsx` (print-owned @font-face).
-First proven on print **`marco-5-s-1`** (`public/prints/marco-5-s-1/doc.json`).
+First proven on print **`5-s-1`** (`public/prints/5-s-1/doc.json`).
 
 ---
 

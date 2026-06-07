@@ -1,0 +1,30 @@
+{
+  "id": "13-s-1",
+  "title": "13-S-1",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "wordmark",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 4500,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 13,
+    "wallId": "wall-12",
+    "frameId": "13-S-1",
+    "side": 1,
+    "src": "prints/13-s-1/assets/la-naranja-mecanica.svg",
+    "alt": "La Naranja Mecánica",
+    "maxWidthMm": 650
+  }
+}

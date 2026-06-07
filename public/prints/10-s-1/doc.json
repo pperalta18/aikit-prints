@@ -1,0 +1,34 @@
+{
+  "id": "10-s-1",
+  "title": "10-S-1",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "wayfinding-s1-s2",
+  "theme": "dark",
+  "dimensions": {
+    "trimWidthMm": 5000,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 24,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 10,
+    "wallId": "wall-9",
+    "frameId": "10-S-1",
+    "side": 1,
+    "invId": 10,
+    "readingDistanceM": 4,
+    "eyebrow": "Próxima sala",
+    "sala": "Sala 2",
+    "title": "Del mito al dato",
+    "arrow": "left",
+    "locator": "S1 → S2"
+  }
+}

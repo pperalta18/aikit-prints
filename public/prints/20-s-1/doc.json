@@ -1,0 +1,40 @@
+{
+  "id": "20-s-1",
+  "title": "20-S-1",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "proxima-sala",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 3125,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 20,
+    "wallId": "wall-18",
+    "frameId": "20-S-1",
+    "side": 1,
+    "readingDistanceM": 4,
+    "edge": "left",
+    "eyebrow": "Próxima sección",
+    "num": "06",
+    "sala": "Hasta aquí hemos llegado",
+    "salaLines": [
+      "Hasta aquí",
+      "hemos llegado"
+    ],
+    "arrow": "left",
+    "eyeBandFraction": 0.5,
+    "showFilete": false,
+    "showTick": false
+  }
+}

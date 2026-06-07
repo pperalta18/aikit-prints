@@ -15,6 +15,7 @@
     "export": "node scripts/export-print.mjs",
     "tile": "node scripts/tile-print.mjs",
     "frontier:fetch": "node scripts/fetch-frontier.mjs",
+    "softproof:bake": "node scripts/bake-softproof-lut.mjs",
     "control-table": "node scripts/control-table.mjs",
     "legibility": "node scripts/legibility.mjs",
     "sources": "node scripts/sources.mjs",

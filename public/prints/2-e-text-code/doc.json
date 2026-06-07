@@ -1,0 +1,31 @@
+{
+  "id": "2-e-text-code",
+  "title": "2-E-TEXT+CODE",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "hitos",
+  "theme": "light",
+  "surface": "#ffffff",
+  "dimensions": {
+    "trimWidthMm": 6625,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 2,
+    "wallId": "wall-1",
+    "frameId": "2-E-TEXT+CODE",
+    "side": 1,
+    "zone": "TEXT+CODE",
+    "eyebrow": "Hitos de la inteligencia artificial",
+    "readingDistanceM": 3
+  }
+}

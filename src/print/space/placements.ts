@@ -40,6 +40,13 @@ export type Placement = {
   /** Which face of the wall it hangs on (+1 / −1 along the normal axis). */
   side: 1 | -1
   /**
+   * Free world-space nudge (metres) added on top of the wall-anchored position,
+   * so the piece can be moved on X / Y / Z independently of the wall — including
+   * off the wall surface. Optional + lenient: absent means no offset (0,0,0); a
+   * partial/NaN value is sanitised to 0 per axis. See `EventSpaceScene`.
+   */
+  offset?: { x: number; y: number; z: number }
+  /**
    * How the piece is mounted — a flat `vinyl` (default) or a backlit `lightbox`
    * (Phase 2). Optional + lenient: a missing/invalid value renders as a vinyl,
    * so old layouts and hand-edits never break. See `./lightbox`.
@@ -84,6 +91,21 @@ const isFiniteNum = (n: unknown): n is number => typeof n === 'number' && Number
 const isNonEmptyString = (s: unknown): s is string => typeof s === 'string' && s.length > 0
 
 /**
+ * Sanitise a free-move offset: each axis coerced to a finite number (else 0).
+ * Returns `undefined` for a zero/absent offset so a plain placement never carries
+ * a no-op `{0,0,0}` (keeps the persisted JSON + the double-sided sync clean).
+ */
+export function sanitizeOffset(value: unknown): { x: number; y: number; z: number } | undefined {
+  if (value == null || typeof value !== 'object') return undefined
+  const o = value as Record<string, unknown>
+  const x = isFiniteNum(o.x) ? o.x : 0
+  const y = isFiniteNum(o.y) ? o.y : 0
+  const z = isFiniteNum(o.z) ? o.z : 0
+  if (x === 0 && y === 0 && z === 0) return undefined
+  return { x, y, z }
+}
+
+/**
  * Strict structural + value validation of a single placement. Used to filter
  * anything that reaches us from storage / an imported file, so a half-written or
  * hand-edited document can never inject a `NaN` position, a zero scale, or a
@@ -122,6 +144,8 @@ function normalise(p: Placement): Placement {
     scale: p.scale,
     side: p.side,
   }
+  const offset = sanitizeOffset(p.offset)
+  if (offset) out.offset = offset
   if (isMountKind(p.mount)) out.mount = p.mount
   if (isFiniteNum(p.glow)) out.glow = p.glow
   if (isNonEmptyString(p.pairId)) out.pairId = p.pairId

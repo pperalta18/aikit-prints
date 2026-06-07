@@ -77,7 +77,7 @@ type Props = {
   lede?: string
 }
 
-const A = 'prints/marco-11-w-text-code/assets'
+const A = 'prints/11-w-text-code/assets'
 
 /** The growth of the context window — defaults; the doc can override via props. */
 const DEFAULT_ITEMS: Item[] = [
@@ -91,7 +91,7 @@ const DEFAULT_ITEMS: Item[] = [
 
 const DEFAULT_HEADER = {
   title: 'De un correo a una saga entera.',
-  lede: 'Es la memoria de trabajo de un modelo: cuánto texto puede leer y tener presente a la vez. En seis años pasó de un correo a una saga entera.',
+  lede: 'El contexto es la memoria de trabajo de un modelo: cuánto texto puede leer y tener presente a la vez. En seis años pasó de un correo a una saga entera.',
 }
 
 export function Contexto({ doc, geo }: PrintPageProps) {
