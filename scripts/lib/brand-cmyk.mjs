@@ -66,7 +66,7 @@ function writeFull(fd, buf, len) {
  *  - intentName perceptual|relative|saturation|absolute (the doc's render intent)
  *  - brand      { rgb:'#0070f9', cmyk:[100,48,0,1], tol:0.03 }
  */
-export function pngToBrandCmykTiff({ srcPng, outTiff, srgbIcc, cmykIcc, intentName = 'relative', brand }) {
+export function pngToBrandCmykTiff({ srcPng, outTiff, srgbIcc, cmykIcc, intentName = 'relative', brand, bandDir = null }) {
   if (!existsSync(srcPng)) throw new Error(`PNG not found: ${srcPng}`)
   const [br, bg, bb] = Array.isArray(brand.rgb) ? brand.rgb : hexToRgb(brand.rgb)
   if (br !== 0) {
@@ -95,56 +95,97 @@ export function pngToBrandCmykTiff({ srcPng, outTiff, srgbIcc, cmykIcc, intentNa
   const tmp = mkdtempSync(path.join(os.tmpdir(), 'brandcmyk-'))
   const f = (n) => path.join(tmp, n)
   try {
-    // ICC base CMYK (raw device bytes) — the fallback for every non-brand pixel.
-    run('magick', [srcPng, '-background', 'white', '-alpha', 'remove', '-alpha', 'off',
-      '-profile', srgbIcc, '-intent', intentArg, '-black-point-compensation',
-      '-profile', cmykIcc, '-depth', '8', `CMYK:${f('base.cmyk')}`])
-    // Raw sRGB bytes (flattened on white, matching the design ground).
-    run('magick', [srcPng, '-background', 'white', '-alpha', 'remove', '-alpha', 'off',
-      '-depth', '8', `RGB:${f('src.rgb')}`])
+    // Process the master in horizontal BANDS. Two ImageMagick limits bite on a
+    // wall-sized master and BOTH silently blank the output (no error):
+    //   1. raw stream I/O overflows past ~2^32 bytes (4 GB) — the 4-byte CMYK plane
+    //      hits that at w·h > 2^30 px (~1.07 Gpx);
+    //   2. a crop+ICC-profile pipeline run directly on a >2^30-px input corrupts.
+    // So we (a) cap each band's raw plane well under 4 GB, and (b) PRE-CROP each band
+    // to its own small PNG first (a plain crop is robust), then run the profile/brand
+    // pass on that sub-2^30-px band. Full-width bands concatenate losslessly, so the
+    // per-band TIFFs `-append` back into the exact same raster.
+    const LIM = ['-limit', 'memory', '24GiB', '-limit', 'map', '24GiB'] // keep the gigapixel cache in RAM
+    const BAND_RAW_CAP = 2_000_000_000 // bytes; 4-byte CMYK plane → ≤ 2 GB per band (also < 2^30 px)
+    const bandH = Math.max(1, Math.min(h, Math.floor(BAND_RAW_CAP / (w * 4))))
+    const nBands = Math.ceil(h / bandH)
+    const bands = [] // { tiff, w, h, y0 } per horizontal band
 
-    // One streaming pass: per pixel, brand-override or keep the ICC base.
-    const rgbFd = openSync(f('src.rgb'), 'r')
-    const baseFd = openSync(f('base.cmyk'), 'r')
-    const outFd = openSync(f('out.cmyk'), 'w')
-    try {
-      const CHUNK = 4_000_000 // pixels per chunk (≈ 12 MB rgb + 16 MB cmyk in flight)
-      const rgb = Buffer.allocUnsafe(CHUNK * 3)
-      const base = Buffer.allocUnsafe(CHUNK * 4)
-      const out = Buffer.allocUnsafe(CHUNK * 4)
-      let done = 0
-      while (done < total) {
-        const n = Math.min(CHUNK, total - done)
-        readFull(rgbFd, rgb, n * 3)
-        readFull(baseFd, base, n * 4)
-        for (let i = 0; i < n; i++) {
-          const r3 = i * 3, c4 = i * 4
-          const R = rgb[r3], G = rgb[r3 + 1], B = rgb[r3 + 2]
-          const negR = 255 - R
-          const gPred = 255 - negR * fG
-          const bPred = 255 - negR * fB
-          if (Math.abs(G - gPred) <= tol255 && Math.abs(B - bPred) <= tol255) {
-            out[c4] = Math.round(negR * fC)
-            out[c4 + 1] = Math.round(negR * fM)
-            out[c4 + 2] = 0
-            out[c4 + 3] = Math.round(negR * fK)
-          } else {
-            out[c4] = base[c4]
-            out[c4 + 1] = base[c4 + 1]
-            out[c4 + 2] = base[c4 + 2]
-            out[c4 + 3] = base[c4 + 3]
+    const CHUNK = 4_000_000 // pixels per chunk (≈ 12 MB rgb + 16 MB cmyk in flight)
+    const rgb = Buffer.allocUnsafe(CHUNK * 3)
+    const base = Buffer.allocUnsafe(CHUNK * 4)
+    const out = Buffer.allocUnsafe(CHUNK * 4)
+
+    for (let b = 0; b < nBands; b++) {
+      const y0 = b * bandH
+      const bh = Math.min(bandH, h - y0)
+      const bandTotal = w * bh
+      // Pre-crop the band to its own PNG. The source can exceed 2^30 px, and on such
+      // a source a crop run with a raised `-limit` silently blanks the output — a plain
+      // crop at IM's default (disk-backed) cache survives it. So NO `-limit` here; every
+      // downstream op runs on the sub-2^30-px band, where `-limit` is safe (and faster).
+      const bandPng = f('band.png')
+      run('magick', [srcPng, '-crop', `${w}x${bh}+0+${y0}`, '+repage', bandPng])
+      // ICC base CMYK (raw device bytes) for this band — the non-brand fallback.
+      run('magick', [...LIM, bandPng, '-background', 'white', '-alpha', 'remove', '-alpha', 'off',
+        '-profile', srgbIcc, '-intent', intentArg, '-black-point-compensation',
+        '-profile', cmykIcc, '-depth', '8', `CMYK:${f('base.cmyk')}`])
+      // Raw sRGB bytes for this band (flattened on white, matching the design ground).
+      run('magick', [...LIM, bandPng, '-background', 'white', '-alpha', 'remove', '-alpha', 'off',
+        '-depth', '8', `RGB:${f('src.rgb')}`])
+
+      // One streaming pass over the band: per pixel, brand-override or keep the ICC base.
+      const rgbFd = openSync(f('src.rgb'), 'r')
+      const baseFd = openSync(f('base.cmyk'), 'r')
+      const outFd = openSync(f('out.cmyk'), 'w')
+      try {
+        let done = 0
+        while (done < bandTotal) {
+          const n = Math.min(CHUNK, bandTotal - done)
+          readFull(rgbFd, rgb, n * 3)
+          readFull(baseFd, base, n * 4)
+          for (let i = 0; i < n; i++) {
+            const r3 = i * 3, c4 = i * 4
+            const R = rgb[r3], G = rgb[r3 + 1], B = rgb[r3 + 2]
+            const negR = 255 - R
+            const gPred = 255 - negR * fG
+            const bPred = 255 - negR * fB
+            if (Math.abs(G - gPred) <= tol255 && Math.abs(B - bPred) <= tol255) {
+              out[c4] = Math.round(negR * fC)
+              out[c4 + 1] = Math.round(negR * fM)
+              out[c4 + 2] = 0
+              out[c4 + 3] = Math.round(negR * fK)
+            } else {
+              out[c4] = base[c4]
+              out[c4 + 1] = base[c4 + 1]
+              out[c4 + 2] = base[c4 + 2]
+              out[c4 + 3] = base[c4 + 3]
+            }
           }
+          writeFull(outFd, out, n * 4)
+          done += n
         }
-        writeFull(outFd, out, n * 4)
-        done += n
+      } finally {
+        closeSync(rgbFd); closeSync(baseFd); closeSync(outFd)
       }
-    } finally {
-      closeSync(rgbFd); closeSync(baseFd); closeSync(outFd)
+
+      // Band raw DeviceCMYK → band TIFF (each well under the raw-I/O ceiling). When the
+      // caller wants the bands back (bandDir set), write them there so they survive this
+      // function's scratch cleanup; otherwise they live in scratch and get `-append`ed.
+      const bt = bandDir
+        ? path.join(bandDir, `band_${String(b).padStart(3, '0')}.tiff`)
+        : f(`band_${String(b).padStart(3, '0')}.tiff`)
+      run('magick', [...LIM, '-size', `${w}x${bh}`, '-depth', '8', `CMYK:${f('out.cmyk')}`,
+        '-set', 'colorspace', 'CMYK', '-compress', 'Zip', bt])
+      rmSync(bandPng, { force: true })
+      bands.push({ tiff: bt, w, h: bh, y0 })
     }
 
-    // Raw DeviceCMYK → TIFF.
-    run('magick', ['-size', `${w}x${h}`, '-depth', '8', `CMYK:${f('out.cmyk')}`,
-      '-set', 'colorspace', 'CMYK', '-compress', 'Zip', outTiff])
+    // With bandDir set, hand the per-band TIFFs (each < 2^30 px) back to the caller so it
+    // can build the PDF band-by-band — assembling/converting a single >2^30-px raster is
+    // exactly what blanks downstream (ImageMagick can't convert it to PDF whole). Without
+    // it, stack the bands into the full DeviceCMYK master here (safe only when ≤ 2^30 px).
+    if (bandDir) return { bands, w, h }
+    run('magick', [...LIM, ...bands.map((b) => b.tiff), '-append', '-set', 'colorspace', 'CMYK', '-compress', 'Zip', outTiff])
   } finally {
     rmSync(tmp, { recursive: true, force: true })
   }

@@ -261,15 +261,18 @@ describe('control table — real committed data', () => {
   const docs = loadRealDocs()
   const rows = buildControlTable(REGISTERED_WALLS, docs)
 
-  it('has one row per registered wall (all 25), invId-ordered', () => {
+  it('has one row per registered wall (all 31), invId-ordered', () => {
     expect(rows.length).toBe(REGISTERED_WALLS.length)
-    expect(rows.length).toBe(25)
+    expect(rows.length).toBe(31)
     const invIds = rows.map((r) => r.invId)
     expect([...invIds].sort((a, b) => a - b)).toEqual(invIds)
-    expect(new Set(invIds).size).toBe(25) // unique
-    // #17 is retired; the new combustión backdrop wall is invId 26.
-    expect(invIds).toContain(26)
+    expect(new Set(invIds).size).toBe(31) // unique
+    // #17 retired; the S2 cube #22-25 removed in the 2026-06-08 plan; #27-31 = central
+    // TV alcove, #32 = intro-IA side panel, #33-36 = the four ex-cube display panels.
+    expect(invIds).toContain(27)
+    expect(invIds).toContain(36)
     expect(invIds).not.toContain(17)
+    expect(invIds).not.toContain(22)
   })
 
   it('has no orphan prints — every authored wall print maps to a real wall', () => {
@@ -324,9 +327,9 @@ describe('control table — real committed data', () => {
 
   it('the summary is consistent with the rows and reflects current progress', () => {
     const s = controlTableSummary(rows)
-    expect(s.total).toBe(25)
-    expect(s.built + s.pending).toBe(25)
-    expect(s.byEstado.ok + s.byEstado.prop + s.byEstado.pend).toBe(25)
+    expect(s.total).toBe(31)
+    expect(s.built + s.pending).toBe(31)
+    expect(s.byEstado.ok + s.byEstado.prop + s.byEstado.pend).toBe(31)
     // At least the hero page is authored (hero-solar on wall 2). Most walls are now
     // filled through the marco-* workflow; a new authored page only raises this.
     expect(s.built).toBeGreaterThanOrEqual(1)
@@ -337,7 +340,7 @@ describe('control table — real committed data', () => {
   it('renders a Markdown deliverable with a row per wall and no broken columns', () => {
     const md = formatControlTableMarkdown(rows)
     const lines = md.split('\n')
-    expect(lines.length).toBe(2 + 25)
+    expect(lines.length).toBe(2 + 31)
     const cols = mdCols(lines[0])
     for (const l of lines) expect(mdCols(l)).toBe(cols)
     // The required columns are present.
@@ -354,7 +357,7 @@ describe('control table — real committed data', () => {
   it('renders a CSV deliverable parseable to one record per wall', () => {
     const csv = formatControlTableCsv(rows)
     const lines = csv.split('\n')
-    expect(lines.length).toBe(1 + 25)
+    expect(lines.length).toBe(1 + 31)
     expect(lines[0].split(',')[0]).toBe('invId')
   })
 

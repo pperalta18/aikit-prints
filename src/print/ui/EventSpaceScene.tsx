@@ -62,7 +62,7 @@ import {
   type Placement,
 } from '../space/placements'
 import { planZonePlacements } from '../space/zones'
-import { computeWallFrames } from '../space/wallFrames'
+import { computeWallFrames, PARED_COMPLETA_FACES } from '../space/wallFrames'
 import {
   pairFor,
   planDoubleSided,
@@ -386,6 +386,15 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
     () => resolvedWalls.filter((w) => w.registry).sort((a, b) => a.registry!.invId - b.registry!.invId),
     [resolvedWalls],
   )
+  // Footprints fed to the plan-view clearance cotas: every wall + the glass
+  // envelope, plus furniture only while it's actually on screen (so we never
+  // measure a gap to something the operator can't see).
+  const planGapBoxes = useMemo(() => {
+    const boxes: Box[] = resolvedWalls.map((w) => ({ cx: w.cx, cz: w.cz, sx: w.sx, sz: w.sz }))
+    for (const g of GLASS) boxes.push({ cx: g.cx, cz: g.cz, sx: g.sx, sz: g.sz })
+    if (showPeople || editFurniture) for (const f of furniture) boxes.push({ cx: f.cx, cz: f.cz, sx: f.sx, sz: f.sz })
+    return boxes
+  }, [resolvedWalls, furniture, showPeople, editFurniture])
   // Look up a mountable surface by id from the live (editable) walls + static glass.
   const findWallLocal = useCallback(
     (id: string): Wall | undefined => resolvedWalls.find((w) => w.id === id) ?? GLASS.find((g) => g.id === id),
@@ -954,6 +963,7 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
         <ContactShadows position={[0, 0.01, 0]} opacity={0.32} scale={Math.max(SPACE_WIDTH, SPACE_DEPTH) * 1.2} blur={2.6} far={3} resolution={512} />
         <OrbitControls makeDefault enablePan enableZoom enableRotate={!planMode} minDistance={1} maxDistance={200} maxPolarAngle={Math.PI / 2 - 0.03} target={[0, 1, 0]} />
         <DragGuides session={dragSession} />
+        {planMode && <PlanDimensions walls={resolvedWalls} gapBoxes={planGapBoxes} y={fallbackHeight + 0.3} />}
         <PlanCamera enabled={planMode} />
         <CameraRig apiRef={cameraApi} planMode={planMode} />
       </Canvas>
@@ -1564,7 +1574,9 @@ function WallFrames({
   realista: boolean
 }) {
   const frames = useMemo(
-    () => computeWallFrames({ walls: registered, allWalls: walls, fallbackHeight: fallback }),
+    // The nave side walls (2-E, 11-W) wear ONE full-wall `pared completa` frame
+    // instead of the three cámara bays, so the combined print hangs as one graphic.
+    () => computeWallFrames({ walls: registered, allWalls: walls, fallbackHeight: fallback, fullFaces: PARED_COMPLETA_FACES }),
     [registered, walls, fallback],
   )
   // Join each frame to its print by `props.frameId` (every frame, not just arted
@@ -1967,6 +1979,145 @@ function DragGuides({ session }: { session: DragSession | null }) {
           </group>
         )
       })}
+    </group>
+  )
+}
+
+const GAP_COL = '#e8943a' // amber: edge-to-edge clearances between elements
+
+/**
+ * A single dimension graphic on the plan: a measured segment a→b along `axis`
+ * (drawn at `along` on the perpendicular axis, at height `y`), capped with end
+ * ticks and a centred label pill. Mirrors the look of {@link DragGuides} but is
+ * a reusable static cota. The 3-D line is drawn above the walls so the top-down
+ * ortho camera never has it occluded by a wall box; the <Html> label always
+ * floats on top regardless.
+ */
+function DimLine({
+  axis,
+  a,
+  b,
+  along,
+  y,
+  color,
+  label,
+  tick = 0.15,
+}: {
+  axis: 'x' | 'z'
+  a: number
+  b: number
+  along: number
+  y: number
+  color: string
+  label: string
+  tick?: number
+}) {
+  const pts: [number, number, number][] = axis === 'x' ? [[a, y, along], [b, y, along]] : [[along, y, a], [along, y, b]]
+  const ends: [number, number, number][][] = axis === 'x'
+    ? [[[a, y, along - tick], [a, y, along + tick]], [[b, y, along - tick], [b, y, along + tick]]]
+    : [[[along - tick, y, a], [along + tick, y, a]], [[along - tick, y, b], [along + tick, y, b]]]
+  const mid: [number, number, number] = axis === 'x' ? [(a + b) / 2, y, along] : [along, y, (a + b) / 2]
+  return (
+    <group>
+      <Line points={pts} color={color} lineWidth={1.2} />
+      {ends.map((e, j) => (
+        <Line key={j} points={e} color={color} lineWidth={1.2} />
+      ))}
+      <Html position={mid} center zIndexRange={[38, 0]} style={{ pointerEvents: 'none', userSelect: 'none' }}>
+        <div style={{ background: color, color: '#fff', font: '700 10px/1 system-ui, sans-serif', padding: '2px 5px', borderRadius: 4, whiteSpace: 'nowrap', boxShadow: '0 1px 3px rgba(0,0,0,.35)' }}>
+          {label}
+        </div>
+      </Html>
+    </group>
+  )
+}
+
+/**
+ * Edge-to-edge clearances between footprints: for every box, the nearest clear
+ * neighbour in each of the four directions (±X, ±Z) that overlaps it on the
+ * perpendicular axis — i.e. the gaps that read as corridors/setbacks on a floor
+ * plan. Picking only the nearest per direction keeps facing pairs and drops
+ * spans that something else already sits between; results are deduped so a pair's
+ * two reciprocal gaps collapse to one cota.
+ */
+function computePlanGaps(boxes: Box[]): MeasureGuide[] {
+  const EPS = 1e-3
+  const span = (a0: number, a1: number, b0: number, b1: number) => Math.min(a1, b1) - Math.max(a0, b0)
+  const out = new Map<string, MeasureGuide>()
+  for (let i = 0; i < boxes.length; i++) {
+    const m = boxes[i]
+    const mL = m.cx - m.sx / 2, mR = m.cx + m.sx / 2, mN = m.cz - m.sz / 2, mF = m.cz + m.sz / 2
+    let right: MeasureGuide | null = null
+    let left: MeasureGuide | null = null
+    let far: MeasureGuide | null = null
+    let near: MeasureGuide | null = null
+    for (let j = 0; j < boxes.length; j++) {
+      if (j === i) continue
+      const o = boxes[j]
+      const oL = o.cx - o.sx / 2, oR = o.cx + o.sx / 2, oN = o.cz - o.sz / 2, oF = o.cz + o.sz / 2
+      // X gap: neighbours that overlap in Z, sitting clear left/right.
+      if (span(mN, mF, oN, oF) > EPS) {
+        const along = (Math.max(mN, oN) + Math.min(mF, oF)) / 2
+        if (oL >= mR - EPS) {
+          const dist = oL - mR
+          if (dist > EPS && (!right || dist < right.dist)) right = { axis: 'x', along, a: mR, b: oL, dist }
+        } else if (oR <= mL + EPS) {
+          const dist = mL - oR
+          if (dist > EPS && (!left || dist < left.dist)) left = { axis: 'x', along, a: oR, b: mL, dist }
+        }
+      }
+      // Z gap: neighbours that overlap in X, sitting clear near/far.
+      if (span(mL, mR, oL, oR) > EPS) {
+        const along = (Math.max(mL, oL) + Math.min(mR, oR)) / 2
+        if (oN >= mF - EPS) {
+          const dist = oN - mF
+          if (dist > EPS && (!far || dist < far.dist)) far = { axis: 'z', along, a: mF, b: oN, dist }
+        } else if (oF <= mN + EPS) {
+          const dist = mN - oF
+          if (dist > EPS && (!near || dist < near.dist)) near = { axis: 'z', along, a: oF, b: mN, dist }
+        }
+      }
+    }
+    for (const g of [right, left, far, near]) {
+      if (!g) continue
+      const lo = Math.min(g.a, g.b), hi = Math.max(g.a, g.b)
+      const key = `${g.axis}:${lo.toFixed(2)}:${hi.toFixed(2)}:${g.along.toFixed(1)}`
+      if (!out.has(key)) out.set(key, g)
+    }
+  }
+  return [...out.values()]
+}
+
+/**
+ * PlanDimensions — the «vista de plano» cota overlay: the length of every wall
+ * (blue, down the wall's centreline) plus the edge-to-edge clearances between
+ * elements (amber). Drawn at `y` above the wall tops so nothing is occluded by a
+ * wall box in the top-down ortho view. Only mounted while plan mode is on.
+ */
+function PlanDimensions({ walls, gapBoxes, y }: { walls: Wall[]; gapBoxes: Box[]; y: number }) {
+  const gaps = useMemo(() => computePlanGaps(gapBoxes), [gapBoxes])
+  return (
+    <group>
+      {walls.map((w) => {
+        const runAxis: 'x' | 'z' = w.normalAxis === 'x' ? 'z' : 'x'
+        const along = w.normalAxis === 'x' ? w.cx : w.cz
+        const center = runAxis === 'x' ? w.cx : w.cz
+        return (
+          <DimLine
+            key={`len-${w.id}`}
+            axis={runAxis}
+            a={center - w.length / 2}
+            b={center + w.length / 2}
+            along={along}
+            y={y}
+            color={KIT_BLUE}
+            label={fmtGap(w.length)}
+          />
+        )
+      })}
+      {gaps.map((g, i) => (
+        <DimLine key={`gap-${i}`} axis={g.axis} a={g.a} b={g.b} along={g.along} y={y} color={GAP_COL} label={fmtGap(g.dist)} tick={0.12} />
+      ))}
     </group>
   )
 }

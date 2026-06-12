@@ -505,9 +505,9 @@ describe('legibility — real venue audit (event-layout.json + public/prints)', 
   const rows = buildLegibilityTable(walls, prints)
   const byInv = new Map<number, LegibilityRow>(rows.map((r) => [r.invId, r]))
 
-  it('audits all 25 registry walls (invId 1..26 minus the retired #17)', () => {
-    expect(rows).toHaveLength(25)
-    expect(rows.map((r) => r.invId)).toEqual([...Array.from({ length: 16 }, (_, i) => i + 1), 18, 19, 20, 21, 22, 23, 24, 25, 26])
+  it('audits all 31 registry walls (cube 22-25 removed; 27-36 added)', () => {
+    expect(rows).toHaveLength(31)
+    expect(rows.map((r) => r.invId)).toEqual([...Array.from({ length: 16 }, (_, i) => i + 1), 18, 19, 20, 21, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36])
   })
 
   it('every wall has a documented cap floor ≥ the legibility minimum for its distance', () => {
@@ -578,7 +578,7 @@ describe('legibility — real venue audit (event-layout.json + public/prints)', 
     const coh = roomCoherence(rows)
     expect(coh.length).toBeGreaterThan(0)
     const covered = coh.flatMap((c) => c.invIds).sort((a, b) => a - b)
-    expect(covered).toEqual([...Array.from({ length: 16 }, (_, i) => i + 1), 18, 19, 20, 21, 22, 23, 24, 25, 26])
+    expect(covered).toEqual([...Array.from({ length: 16 }, (_, i) => i + 1), 18, 19, 20, 21, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36])
     for (const c of coh) {
       expect(c.readingDistanceM).toBe(salaReadingDistanceM(c.sala))
       expect(c.minCapHeightCm).toBeCloseTo(minCapHeightMm(c.readingDistanceM) / 10, 9)

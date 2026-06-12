@@ -2,16 +2,16 @@
   "id": "21-n-1",
   "title": "21-N-1",
   "createdAt": "2026-06-04T00:00:00.000Z",
-  "pageComponentId": "blank",
+  "pageComponentId": "imagen-grid",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 4500,
+    "trimWidthMm": 5500,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
     "cropMarks": false
   },
-  "dpi": 24,
+  "dpi": 30,
   "color": {
     "mode": "cmyk",
     "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
@@ -22,6 +22,17 @@
     "frameWallInvId": 21,
     "wallId": "wall-19",
     "frameId": "21-N-1",
-    "side": -1
+    "side": -1,
+    "cols": 3,
+    "rows": 2,
+    "gutterMm": 0,
+    "images": [
+      "prints/21-n-1/assets/grid-1.png",
+      "prints/21-n-1/assets/grid-2.png",
+      "prints/21-n-1/assets/grid-3.png",
+      "prints/21-n-1/assets/grid-4.png",
+      "prints/21-n-1/assets/grid-5.png",
+      "prints/21-n-1/assets/grid-6.png"
+    ]
   }
 }

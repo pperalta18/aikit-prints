@@ -228,6 +228,42 @@ function outerBoxSide(wall: Wall, box: WallBox): 1 | -1 {
   return normalValueOf(wall, { cx: wall.cx, cz: wall.cz }) >= center ? 1 : -1
 }
 
+/**
+ * Faces that wear ONE combined "pared completa" print instead of being split into
+ * separate panels: the two nave side walls' nave-facing face (2-E, 11-W). The
+ * three cámara prints on each are authored + exported individually, but the whole
+ * wall is also a single deliverable (`pared-combinada`, e.g. `11-w-pared`) that
+ * hangs as one continuous graphic — so its scene frame must span the full face,
+ * not the three bays. Wall 2's nave face is its +1 (E) side; wall 11's is −1 (W).
+ */
+export const PARED_COMPLETA_FACES: ReadonlyArray<{ invId: number; side: 1 | -1 }> = [
+  { invId: 2, side: 1 },
+  { invId: 11, side: -1 },
+]
+
+/**
+ * Outer corners where a face must **clad the neighbour's corner return** instead of
+ * stopping at its inner face — the complement of the corner *inset*. Each entry names
+ * a host face (`invId` + `side`) and the perpendicular `neighborInvId` wall it butts
+ * at one end; the frame grows by that neighbour's thickness so the print wraps out to
+ * the outer corner and the two faces miter cleanly (the same idea as the cube's
+ * outer-face span, but for an open U that {@link detectBoxes} can't see).
+ *
+ * Both of today's entries are corners of the central TV alcove (an open U/comb of
+ * walls 27–31 that {@link detectBoxes} can't see):
+ *   • **SW corner** — wall 31 (south/INVERSIÓN face) is drawn from wall 27's *inner*
+ *     (east) face to wall 29's *outer* (east) face, so its east end already lands on
+ *     the outer corner but its west end leaves wall 27's 0.25 m return bare. Carry
+ *     `31-S` out to wall 27's west (outer) face.
+ *   • **NW corner of the west screen bay** — wall 28's west face stops at the south
+ *     edge of wall 30 (the top partition), leaving wall 30's 0.25 m west-end return
+ *     bare. Carry `28-W` up to wall 30's north edge.
+ */
+export const CORNER_WRAP_FACES: ReadonlyArray<{ invId: number; side: 1 | -1; neighborInvId: number }> = [
+  { invId: 31, side: 1, neighborInvId: 27 }, // 31-S ↔ 27-W (alcove SW corner)
+  { invId: 28, side: -1, neighborInvId: 30 }, // 28-W ↔ 30 (west screen-bay NW corner)
+]
+
 export type WallFramesOptions = {
   /** The registry-bearing event walls to frame (both faces of each). */
   walls: Wall[]
@@ -235,6 +271,13 @@ export type WallFramesOptions = {
   allWalls: Wall[]
   /** Fallback height for walls without measured `alturaM` (default 3 m). */
   fallbackHeight?: number
+  /**
+   * Faces to emit as ONE full-face panel `${invId}-${tag}` (e.g. `11-W`) spanning
+   * the whole framable run, instead of the abutment/nave-cámara split — for the
+   * combined `pared completa` prints. The corner inset still applies (so the panel
+   * never slides behind a corner return). Default: none → identical to before.
+   */
+  fullFaces?: ReadonlyArray<{ invId: number; side: 1 | -1 }>
 }
 
 /**
@@ -293,6 +336,42 @@ export function computeWallFrames(opts: WallFramesOptions): WallFrame[] {
         const pHi = at + p.thickness / 2
         if (pLo <= runStart + TOUCH_TOL_M && pHi > runStart + TOUCH_TOL_M && pHi < runEnd) effStart = Math.max(effStart, pHi)
         if (pHi >= runEnd - TOUCH_TOL_M && pLo < runEnd - TOUCH_TOL_M && pLo > runStart) effEnd = Math.min(effEnd, pLo)
+      }
+
+      // 0b — outer-corner wrap (the complement of the inset above): on a curated face
+      //      whose end butts a perpendicular wall from OUTSIDE the run — an outer
+      //      corner, not a T-junction — grow the framable run by that wall's thickness
+      //      so the print *claddings* the corner return instead of stopping at the
+      //      neighbour's inner face. See {@link CORNER_WRAP_FACES}.
+      for (const wrap of CORNER_WRAP_FACES) {
+        if (wrap.invId !== invId || wrap.side !== side) continue
+        const nb = byInv(allWalls, wrap.neighborInvId)
+        if (!nb || nb.normalAxis === wall.normalAxis) continue
+        const at = runValueOf(wall, { cx: nb.cx, cz: nb.cz })
+        const nbLo = at - nb.thickness / 2
+        const nbHi = at + nb.thickness / 2
+        if (Math.abs(nbHi - runStart) <= TOUCH_TOL_M) effStart = Math.min(effStart, nbLo)
+        if (Math.abs(nbLo - runEnd) <= TOUCH_TOL_M) effEnd = Math.max(effEnd, nbHi)
+      }
+
+      // Full-face override: this face wears one combined "pared completa" print, so
+      // emit a single panel over the whole framable run (corner inset kept) instead
+      // of the abutment/nave-cámara split. Id is the bare face code (e.g. `11-W`).
+      if (opts.fullFaces?.some((f) => f.invId === invId && f.side === side)) {
+        if (effEnd - effStart >= FRAME_MIN_SEGMENT_M) {
+          const tag = sideTag(wall, side)
+          frames.push({
+            id: `${invId}-${tag}`,
+            invId,
+            wallId: wall.id,
+            side,
+            label: `#${invId}·${tag} pared`,
+            alongCenter: round4((effStart + effEnd) / 2),
+            widthM: round4(effEnd - effStart),
+            heightM: round4(height),
+          })
+        }
+        continue
       }
 
       // 1 — abutment cuts: perpendicular walls whose end touches THIS face.

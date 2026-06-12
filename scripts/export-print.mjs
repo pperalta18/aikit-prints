@@ -136,11 +136,16 @@ function stitchTiles(parts, mediaWidthPx, mediaHeightPx, outPng) {
   run('magick', argv)
 }
 
-async function renderPng(doc, guides, outPng, maxRenderPx) {
-  const { bundle } = await import('@remotion/bundler')
+async function renderPng(doc, guides, outPng, maxRenderPx, prebuiltServeUrl = null) {
   const { selectComposition, renderStill, openBrowser } = await import('@remotion/renderer')
-  console.error(`Bundling ${ENTRY} …`)
-  const serveUrl = await bundle({ entryPoint: path.resolve(ENTRY), webpackOverride: applyProjectWebpack })
+  // Reuse a caller-supplied bundle (batch exporter) so the Remotion webpack build
+  // runs once across many prints; fall back to a one-off bundle for a single export.
+  let serveUrl = prebuiltServeUrl
+  if (!serveUrl) {
+    const { bundle } = await import('@remotion/bundler')
+    console.error(`Bundling ${ENTRY} …`)
+    serveUrl = await bundle({ entryPoint: path.resolve(ENTRY), webpackOverride: applyProjectWebpack })
+  }
 
   const { width: fullW, height: fullH } = mediaSizePx(doc.dimensions, doc.dpi)
   console.log(
@@ -298,4 +303,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   })
 }
 
-export { applyProjectWebpack, parseArgs, loadDoc, buildPdfxDef }
+export { applyProjectWebpack, parseArgs, loadDoc, buildPdfxDef, renderPng }

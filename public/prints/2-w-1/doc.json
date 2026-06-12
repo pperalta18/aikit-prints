@@ -2,7 +2,7 @@
   "id": "2-w-1",
   "title": "2-W-1",
   "createdAt": "2026-06-04T00:00:00.000Z",
-  "pageComponentId": "proxima-sala",
+  "pageComponentId": "blank",
   "theme": "light",
   "dimensions": {
     "trimWidthMm": 6375,
@@ -23,17 +23,6 @@
     "wallId": "wall-1",
     "frameId": "2-W-1",
     "side": -1,
-    "invId": 2,
-    "readingDistanceM": 4,
-    "eyebrow": "Próxima sección",
-    "num": "03",
-    "sala": "Velocidad de progreso",
-    "salaLines": [
-      "Velocidad",
-      "de progreso"
-    ],
-    "arrow": "left",
-    "showFilete": false,
-    "showTick": false
+    "invId": 2
   }
 }

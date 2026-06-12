@@ -12,20 +12,22 @@ import type { PrintDoc, PrintPageProps } from '../types'
 import { DEFAULT_WALL_HEIGHT_M, findWallByInvId, resolveWallHeight } from '../space/eventLayout'
 
 /**
- * proxima-sala — doc + registration tests for the wall 2-W-1 indicator.
+ * proxima-sala — doc + registration tests for the wall 32-W-1 indicator.
  * ───────────────────────────────────────────────────────────────────────
  * The museographic maths lives in `tipografia.ts` and is unit-tested there. This
- * file covers the *authoring* of the print: `public/prints/2-w-1/doc.json`
- * (the left 6.25 m print of the West / combustión face of wall 2) and its
- * registration. The checks prove the authored piece is honest and renderable — it
- * resolves from the registry, ships the CMYK / FOGRA52 / PDF/X contract on a clean
- * paper ground, physically fits within the wall-2 West face, sizes its two text
- * levels legibly **yet small** (a marginal tag, not a headline), and renders the
- * real next-room content (eyebrow + room name + arrow), not a blank page.
+ * file covers the *authoring* of the print: `public/prints/32-w-1/doc.json`
+ * (the 3.2 m costado of the IA-intro wall #8 — «tamaño de modelos») and its
+ * registration. The tag was first authored on 2-W-1 and later moved here, centred
+ * in the print with the arrow pointing right. The checks prove the authored piece
+ * is honest and renderable — it resolves from the registry, ships the CMYK /
+ * FOGRA52 / PDF/X contract on a clean paper ground, physically fits within the
+ * wall-32 face, sizes its two text levels legibly **yet small** (a marginal tag,
+ * not a headline), and renders the real next-room content (eyebrow + room name +
+ * arrow), not a blank page.
  */
 
 // public/ lives outside the src bundle root → read the committed file directly.
-const DOC_PATH = fileURLToPath(new URL('../../../public/prints/2-w-1/doc.json', import.meta.url))
+const DOC_PATH = fileURLToPath(new URL('../../../public/prints/32-w-1/doc.json', import.meta.url))
 const doc = JSON.parse(readFileSync(DOC_PATH, 'utf8')) as PrintDoc
 
 const RENDER_INTENTS = ['perceptual', 'relative', 'saturation', 'absolute']
@@ -33,7 +35,7 @@ const RENDER_INTENTS = ['perceptual', 'relative', 'saturation', 'absolute']
 // Mirror the page's own small name-cap fraction so the *authored* sizes are proven,
 // not a convenient test value (see proxima-sala.tsx DEFAULTS.nameCapFraction).
 const NAME_CAP_FRACTION = 0.03
-const WALL_INV_ID = 2
+const WALL_INV_ID = 32
 
 function readingDistanceM(): number {
   const v = doc.props?.readingDistanceM
@@ -47,8 +49,8 @@ describe('proxima-sala — registration', () => {
     expect(PRINT_PAGES[doc.pageComponentId]).toBe(ProximaSala)
   })
 
-  it('doc id matches its folder (the wall-2 West-face left frame)', () => {
-    expect(doc.id).toBe('2-w-1')
+  it('doc id matches its folder (the wall-32 costado frame)', () => {
+    expect(doc.id).toBe('32-w-1')
   })
 })
 
@@ -76,35 +78,41 @@ describe('proxima-sala — print contract', () => {
     expect(geo.mediaHeightPx).toBeLessThan(20000)
   })
 
-  it('points at the wall-2 (Nave O) frame via props', () => {
+  it('points at the wall-32 (costado intro IA) frame via props', () => {
     expect(doc.props?.invId).toBe(WALL_INV_ID)
-    expect(doc.props?.frameId).toBe('2-W-1')
+    expect(doc.props?.frameId).toBe('32-W-1')
     expect(doc.props?.side).toBe(-1)
+  })
+
+  it('is centred in the print with the arrow pointing right', () => {
+    expect(doc.props?.blockCenterXFraction).toBe(0.5)
+    expect(doc.props?.eyeBandFraction).toBe(0.5)
+    expect(doc.props?.arrow).toBe('right')
   })
 })
 
-describe('proxima-sala — physical fit to the wall-2 West face', () => {
+describe('proxima-sala — physical fit to the wall-32 face', () => {
   const wall = findWallByInvId(WALL_INV_ID)
 
-  it('targets the registered Nave O wall', () => {
+  it('targets the registered costado intro IA wall', () => {
     expect(wall).toBeDefined()
     expect(wall?.registry?.invId).toBe(WALL_INV_ID)
-    expect(wall?.registry?.tema).toContain('Nave O')
+    expect(wall?.registry?.tema).toContain('tamaño de modelos')
   })
 
   it('fits within the wall face: full height, ≤ the wall run length', () => {
-    if (!wall) throw new Error('wall 2 missing')
+    if (!wall) throw new Error('wall 32 missing')
     const wallHeightMm = resolveWallHeight(wall) * 1000
     const wallLengthMm = wall.length * 1000
     const { trimWidthMm, trimHeightMm, bleedMm } = doc.dimensions
 
-    // Wall 2 has no measured alturaM yet → the 2.5 m default governs.
+    // Wall 32 has no measured alturaM yet → the 3 m default governs.
     expect(wallHeightMm).toBe(DEFAULT_WALL_HEIGHT_M * 1000)
     // The frame covers the full wall height…
     expect(trimHeightMm).toBe(wallHeightMm)
-    // …and is one of the two West-face prints, so it is a fraction of the run.
+    // …and spans the full costado run (a single print on this face).
     expect(trimWidthMm).toBeLessThanOrEqual(wallLengthMm)
-    expect(trimWidthMm).toBeCloseTo(6250, 6)
+    expect(trimWidthMm).toBeCloseTo(3200, 6)
     // Bleed extends beyond the face and is trimmed / wrapped at install.
     expect(bleedMm).toBeGreaterThan(0)
   })
@@ -140,7 +148,7 @@ describe('proxima-sala — renders real content (not a blank page)', () => {
 
   it('renders the eyebrow, the next-room name and the directional arrow', () => {
     const html = render()
-    expect(html).toContain('Próxima sala') // the eyebrow
+    expect(html).toContain('Próxima sección') // the eyebrow
     // the room name — authored with an explicit rag (two balanced lines)
     expect(html).toContain('Velocidad')
     expect(html).toContain('de progreso')

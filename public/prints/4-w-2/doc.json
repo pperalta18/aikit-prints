@@ -2,7 +2,7 @@
   "id": "4-w-2",
   "title": "4-W-2",
   "createdAt": "2026-06-04T00:00:00.000Z",
-  "pageComponentId": "prensa",
+  "pageComponentId": "cinta",
   "theme": "light",
   "dimensions": {
     "trimWidthMm": 11500,
@@ -22,8 +22,6 @@
     "frameWallInvId": 4,
     "wallId": "wall-3",
     "frameId": "4-W-2",
-    "side": -1,
-    "marginMm": 450,
-    "photoFraction": 0.3
+    "side": -1
   }
 }

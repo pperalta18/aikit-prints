@@ -12,7 +12,7 @@
  * sRGB→CMYK PDF/X + GTS_PDFX OutputIntent. Verified with pdfinfo / mutool.
  */
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync, rmSync, mkdirSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { PDFDocument } from 'pdf-lib'
@@ -201,19 +201,44 @@ export async function pngToCmykPdfX({ png, outPdf, dpi, makeBoxes, color, idTag 
   const midPdf = path.join(os.tmpdir(), `${idTag}-mid-${process.pid}.pdf`)
   const boxedPdf = path.join(os.tmpdir(), `${idTag}-boxed-${process.pid}.pdf`)
   const cmykTiff = path.join(os.tmpdir(), `${idTag}-brand-${process.pid}.tiff`)
+  const bandDir = path.join(os.tmpdir(), `${idTag}-bands-${process.pid}`)
   const brand = resolveBrand(color)
   try {
     if (brand) {
       const cmykIcc = path.join(ROOT, 'public', color.iccProfile)
       if (!existsSync(cmykIcc)) throw new Error(`ICC profile not found: ${cmykIcc}`)
-      pngToBrandCmykTiff({
-        srcPng: png, outTiff: cmykTiff, srgbIcc: SRGB_PROFILE, cmykIcc,
-        intentName: color.renderIntent ?? 'relative', brand,
-      })
-      // CMYK TIFF → sized DeviceCMYK PDF (page = px/dpi, like pngToRgbPdf). Force
-      // Zip (Flate) — magick's default for CMYK is lossy JPEG, which would smear the
-      // crisp art and shift the exact brand ink.
-      run('magick', ['-units', 'PixelsPerInch', '-density', String(dpi), cmykTiff, '-compress', 'Zip', midPdf])
+      const intentName = color.renderIntent ?? 'relative'
+      const [iw, ih] = run('magick', ['identify', '-format', '%w %h', `${png}[0]`]).trim().split(/\s+/).map(Number)
+      // ImageMagick (Q16) silently blanks any single raster > 2^30 px (~1.07 Gpx) when it
+      // converts that raster to a PDF image — even though the brand CMYK TIFF itself is
+      // correct. So above ~1 Gpx, build the page band-by-band: each CMYK band TIFF (< 2^30)
+      // → its own sized PDF, stacked losslessly onto one page (no >2^30 raster ever reaches
+      // magick's raster→PDF, and no monster `-append` either). Below that, single-shot.
+      if (iw * ih > 1_000_000_000) {
+        mkdirSync(bandDir, { recursive: true })
+        const { bands, w, h } = pngToBrandCmykTiff({
+          srcPng: png, outTiff: cmykTiff, srgbIcc: SRGB_PROFILE, cmykIcc, intentName, brand, bandDir,
+        })
+        const doc = await PDFDocument.create()
+        const pageW = (w * 72) / dpi
+        const pageH = (h * 72) / dpi
+        const page = doc.addPage([pageW, pageH])
+        for (const b of bands) {
+          const bandPdf = path.join(bandDir, `${path.basename(b.tiff, '.tiff')}.pdf`)
+          run('magick', ['-units', 'PixelsPerInch', '-density', String(dpi), b.tiff, '-compress', 'Zip', bandPdf])
+          const src = await PDFDocument.load(readFileSync(bandPdf))
+          const [emb] = await doc.embedPdf(src, [0])
+          // b.y0 is the band's top offset (px from the image top); PDF y grows upward.
+          page.drawPage(emb, { x: 0, y: pageH - (b.y0 * 72) / dpi - (b.h * 72) / dpi, width: (b.w * 72) / dpi, height: (b.h * 72) / dpi })
+        }
+        writeFileSync(midPdf, await doc.save())
+      } else {
+        pngToBrandCmykTiff({ srcPng: png, outTiff: cmykTiff, srgbIcc: SRGB_PROFILE, cmykIcc, intentName, brand })
+        // CMYK TIFF → sized DeviceCMYK PDF (page = px/dpi, like pngToRgbPdf). Force Zip
+        // (Flate) — magick's default for CMYK is lossy JPEG, which would smear the crisp
+        // art and shift the exact brand ink.
+        run('magick', ['-units', 'PixelsPerInch', '-density', String(dpi), cmykTiff, '-compress', 'Zip', midPdf])
+      }
       await setPdfBoxes(midPdf, boxedPdf, makeBoxes)
       cmykPdfToPdfX(boxedPdf, outPdf, color, idTag)
     } else {
@@ -225,5 +250,6 @@ export async function pngToCmykPdfX({ png, outPdf, dpi, makeBoxes, color, idTag 
     rmSync(midPdf, { force: true })
     rmSync(boxedPdf, { force: true })
     rmSync(cmykTiff, { force: true })
+    rmSync(bandDir, { recursive: true, force: true })
   }
 }

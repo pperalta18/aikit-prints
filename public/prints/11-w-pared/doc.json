@@ -5,7 +5,7 @@
   "pageComponentId": "pared-combinada",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 22000,
+    "trimWidthMm": 23000,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
@@ -20,6 +20,10 @@
   },
   "props": {
     "wall": "11-W",
+    "frameWallInvId": 11,
+    "wallId": "wall-10",
+    "frameId": "11-W",
+    "side": -1,
     "panelsLeftToRight": [
       "11-w-image",
       "11-w-text-code",
@@ -44,7 +48,7 @@
         "id": "11-w-text-code",
         "pageComponentId": "contexto",
         "theme": "light",
-        "trimWidthMm": 6625,
+        "trimWidthMm": 7500,
         "bleedMm": 10,
         "props": {
           "frameWallInvId": 11,
@@ -59,7 +63,7 @@
         "pageComponentId": "warp",
         "theme": "light",
         "surface": "#ffffff",
-        "trimWidthMm": 6125,
+        "trimWidthMm": 6250,
         "bleedMm": 10,
         "props": {
           "frameWallInvId": 11,
@@ -67,12 +71,12 @@
           "frameId": "11-W-INVERSIÓN",
           "side": -1,
           "zone": "INVERSIÓN",
-          "fullWidthMm": 23500,
-          "originXMm": 0,
-          "holeCenterXMm": 10500,
+          "fullWidthMm": 24500,
+          "originXMm": 875,
+          "holeCenterXMm": 11500,
           "seams": [
-            5750,
-            15250
+            6750,
+            16250
           ],
           "foreshorten": 0.38,
           "holeCenterYFrac": 0.63,

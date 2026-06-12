@@ -3,9 +3,9 @@
   "title": "21-S-1",
   "createdAt": "2026-06-04T00:00:00.000Z",
   "pageComponentId": "blank",
-  "theme": "dark",
+  "theme": "light",
   "dimensions": {
-    "trimWidthMm": 4375,
+    "trimWidthMm": 5375,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

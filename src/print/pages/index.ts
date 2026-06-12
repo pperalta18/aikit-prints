@@ -107,17 +107,34 @@ import { LogoCorner } from './logo-corner'
 // «tecnología + impacto» headline + paragraph + dateline). Eight links of a supply
 // chain that makes a product nearly free to make and move.
 import { Prensa } from './prensa'
+// «La Naranja Mecánica» ribbon-trail (4-W-2): a Bauhaus multi-stripe ribbon
+// weaving a complex trail across the whole wall (no text), doubling back so two
+// brand-orange discs nest tangent in the bends. Pure SVG (stacked strokes).
+import { Cinta } from './cinta'
 // «Dos columnas» wall (19-S-1): two centred slender bands, each a full-height
 // mosaic of square brand-blue cells with a deterministic (seeded) per-cell
 // opacity — most empty, the rest random. `columnas.ts` (pure layout + cell/scatter
 // maths) shares the basename → explicit `.tsx`.
 import { Columnas } from './columnas.tsx'
+// «Friso continuo» (alcoba TV: inv 16 + 27–31): one horizontal mosaic band that
+// wraps the alcove walls as a single frieze — same blue scatter as `columnas`, but
+// its cells are anchored to a global world coordinate (baked per print) so
+// collinear faces seam-match at the join. `banda.ts` holds the pure grid + field.
+import { Banda } from './banda.tsx'
 // Pared combinada — joins a wall's per-zone prints (IMAGE · TEXT+CODE · INVERSIÓN)
 // into ONE wall-sized deliverable, panels butted in as-viewed order at real width.
 import { ParedCombinada } from './pared-combinada'
 // Wordmark — a single logo/wordmark centred on the wall at a controlled size
 // (statement wall). First used by 13-S-1 («La Naranja Mecánica»).
 import { Wordmark } from './wordmark'
+// Imagen-grid — a uniform N×M grid of full-bleed images filling the whole wall
+// edge to edge (one page, many docs). First used by 21-N-1 (3×2 campaign sheets).
+import { ImagenGrid } from './imagen-grid'
+// «El mercado de la IA, año a año» (print libre, ~tamaño 12-S-1): la esfera de la IA
+// de la «Galaxia de mercados» dibujada en el tiempo — un círculo concéntrico por año
+// (2019→2026, área ∝ valoración combinada de los laboratorios), con tooltips de año a
+// la derecha. `mercado-tiempo.ts` (datos + geometría) comparte basename → import `.tsx`.
+import { MercadoTiempo } from './mercado-tiempo.tsx'
 
 /**
  * Page registry — maps a `doc.pageComponentId` to its React component. Add a new
@@ -207,12 +224,20 @@ export const PRINT_PAGES: Record<string, PrintPageComponent> = {
   'logo-corner': LogoCorner,
   // ── Muro de noticias (4-W-2 «La Naranja Mecánica»): ¼ izq. blanco + portada de periódico de automatización real (8 noticias: antetítulo · titular · párrafo · foto) ──
   prensa: Prensa,
+  // ── Cinta (4-W-2 «La Naranja Mecánica»): homenaje Bauhaus sin texto — cinta multi-banda que traza un recorrido complejo por toda la pared, doblándose sobre sí para que dos discos naranja aniden en sus curvas ──
+  cinta: Cinta,
   // ── «Dos columnas» (19-S-1): dos bandas esbeltas centradas — grid azul de marca a toda altura + degradado azul desde el suelo; la tinta del grid se invierte (blanco↔azul) en la disolución ──
   columnas: Columnas,
+  // ── «Friso continuo» (alcoba TV: inv 16 + 27–31): una banda horizontal de mosaico azul (30 cm de alto, su borde superior a 30 cm del top) que recorre las paredes de la alcoba como un único friso; las celdas se anclan a una coordenada mundial global (origen/dir horneados por print) para que las caras colineales encajen sin costura en la unión ──
+  banda: Banda,
   // ── Pared combinada (2-E · 11-W): une los paneles de zona de una pared (IMAGE · TEXT+CODE · INVERSIÓN) en UN solo print del tamaño de la pared ──
   'pared-combinada': ParedCombinada,
   // ── Wordmark (13-S-1 «La Naranja Mecánica»): un logo/wordmark centrado a tamaño controlado sobre el fondo ──
   wordmark: Wordmark,
+  // ── Imagen-grid (21-N-1): cuadrícula uniforme N×M de imágenes a sangre que llena toda la pared ──
+  'imagen-grid': ImagenGrid,
+  // ── «El mercado de la IA, año a año» (print libre): la esfera de la IA en el tiempo — círculos concéntricos por año (área ∝ valoración combinada de los laboratorios), tooltips de año a la derecha ──
+  'mercado-tiempo': MercadoTiempo,
 }
 
 export function getPrintPage(id: string): PrintPageComponent | undefined {

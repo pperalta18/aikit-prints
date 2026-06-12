@@ -5,7 +5,7 @@
   "pageComponentId": "blank",
   "theme": "light",
   "dimensions": {
-    "trimWidthMm": 3500,
+    "trimWidthMm": 4500,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,

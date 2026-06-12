@@ -20,6 +20,10 @@
   },
   "props": {
     "wall": "2-E",
+    "frameWallInvId": 2,
+    "wallId": "wall-1",
+    "frameId": "2-E",
+    "side": 1,
     "panelsLeftToRight": [
       "2-e-inversion",
       "2-e-text-code",
@@ -31,7 +35,7 @@
         "pageComponentId": "warp",
         "theme": "light",
         "surface": "#ffffff",
-        "trimWidthMm": 8625,
+        "trimWidthMm": 7750,
         "bleedMm": 10,
         "props": {
           "frameWallInvId": 2,
@@ -39,12 +43,12 @@
           "frameId": "2-E-INVERSIÓN",
           "side": 1,
           "zone": "INVERSIÓN",
-          "fullWidthMm": 23500,
-          "originXMm": 15250,
-          "holeCenterXMm": 10500,
+          "fullWidthMm": 24500,
+          "originXMm": 16250,
+          "holeCenterXMm": 11500,
           "seams": [
-            5750,
-            15250
+            6750,
+            16250
           ],
           "foreshorten": 0.38,
           "holeCenterYFrac": 0.63,
@@ -64,8 +68,8 @@
             "wMm": 3136.5,
             "hMm": 1804
           },
-          "gridFadeStartXMm": 16900,
-          "gridFadeEndXMm": 19150
+          "gridFadeStartXMm": 17900,
+          "gridFadeEndXMm": 20150
         }
       },
       {
@@ -73,7 +77,7 @@
         "pageComponentId": "hitos",
         "theme": "light",
         "surface": "#ffffff",
-        "trimWidthMm": 6625,
+        "trimWidthMm": 7500,
         "bleedMm": 10,
         "props": {
           "frameWallInvId": 2,

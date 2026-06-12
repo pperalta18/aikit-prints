@@ -6,7 +6,7 @@
   "theme": "light",
   "surface": "#ffffff",
   "dimensions": {
-    "trimWidthMm": 23500,
+    "trimWidthMm": 24500,
     "trimHeightMm": 2500,
     "bleedMm": 0,
     "safeMarginMm": 0,
@@ -30,8 +30,11 @@
     "dispersion": 0.72,
     "bodyGapMm": 240,
     "perspectiveCompensate": false,
-    "holeCenterXMm": 10500,
-    "seams": [5750, 15250],
+    "holeCenterXMm": 11500,
+    "seams": [
+      6750,
+      16250
+    ],
     "centerTitle": "Laboratorios de IA\ny GPUs"
   }
 }

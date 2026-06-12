@@ -1,0 +1,25 @@
+{
+  "id": "4-w-2-prensa",
+  "title": "4-W-2 · Prensa (backup)",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "prensa",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 11500,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 30,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "marginMm": 450,
+    "photoFraction": 0.3
+  }
+}

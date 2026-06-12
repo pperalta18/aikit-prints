@@ -2,11 +2,11 @@
   "id": "16-n-1",
   "title": "16-N-1",
   "createdAt": "2026-06-04T00:00:00.000Z",
-  "pageComponentId": "columnas",
+  "pageComponentId": "banda",
   "theme": "light",
   "surface": "#ffffff",
   "dimensions": {
-    "trimWidthMm": 4250,
+    "trimWidthMm": 2750,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
@@ -24,13 +24,14 @@
     "wallId": "wall-15",
     "frameId": "16-N-1",
     "side": -1,
-    "count": 2,
-    "columnWidthMm": 1150,
-    "gapMm": 1000,
+    "bandTopMm": 300,
+    "bandHeightMm": 300,
     "gridMm": 12.5,
     "emptyFrac": 0.7,
     "minOpacity": 0.1,
     "maxOpacity": 1,
-    "seed": 16
+    "seed": 16,
+    "originMm": 1000,
+    "dir": -1
   }
 }

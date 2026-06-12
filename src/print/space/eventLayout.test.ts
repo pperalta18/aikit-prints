@@ -30,8 +30,8 @@ const VALID_ESTADO: Estado[] = ['ok', 'prop', 'pend']
 const VALID_TRACK: Track[] = ['C', 'I', 'H', 'C/I']
 
 describe('wall registry — coverage & shape', () => {
-  it('registers all 25 event walls (invId 17 retired)', () => {
-    expect(REGISTERED_WALLS).toHaveLength(25)
+  it('registers all 31 event walls (17 + cube 22-25 retired; 27-31 alcove, 32 intro-side, 33-36 ex-cube panels added)', () => {
+    expect(REGISTERED_WALLS).toHaveLength(31)
   })
 
   it('every WALLS element carries a registry (no blank walls)', () => {
@@ -45,13 +45,13 @@ describe('wall registry — coverage & shape', () => {
     expect(MOUNTABLE.length).toBe(WALLS.length + GLASS.length)
   })
 
-  it('exposes invIds 1..26 minus the retired #17, unique', () => {
+  it('exposes the live invIds, unique (cube #22-25 out; #27-36 added)', () => {
     const ids = REGISTERED_WALLS.map((w) => w.registry!.invId).sort((a, b) => a - b)
-    // The confesionario (#17) was retired (folded into wall 12's reverse face), so
-    // the inventory skips it: 25 walls, ids 1..16 + 18..26 (22..25 = the S2 central
-    // cube, 26 = the added S1 Bici/combustión backdrop wall).
-    expect(ids).toEqual([...Array.from({ length: 16 }, (_, i) => i + 1), 18, 19, 20, 21, 22, 23, 24, 25, 26])
-    expect(new Set(ids).size).toBe(25)
+    // #17 confesionario + the S2 cube (#22-25) are retired. The 2026-06-08 plan added
+    // #27-31 (central TV alcove), #32 (intro-IA side panel, ex wall-new-0) and #33-36
+    // (the four ex-cube display panels). Live set = 1..16 + 18..21 + 26..36 (31 walls).
+    expect(ids).toEqual([...Array.from({ length: 16 }, (_, i) => i + 1), 18, 19, 20, 21, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36])
+    expect(new Set(ids).size).toBe(31)
   })
 
   it('every registry field is present and well-typed', () => {
@@ -79,10 +79,11 @@ describe('wall registry — id convention (invId N ↔ wall-(N-1))', () => {
 })
 
 describe('findWallByInvId', () => {
-  it('resolves every live id to the matching wall (#17 retired ⇒ undefined)', () => {
-    for (let n = 1; n <= 26; n++) {
+  it('resolves every live id to the matching wall (#17 + cube #22-25 ⇒ undefined)', () => {
+    const absent = new Set([17, 22, 23, 24, 25])
+    for (let n = 1; n <= 36; n++) {
       const w = findWallByInvId(n)
-      if (n === 17) {
+      if (absent.has(n)) {
         expect(w).toBeUndefined()
         continue
       }
@@ -93,7 +94,7 @@ describe('findWallByInvId', () => {
 
   it('returns undefined for out-of-range / invalid ids', () => {
     expect(findWallByInvId(0)).toBeUndefined()
-    expect(findWallByInvId(27)).toBeUndefined()
+    expect(findWallByInvId(37)).toBeUndefined()
     expect(findWallByInvId(-1)).toBeUndefined()
   })
 

@@ -1,0 +1,25 @@
+{
+  "id": "mercado-ia-tiempo",
+  "title": "El mercado de la IA, año a año (4,5 × 3 m)",
+  "createdAt": "2026-06-08T00:00:00.000Z",
+  "pageComponentId": "mercado-tiempo",
+  "theme": "light",
+  "surface": "#ffffff",
+  "dimensions": {
+    "trimWidthMm": 4500,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "title": "Inteligencia artificial: el valor de su mercado, año a año"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "id": "28-w-1",
+  "title": "28-W-1",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "banda",
+  "theme": "light",
+  "dimensions": {
+    "trimWidthMm": 1750,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "perceptual",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 28,
+    "wallId": "wall-23",
+    "frameId": "28-W-1",
+    "side": -1,
+    "bandTopMm": 300,
+    "bandHeightMm": 300,
+    "gridMm": 12.5,
+    "emptyFrac": 0.7,
+    "minOpacity": 0.1,
+    "maxOpacity": 1,
+    "seed": 16,
+    "originMm": 21500,
+    "dir": 1
+  },
+  "surface": "#ffffff"
+}

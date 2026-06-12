@@ -1,0 +1,34 @@
+{
+  "id": "31-s-1",
+  "title": "31-S-1",
+  "createdAt": "2026-06-04T00:00:00.000Z",
+  "pageComponentId": "mercado-tiempo",
+  "theme": "light",
+  "surface": "#ffffff",
+  "dimensions": {
+    "trimWidthMm": 2750,
+    "trimHeightMm": 3000,
+    "bleedMm": 10,
+    "safeMarginMm": 0,
+    "cropMarks": false
+  },
+  "dpi": 36,
+  "color": {
+    "mode": "cmyk",
+    "iccProfile": "icc/PSOuncoated_v3_FOGRA52.icc",
+    "renderIntent": "relative",
+    "pdfxVariant": "x1a"
+  },
+  "props": {
+    "frameWallInvId": 31,
+    "wallId": "wall-26",
+    "frameId": "31-S-1",
+    "side": 1,
+    "title": "El mercado de la IA,\naño a año",
+    "numberFormat": "us",
+    "centerXFrac": 0.36,
+    "centerYFrac": 0.57,
+    "maxRadiusFrac": 0.3,
+    "columnXFrac": 0.78
+  }
+}

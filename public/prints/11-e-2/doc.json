@@ -6,7 +6,7 @@
   "theme": "light",
   "surface": "#ffffff",
   "dimensions": {
-    "trimWidthMm": 11750,
+    "trimWidthMm": 12750,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
@@ -48,7 +48,7 @@
     },
     "bays": [
       {
-        "cols": 2,
+        "cols": 3,
         "slots": [
           {
             "kind": "image",
@@ -82,7 +82,7 @@
           },
           {
             "kind": "image",
-            "image": "landscape",
+            "image": "poster",
             "rows": 2
           }
         ]
@@ -92,7 +92,7 @@
         "slots": [
           {
             "kind": "image",
-            "image": "poster",
+            "image": "landscape",
             "rows": 2
           },
           {

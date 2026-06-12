@@ -19,6 +19,11 @@ import type { PrintPageProps } from '../types'
  *                        convention `prints/<id>/assets/<id>.svg`.
  *   • `alt`              description (accessibility / sources note).
  *   • `maxWidthMm`       mark width in mm. Default: 60 % of the trim width.
+ *   • `alignX`           horizontal edge: 'left' | 'center' | 'right'. When set it
+ *                        flushes the mark to that edge of the trim, overriding
+ *                        `centerXFraction`. Default 'center'.
+ *   • `marginXMm`        inset (mm) from the aligned edge when `alignX` is
+ *                        left/right. Default 0 (flush). Ignored when centred.
  *   • `centerXFraction`  horizontal placement (0..1). Default 0.5.
  *   • `centerYFraction`  vertical placement (0..1). Default 0.5.
  */
@@ -27,6 +32,8 @@ type Props = {
   src?: string
   alt?: string
   maxWidthMm?: number
+  alignX?: 'left' | 'center' | 'right'
+  marginXMm?: number
   centerXFraction?: number
   centerYFraction?: number
 }
@@ -38,17 +45,26 @@ export function Wordmark({ doc, geo }: PrintPageProps) {
   const widthMm = typeof p.maxWidthMm === 'number' ? p.maxWidthMm : geo.dims.trimWidthMm * 0.6
   const cx = typeof p.centerXFraction === 'number' ? p.centerXFraction : 0.5
   const cy = typeof p.centerYFraction === 'number' ? p.centerYFraction : 0.5
+  const alignX = p.alignX === 'left' || p.alignX === 'right' ? p.alignX : 'center'
+  const marginX = typeof p.marginXMm === 'number' ? geo.mm(p.marginXMm) : 0
   const imgStyle: CSSProperties = { width: '100%', height: 'auto', display: 'block' }
+  // Horizontal anchoring: inset from a trim edge by `marginXMm` for left/right,
+  // else centre on `centerXFraction`. Vertical placement stays on `centerYFraction`.
+  const horiz: CSSProperties =
+    alignX === 'left'
+      ? { left: marginX, transform: 'translateY(-50%)' }
+      : alignX === 'right'
+        ? { right: marginX, transform: 'translateY(-50%)' }
+        : { left: `${cx * 100}%`, transform: 'translate(-50%, -50%)' }
 
   return (
     <div style={{ position: 'absolute', left: geo.bleedPx, top: geo.bleedPx, width: geo.trimWidthPx, height: geo.trimHeightPx }}>
       <div
         style={{
           position: 'absolute',
-          left: `${cx * 100}%`,
           top: `${cy * 100}%`,
-          transform: 'translate(-50%, -50%)',
           width: geo.mm(widthMm),
+          ...horiz,
         }}
       >
         {/* Remotion's <Img> delays the still until the bitmap decodes (export);

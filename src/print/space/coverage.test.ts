@@ -422,16 +422,16 @@ describe('drift guard', () => {
 describe('the real venue — REGISTERED_WALLS', () => {
   const rows = buildCoverage(REGISTERED_WALLS)
 
-  it('has exactly the 25 event walls (invId 17 retired)', () => {
-    expect(rows.length).toBe(25)
-    expect(rows.map((r) => r.invId)).toEqual([...Array.from({ length: 16 }, (_, i) => i + 1), 18, 19, 20, 21, 22, 23, 24, 25, 26])
+  it('has exactly the 31 event walls (cube 22-25 removed; 27-36 added)', () => {
+    expect(rows.length).toBe(31)
+    expect(rows.map((r) => r.invId)).toEqual([...Array.from({ length: 16 }, (_, i) => i + 1), 18, 19, 20, 21, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36])
   })
 
-  it('NO blank walls — all 25 carry a decided piece', () => {
+  it('NO blank walls — all 31 carry a decided piece', () => {
     const blank = blankWalls(rows)
     expect(blank.map((r) => r.invId)).toEqual([])
     expect(() => assertNoBlankWalls(rows)).not.toThrow()
-    expect(coverageSummary(rows).covered).toBe(25)
+    expect(coverageSummary(rows).covered).toBe(31)
   })
 
   it('every wall has resolvable rooms (no typo in any sala)', () => {
@@ -479,18 +479,18 @@ describe('the real venue — REGISTERED_WALLS', () => {
   it('renders the deliverable Markdown + CSV with consistent arity', () => {
     const md = formatCoverageMarkdown(rows).split('\n')
     const headerCols = mdCols(md[0]).length
-    expect(md.length).toBe(2 + 25)
+    expect(md.length).toBe(2 + 31)
     for (const line of md.slice(2)) expect(mdCols(line).length).toBe(headerCols)
 
     const csv = formatCoverageCsv(rows).split('\n')
-    expect(csv.length).toBe(1 + 25)
+    expect(csv.length).toBe(1 + 31)
     const csvCols = csv[0].split(',').length
     for (const line of csv.slice(1)) expect(line.split(',').length).toBeGreaterThanOrEqual(csvCols)
   })
 
   it('summarises as covered + funnel complete', () => {
     const line = summaryLine(coverageSummary(rows))
-    expect(line).toContain('25/25 cubiertos')
+    expect(line).toContain('31/31 cubiertos')
     expect(line).toContain('0 en blanco')
     expect(line).toContain('funnel completo')
   })

@@ -33,9 +33,9 @@
     },
     {
       "type": "wall",
-      "x": 14.75,
+      "x": 14.5,
       "y": 40.25,
-      "w": 3.5,
+      "w": 3.75,
       "h": 0.5,
       "invId": 3,
       "sala": "S2/S3",
@@ -105,7 +105,7 @@
       "type": "wall",
       "x": 0.5,
       "y": 40.25,
-      "w": 11.75,
+      "w": 11.5,
       "h": 0.5,
       "invId": 8,
       "sala": "S2",
@@ -148,7 +148,7 @@
       "x": 17.75,
       "y": 40.75,
       "w": 0.5,
-      "h": 22,
+      "h": 23,
       "invId": 11,
       "sala": "S3",
       "tema": "Nave E — aceleración",
@@ -159,9 +159,9 @@
     },
     {
       "type": "wall",
-      "x": 11.75,
+      "x": 11,
       "y": 49.75,
-      "w": 3.5,
+      "w": 4.5,
       "h": 0.5,
       "invId": 12,
       "sala": "S3",
@@ -188,7 +188,7 @@
     {
       "type": "wall",
       "x": 18.25,
-      "y": 62.25,
+      "y": 63.25,
       "w": 1.5,
       "h": 0.5,
       "invId": 14,
@@ -202,7 +202,7 @@
     {
       "type": "wall",
       "x": 19.75,
-      "y": 62.25,
+      "y": 63.25,
       "w": 0.5,
       "h": 4,
       "invId": 15,
@@ -215,9 +215,9 @@
     },
     {
       "type": "wall",
-      "x": 11.5,
-      "y": 56.375,
-      "w": 4.25,
+      "x": 13.25,
+      "y": 57.25,
+      "w": 2.75,
       "h": 0.5,
       "invId": 16,
       "sala": "S3",
@@ -271,71 +271,15 @@
     },
     {
       "type": "wall",
-      "x": 20.75,
+      "x": 19.75,
       "y": 59.75,
-      "w": 4.5,
+      "w": 5.5,
       "h": 0.5,
       "invId": 21,
       "sala": "S4/S5",
       "tema": "Transición",
       "rol": "Proponer; transición cine-negro → branding zumo cálido",
       "track": "I",
-      "estado": "pend",
-      "research": false
-    },
-    {
-      "type": "wall",
-      "x": 3.595,
-      "y": 43.742,
-      "w": 2,
-      "h": 0.5,
-      "invId": 22,
-      "sala": "S2",
-      "tema": "Cubo central S2 — cara norte",
-      "rol": "Cara norte del cubo expositivo central de S2 (Intro IA); graphic por definir",
-      "track": "C",
-      "estado": "pend",
-      "research": false
-    },
-    {
-      "type": "wall",
-      "x": 3.75,
-      "y": 45.75,
-      "w": 2,
-      "h": 0.5,
-      "invId": 23,
-      "sala": "S2",
-      "tema": "Cubo central S2 — cara sur",
-      "rol": "Cara sur del cubo expositivo central de S2 (Intro IA); graphic por definir",
-      "track": "C",
-      "estado": "pend",
-      "research": false
-    },
-    {
-      "type": "wall",
-      "x": 3.25,
-      "y": 44.25,
-      "w": 0.5,
-      "h": 2,
-      "invId": 24,
-      "sala": "S2",
-      "tema": "Cubo central S2 — cara oeste",
-      "rol": "Cara oeste del cubo expositivo central de S2 (Intro IA); graphic por definir",
-      "track": "C",
-      "estado": "pend",
-      "research": false
-    },
-    {
-      "type": "wall",
-      "x": 5.25,
-      "y": 43.75,
-      "w": 0.5,
-      "h": 2,
-      "invId": 25,
-      "sala": "S2",
-      "tema": "Cubo central S2 — cara este",
-      "rol": "Cara este del cubo expositivo central de S2 (Intro IA); graphic por definir",
-      "track": "C",
       "estado": "pend",
       "research": false
     },
@@ -355,237 +299,902 @@
     },
     {
       "type": "wall",
-      "x": 10.251,
-      "y": 40.792,
-      "w": 0.2,
+      "x": 10.25,
+      "y": 40.75,
+      "w": 0.5,
       "h": 3.2,
+      "invId": 32,
+      "sala": "S2",
+      "tema": "Costado intro IA — tamaño de modelos",
+      "rol": "Costado (cara E/O) de la pared de intro IA (#8), hacia la entrada del showroom; superficie por definir",
+      "track": "C",
+      "estado": "pend",
+      "research": false,
       "wallId": "wall-new-0"
     },
     {
+      "type": "wall",
+      "x": 10.5,
+      "y": 55.75,
+      "w": 0.25,
+      "h": 3.5,
+      "invId": 27,
+      "sala": "S3",
+      "tema": "Sala central — pared oeste alcoba TV",
+      "rol": "Cara oeste de la alcoba de pantallas en el centro del showroom; gráfica por definir",
+      "track": "C",
+      "estado": "pend",
+      "research": false
+    },
+    {
+      "type": "wall",
+      "x": 11.75,
+      "y": 56.75,
+      "w": 0.25,
+      "h": 1.5,
+      "invId": 28,
+      "sala": "S3",
+      "tema": "Sala central — partición interior alcoba TV",
+      "rol": "Partición interior de la alcoba de pantallas; superficie por definir",
+      "track": "C",
+      "estado": "pend",
+      "research": false
+    },
+    {
+      "type": "wall",
+      "x": 13,
+      "y": 56.75,
+      "w": 0.25,
+      "h": 2.25,
+      "invId": 29,
+      "sala": "S3",
+      "tema": "Sala central — partición este alcoba TV (soporte pantallas)",
+      "rol": "Partición este que aloja las pantallas 100\"; gráfica por definir",
+      "track": "C",
+      "estado": "pend",
+      "research": false
+    },
+    {
+      "type": "wall",
+      "x": 11.75,
+      "y": 56.5,
+      "w": 1.5,
+      "h": 0.25,
+      "invId": 30,
+      "sala": "S3",
+      "tema": "Sala central — partición interior alcoba TV",
+      "rol": "Partición interior de la alcoba de pantallas; superficie por definir",
+      "track": "C",
+      "estado": "pend",
+      "research": false
+    },
+    {
+      "type": "wall",
+      "x": 10.75,
+      "y": 59,
+      "w": 2.5,
+      "h": 0.25,
+      "invId": 31,
+      "sala": "S3",
+      "tema": "Sala central — pared sur alcoba TV",
+      "rol": "Cara sur de la alcoba de pantallas, hacia la cámara INVERSIÓN; gráfica por definir",
+      "track": "C",
+      "estado": "pend",
+      "research": false
+    },
+    {
       "type": "bar",
-      "x": 5,
+      "x": 3.25,
       "y": 60.75,
       "w": 3,
       "h": 1
     },
     {
       "type": "table",
+      "x": 19.75,
+      "y": 60.25,
+      "w": 5.5,
+      "h": 0.5,
+      "alturaM": 1.4,
+      "elevacionM": 0.6
+    },
+    {
+      "type": "table",
+      "x": 9.5,
+      "y": 27.25,
+      "w": 1.5,
+      "h": 2,
+      "alturaM": 1.05
+    },
+    {
+      "type": "table",
+      "x": 9.25,
+      "y": 27.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 9.25,
+      "y": 28.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 10.75,
+      "y": 27.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 10.75,
+      "y": 28.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 6,
+      "y": 27,
+      "w": 1.5,
+      "h": 2,
+      "alturaM": 1.05
+    },
+    {
+      "type": "table",
+      "x": 5.75,
+      "y": 27.25,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 5.75,
+      "y": 28.25,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 7.25,
+      "y": 27.25,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 7.25,
+      "y": 28.25,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 6,
+      "y": 30,
+      "w": 1.5,
+      "h": 2,
+      "alturaM": 1.05
+    },
+    {
+      "type": "table",
+      "x": 5.75,
+      "y": 30.25,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 5.75,
+      "y": 31.25,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 7.25,
+      "y": 30.25,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 7.25,
+      "y": 31.25,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 6,
+      "y": 33.25,
+      "w": 1.5,
+      "h": 2,
+      "alturaM": 1.05
+    },
+    {
+      "type": "table",
+      "x": 5.75,
+      "y": 33.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 5.75,
+      "y": 34.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 7.25,
+      "y": 33.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 7.25,
+      "y": 34.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 9.5,
+      "y": 30.25,
+      "w": 1.5,
+      "h": 2,
+      "alturaM": 1.05
+    },
+    {
+      "type": "table",
+      "x": 9.25,
+      "y": 30.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 9.25,
+      "y": 31.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 10.75,
+      "y": 30.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 10.75,
+      "y": 31.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 25,
+      "y": 27.25,
+      "w": 1.5,
+      "h": 2,
+      "alturaM": 1.05
+    },
+    {
+      "type": "table",
+      "x": 24.75,
+      "y": 27.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 24.75,
+      "y": 28.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 26.25,
+      "y": 27.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 26.25,
+      "y": 28.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 21.5,
+      "y": 27.25,
+      "w": 1.5,
+      "h": 2,
+      "alturaM": 1.05
+    },
+    {
+      "type": "table",
+      "x": 21.25,
+      "y": 27.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 21.25,
+      "y": 28.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 22.75,
+      "y": 27.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 22.75,
+      "y": 28.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 21.5,
+      "y": 30.25,
+      "w": 1.5,
+      "h": 2,
+      "alturaM": 1.05
+    },
+    {
+      "type": "table",
+      "x": 21.25,
+      "y": 30.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 21.25,
+      "y": 31.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 22.75,
+      "y": 30.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 22.75,
+      "y": 31.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 25,
+      "y": 30.25,
+      "w": 1.5,
+      "h": 2,
+      "alturaM": 1.05
+    },
+    {
+      "type": "table",
+      "x": 24.75,
+      "y": 30.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 24.75,
+      "y": 31.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 26.25,
+      "y": 30.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 26.25,
+      "y": 31.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 9.5,
+      "y": 33.25,
+      "w": 1.5,
+      "h": 2,
+      "alturaM": 1.05
+    },
+    {
+      "type": "table",
+      "x": 9.25,
+      "y": 33.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 9.25,
+      "y": 34.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 10.75,
+      "y": 33.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 10.75,
+      "y": 34.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 7.25,
+      "y": 43.75,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8
+    },
+    {
+      "type": "table",
+      "x": 18,
+      "y": 51.5,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 18,
+      "y": 53.5,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 18,
+      "y": 52.5,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 18,
+      "y": 54.5,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 24.75,
+      "y": 46,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 24.75,
+      "y": 44,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 90
+    },
+    {
+      "type": "table",
+      "x": 23.5,
+      "y": 40.75,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8
+    },
+    {
+      "type": "table",
+      "x": 21.5,
+      "y": 40.75,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8
+    },
+    {
+      "type": "table",
       "x": 2,
-      "y": 52.75,
-      "w": 3.5,
-      "h": 3
+      "y": 52.5,
+      "w": 2,
+      "h": 2,
+      "alturaM": 0.2
     },
     {
       "type": "table",
-      "x": 4.214,
-      "y": 45.752,
+      "x": 13.75,
+      "y": 29.25,
+      "w": 4.75,
+      "h": 4.75,
+      "alturaM": 0.2
+    },
+    {
+      "type": "table",
+      "x": 21.5,
+      "y": 33.25,
+      "w": 1.5,
+      "h": 2,
+      "alturaM": 1.05
+    },
+    {
+      "type": "table",
+      "x": 21.25,
+      "y": 33.5,
       "w": 0.5,
-      "h": 1.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 21.25,
+      "y": 34.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 22.75,
+      "y": 33.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
       "rotation": 90
     },
     {
       "type": "table",
-      "x": 13.36,
-      "y": 48.4,
-      "w": 0.3,
-      "h": 2.8,
-      "alturaM": 1.25,
-      "elevacionM": 0.85,
+      "x": 22.75,
+      "y": 34.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
       "rotation": 90
     },
     {
       "type": "table",
-      "x": 12.234,
-      "y": 55.358,
+      "x": 25,
+      "y": 33.25,
+      "w": 1.5,
+      "h": 2,
+      "alturaM": 1.05
+    },
+    {
+      "type": "table",
+      "x": 24.75,
+      "y": 33.5,
       "w": 0.5,
-      "h": 1.5,
-      "alturaM": 0.65,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 24.75,
+      "y": 34.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 26.25,
+      "y": 33.5,
+      "w": 0.5,
+      "h": 0.5,
+      "alturaM": 0.45,
       "rotation": 90
     },
     {
       "type": "table",
-      "x": 14.25,
-      "y": 55.358,
+      "x": 26.25,
+      "y": 34.5,
       "w": 0.5,
-      "h": 1.5,
+      "h": 0.5,
+      "alturaM": 0.45,
       "rotation": 90
     },
     {
-      "type": "table",
-      "x": 2.695,
-      "y": 44.464,
-      "w": 0.5,
+      "type": "plant",
+      "x": 3.75,
+      "y": 25.25,
+      "w": 1.5,
       "h": 1.5
     },
     {
-      "type": "table",
-      "x": 5.802,
-      "y": 44.491,
-      "w": 0.5,
+      "type": "plant",
+      "x": 8.25,
+      "y": 25.5,
+      "w": 1.5,
       "h": 1.5
     },
     {
-      "type": "table",
-      "x": 24.497,
-      "y": 42.778,
-      "w": 0.5,
+      "type": "plant",
+      "x": 23.25,
+      "y": 25.5,
+      "w": 1.5,
       "h": 1.5
     },
     {
-      "type": "table",
-      "x": 24.531,
-      "y": 44.936,
-      "w": 0.5,
-      "h": 1.5
-    },
-    {
-      "type": "table",
-      "x": 23.776,
-      "y": 40.285,
-      "w": 0.5,
-      "h": 1.5,
-      "rotation": 90
-    },
-    {
-      "type": "table",
-      "x": 12.31,
-      "y": 56.708,
-      "w": 2.7,
-      "h": 0.3,
-      "alturaM": 1.75,
-      "elevacionM": 0.5
+      "type": "plant",
+      "x": 2.25,
+      "y": 38.75,
+      "w": 1.25,
+      "h": 1.25
     },
     {
       "type": "plant",
-      "x": 27.137,
-      "y": 35.616,
-      "w": 0.8,
-      "h": 0.8
-    },
-    {
-      "type": "plant",
-      "x": 27.249,
-      "y": 34.239,
-      "w": 0.8,
-      "h": 0.8
-    },
-    {
-      "type": "plant",
-      "x": 25.148,
-      "y": 33.96,
-      "w": 0.8,
-      "h": 0.8
-    },
-    {
-      "type": "plant",
-      "x": 25.606,
-      "y": 31.283,
-      "w": 0.8,
-      "h": 0.8
-    },
-    {
-      "type": "plant",
-      "x": 27.295,
-      "y": 32.307,
-      "w": 0.8,
-      "h": 0.8
-    },
-    {
-      "type": "plant",
-      "x": 22.872,
-      "y": 31.44,
-      "w": 0.8,
-      "h": 0.8
-    },
-    {
-      "type": "plant",
-      "x": 27.637,
-      "y": 36.855,
-      "w": 0.8,
-      "h": 0.8
-    },
-    {
-      "type": "plant",
-      "x": 1.119,
-      "y": 68.234,
-      "w": 0.8,
-      "h": 0.8
-    },
-    {
-      "type": "plant",
-      "x": 0.361,
-      "y": 67.002,
-      "w": 0.8,
-      "h": 0.8
-    },
-    {
-      "type": "plant",
-      "x": 0.303,
-      "y": 65.576,
-      "w": 0.8,
-      "h": 0.8
+      "x": 7.25,
+      "y": 39,
+      "w": 1.25,
+      "h": 1
     },
     {
       "type": "table",
-      "x": 4.232,
-      "y": 42.707,
-      "w": 0.5,
-      "h": 1.5,
-      "rotation": 90
+      "x": 7.25,
+      "y": 44.25,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 180
     },
     {
       "type": "table",
-      "x": 22.5,
-      "y": 55.375,
-      "w": 0.5,
-      "h": 1.5
+      "x": 5.25,
+      "y": 43.75,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8
     },
     {
       "type": "table",
-      "x": 21.204,
-      "y": 53.5,
-      "w": 0.5,
-      "h": 1.5
+      "x": 5.25,
+      "y": 44.25,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 180
     },
     {
       "type": "table",
-      "x": 21.204,
-      "y": 55.448,
-      "w": 0.5,
-      "h": 1.5
+      "x": 7.25,
+      "y": 45.75,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8
     },
     {
       "type": "table",
-      "x": 20.843,
-      "y": 59.987,
-      "w": 4.3,
-      "h": 0.3,
-      "alturaM": 1.6,
+      "x": 7.25,
+      "y": 46.25,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 180
+    },
+    {
+      "type": "table",
+      "x": 13.5,
+      "y": 56.75,
+      "w": 2.215,
+      "h": 0.375,
+      "alturaM": 1.3,
       "elevacionM": 0.5
     },
     {
       "type": "table",
-      "x": 21.591,
-      "y": 40.319,
-      "w": 0.5,
-      "h": 1.5,
-      "rotation": 90
-    },
-    {
-      "type": "table",
-      "x": 22.493,
-      "y": 53.5,
-      "w": 0.5,
-      "h": 1.5
-    },
-    {
-      "type": "table",
-      "x": 21.65,
-      "y": 59.687,
-      "w": 2.7,
-      "h": 0.3,
-      "alturaM": 1.75,
+      "x": 13.5,
+      "y": 57.75,
+      "w": 2.215,
+      "h": 0.375,
+      "alturaM": 1.3,
       "elevacionM": 0.5
+    },
+    {
+      "type": "table",
+      "x": 11,
+      "y": 49.25,
+      "w": 4.5,
+      "h": 0.5,
+      "alturaM": 1.4,
+      "elevacionM": 0.6
+    },
+    {
+      "type": "table",
+      "x": 12,
+      "y": 50.25,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 180
+    },
+    {
+      "type": "table",
+      "x": 24.75,
+      "y": 58.75,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 24.75,
+      "y": 57.75,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 24.75,
+      "y": 56.75,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 24.75,
+      "y": 55.75,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 270
+    },
+    {
+      "type": "table",
+      "x": 13.75,
+      "y": 50.25,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 180
+    },
+    {
+      "type": "table",
+      "x": 5.25,
+      "y": 45.75,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8
+    },
+    {
+      "type": "table",
+      "x": 5.25,
+      "y": 46.25,
+      "w": 0.75,
+      "h": 0.25,
+      "alturaM": 1.8,
+      "rotation": 180
     },
     {
       "type": "glass",
@@ -1844,6 +2453,62 @@
       "rotation": 90,
       "animation": "Idle_Torch_Loop",
       "groupId": "g18"
+    },
+    {
+      "type": "wall",
+      "x": 5,
+      "y": 44,
+      "w": 1.25,
+      "h": 0.25,
+      "invId": 33,
+      "sala": "S2",
+      "tema": "Intro IA — panel expositor NO (sustituye el cubo)",
+      "rol": "Panel expositor de la sala Intro IA (donde estaba el cubo central); aloja un tvtotem, gráfica por definir",
+      "track": "C",
+      "estado": "pend",
+      "research": false
+    },
+    {
+      "type": "wall",
+      "x": 7,
+      "y": 44,
+      "w": 1.25,
+      "h": 0.25,
+      "invId": 34,
+      "sala": "S2",
+      "tema": "Intro IA — panel expositor NE (sustituye el cubo)",
+      "rol": "Panel expositor de la sala Intro IA (donde estaba el cubo central); aloja un tvtotem, gráfica por definir",
+      "track": "C",
+      "estado": "pend",
+      "research": false
+    },
+    {
+      "type": "wall",
+      "x": 5,
+      "y": 46,
+      "w": 1.25,
+      "h": 0.25,
+      "invId": 35,
+      "sala": "S2",
+      "tema": "Intro IA — panel expositor SO (sustituye el cubo)",
+      "rol": "Panel expositor de la sala Intro IA (donde estaba el cubo central); aloja un tvtotem, gráfica por definir",
+      "track": "C",
+      "estado": "pend",
+      "research": false
+    },
+    {
+      "type": "wall",
+      "x": 7,
+      "y": 46,
+      "w": 1.25,
+      "h": 0.25,
+      "invId": 36,
+      "sala": "S2",
+      "tema": "Intro IA — panel expositor SE (sustituye el cubo)",
+      "rol": "Panel expositor de la sala Intro IA (donde estaba el cubo central); aloja un tvtotem, gráfica por definir",
+      "track": "C",
+      "estado": "pend",
+      "research": false
     }
   ],
   "exportedAt": "2026-06-04T09:17:28.648Z",

@@ -24,12 +24,12 @@
     "wallId": "wall-4",
     "frameId": "5-N-1",
     "side": -1,
-    "fullWidthMm": 23500,
-    "originXMm": 5750,
-    "holeCenterXMm": 10500,
+    "fullWidthMm": 24500,
+    "originXMm": 6750,
+    "holeCenterXMm": 11500,
     "seams": [
-      5750,
-      15250
+      6750,
+      16250
     ],
     "foreshorten": 0.38,
     "holeCenterYFrac": 0.63,

@@ -6,7 +6,7 @@
   "theme": "light",
   "surface": "#ffffff",
   "dimensions": {
-    "trimWidthMm": 6125,
+    "trimWidthMm": 6250,
     "trimHeightMm": 3000,
     "bleedMm": 10,
     "safeMarginMm": 0,
@@ -25,12 +25,12 @@
     "frameId": "11-W-INVERSIÓN",
     "side": -1,
     "zone": "INVERSIÓN",
-    "fullWidthMm": 23500,
-    "originXMm": 0,
-    "holeCenterXMm": 10500,
+    "fullWidthMm": 24500,
+    "originXMm": 875,
+    "holeCenterXMm": 11500,
     "seams": [
-      5750,
-      15250
+      6750,
+      16250
     ],
     "foreshorten": 0.38,
     "holeCenterYFrac": 0.63,

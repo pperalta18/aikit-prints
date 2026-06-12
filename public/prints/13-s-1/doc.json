@@ -25,6 +25,7 @@
     "side": 1,
     "src": "prints/13-s-1/assets/la-naranja-mecanica.svg",
     "alt": "La Naranja Mecánica",
-    "maxWidthMm": 650
+    "maxWidthMm": 600,
+    "alignX": "center"
   }
 }
