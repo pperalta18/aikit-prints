@@ -162,6 +162,25 @@ export function EventSpaceScene({ docs, onBack }: { docs: PrintDoc[]; onBack: ()
   const [armedId, setArmedId] = useState<string | null>(docs[0]?.id ?? null)
   // Restore the saved layout on open; persist it on every change (Phase 2).
   const [placements, setPlacements] = useState<Placement[]>(() => loadPlacements())
+  // Fresh browser (no saved layout) → load the committed default design, so the
+  // deployed viewer opens with the venue dressed instead of bare walls. Any local
+  // edit then takes over via the auto-persist effect. Missing file = no-op (dev
+  // without a committed default keeps the old empty-start behaviour).
+  useEffect(() => {
+    if (loadPlacements().length > 0) return
+    let alive = true
+    fetch('/event-default-placements.json')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        if (!alive || json == null) return
+        const def = parsePlacements(json)
+        if (def.length) setPlacements((cur) => (cur.length ? cur : def))
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   // The simulated-occupancy overlay — attendees (crowd), their tables and the
   // spawn point — clutters the museographic view, so it's off by default; a single
