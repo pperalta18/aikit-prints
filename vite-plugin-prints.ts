@@ -44,6 +44,36 @@ export function printsPlugin(): Plugin {
     return docs
   }
 
+  // Read-only middlewares shared by dev and preview: list the docs + stream any
+  // exported artifacts. The mutating endpoints (export/delete/layout-save) stay
+  // dev-only — `vite preview` may be deployed to a public host where spawning
+  // exports or deleting documents must not be reachable.
+  const useReadOnly = (middlewares: { use: (route: string, fn: (req: any, res: any, next: () => void) => void) => void }) => {
+    middlewares.use('/api/prints', (req, res, next) => {
+      if (req.method !== 'GET') return next()
+      res.setHeader('Content-Type', 'application/json')
+      res.end(JSON.stringify(listDocs()))
+    })
+    middlewares.use('/api/prints-output', (req, res, next) => {
+      if (req.method !== 'GET') return next()
+      const rel = decodeURIComponent((req.url || '').replace(/^\//, '').split('?')[0])
+      if (!FILE_RE.test(rel)) {
+        res.statusCode = 400
+        return res.end('bad name')
+      }
+      const file = path.join(outDir, rel)
+      if (!file.startsWith(outDir) || !existsSync(file)) {
+        res.statusCode = 404
+        return res.end('not found')
+      }
+      const ext = path.extname(file).toLowerCase()
+      const type =
+        ext === '.pdf' ? 'application/pdf' : ext === '.png' ? 'image/png' : ext === '.jpg' ? 'image/jpeg' : 'application/octet-stream'
+      res.setHeader('Content-Type', type)
+      createReadStream(file).pipe(res)
+    })
+  }
+
   return {
     name: 'aikit-prints',
     // The 3D scene saves the venue layout (furniture + walls) by POSTing to the
@@ -53,12 +83,12 @@ export function printsPlugin(): Plugin {
     handleHotUpdate(ctx) {
       if (ctx.file === layoutPath) return []
     },
+    // `vite preview` (the deployed mode) gets ONLY the read-only endpoints.
+    configurePreviewServer(server) {
+      useReadOnly(server.middlewares)
+    },
     configureServer(server) {
-      server.middlewares.use('/api/prints', (req, res, next) => {
-        if (req.method !== 'GET') return next()
-        res.setHeader('Content-Type', 'application/json')
-        res.end(JSON.stringify(listDocs()))
-      })
+      useReadOnly(server.middlewares)
 
       server.middlewares.use('/api/export-print', (req, res) => {
         if (req.method !== 'POST') {
@@ -245,25 +275,6 @@ export function printsPlugin(): Plugin {
           }
           reply(200, { ok: true, furniture: cleanFurn.length, walls: cleanWalls.length })
         })
-      })
-
-      server.middlewares.use('/api/prints-output', (req, res, next) => {
-        if (req.method !== 'GET') return next()
-        const rel = decodeURIComponent((req.url || '').replace(/^\//, '').split('?')[0])
-        if (!FILE_RE.test(rel)) {
-          res.statusCode = 400
-          return res.end('bad name')
-        }
-        const file = path.join(outDir, rel)
-        if (!file.startsWith(outDir) || !existsSync(file)) {
-          res.statusCode = 404
-          return res.end('not found')
-        }
-        const ext = path.extname(file).toLowerCase()
-        const type =
-          ext === '.pdf' ? 'application/pdf' : ext === '.png' ? 'image/png' : ext === '.jpg' ? 'image/jpeg' : 'application/octet-stream'
-        res.setHeader('Content-Type', type)
-        createReadStream(file).pipe(res)
       })
     },
   }

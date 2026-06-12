@@ -10,6 +10,12 @@ import { printsPlugin } from './vite-plugin-prints';
 // pure geometry/scale/tiling logic, no browser or GL.
 export default defineConfig({
   plugins: [react(), printsPlugin()],
+  // `vite preview` is the deployed serving mode (Railway): listen on all
+  // interfaces and accept the platform's domain in the Host header.
+  preview: {
+    host: true,
+    allowedHosts: true
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
